@@ -1,0 +1,7 @@
+[
+{"id":"f-v1","label":"SDI 1 Video","format":"urn:x-nmos:format:video","media_type":"video/raw","source_id":"s-v1","device_id":"d0000000-0000-4000-8000-000000000001","frame_width":1920,"frame_height":1080,"interlace_mode":"progressive","colorspace":"BT709","grain_rate":{"numerator":25,"denominator":1},"components":[{"name":"Y","width":1920,"height":1080,"bit_depth":10}]},
+{"id":"f-a1","label":"SDI 1 Audio","format":"urn:x-nmos:format:audio","media_type":"audio/L24","source_id":"s-a1","device_id":"d0000000-0000-4000-8000-000000000001","sample_rate":{"numerator":48000},"bit_depth":24},
+{"id":"f-v2","label":"SDI 2 Video","format":"urn:x-nmos:format:video","media_type":"video/raw","source_id":"s-v2","device_id":"d0000000-0000-4000-8000-000000000001","frame_width":1920,"frame_height":1080,"interlace_mode":"interlaced_tff","grain_rate":{"numerator":25,"denominator":1},"components":[{"name":"Y","width":1920,"height":1080,"bit_depth":10}]},
+{"id":"f-a2","label":"SDI 2 Audio","format":"urn:x-nmos:format:audio","media_type":"audio/L24","source_id":"s-a2","device_id":"d0000000-0000-4000-8000-000000000001","sample_rate":{"numerator":48000},"bit_depth":24},
+{"id":"f-d1","label":"SDI 1 ANC","format":"urn:x-nmos:format:data","media_type":"video/smpte291","source_id":"s-d1","device_id":"d0000000-0000-4000-8000-000000000001"}
+]

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>de</string>
+	<key>CFBundleDisplayName</key>
+	<string>ST 2110 Monitor</string>
+	<key>CFBundleName</key>
+	<string>ST 2110 Monitor</string>
+	<key>CFBundleExecutable</key>
+	<string>ST2110Monitor</string>
+	<key>CFBundleIdentifier</key>
+	<string>@BUNDLE_ID@</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>@VERSION@</string>
+	<key>CFBundleVersion</key>
+	<string>@BUILD@</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>LSArchitecturePriority</key>
+	<array>
+		<string>arm64</string>
+	</array>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.video</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSSupportsAutomaticGraphicsSwitching</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>Für Lehre und Tests im Medienlabor. Enthält GStreamer (LGPL).</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Der ST 2110 Monitor sucht Blackmagic-Geräte im lokalen Netzwerk (NMOS) und empfängt deren Video- und Audioströme (Multicast). Ohne diese Erlaubnis sind weder Geräteerkennung noch Empfang möglich.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_nmos-node._tcp</string>
+		<string>_nmos-query._tcp</string>
+		<string>_nmos-register._tcp</string>
+	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>SDP-Beschreibung</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>sdp</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

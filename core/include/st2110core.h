@@ -294,6 +294,10 @@ void st_receiver_set_monitor_channels(st_receiver *r, int left, int right);
 /* Manueller Audioversatz in Millisekunden (positiv = Ton später). */
 void st_receiver_set_audio_delay_ms(st_receiver *r, int delay_ms);
 
+/* Selbsttest (Demo, Loopback-Empfang, Lippensynchronität, PTP-Helfer).
+ * Liefert die Anzahl der Fehler; out erhält ein lesbares Protokoll. */
+int st_selftest(int seconds, char *out, size_t out_len);
+
 /* Hilfsfunktionen für Diagnose */
 const char *st_state_name(st_state s);
 const char *st_sync_mode_name(st_sync_mode m);

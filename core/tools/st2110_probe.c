@@ -99,11 +99,17 @@ int main(int argc, char **argv)
         else if (strcmp(a, "--audio-out") == 0) cfg.audio_null_sink = 0;
         else if (strcmp(a, "--no-ssm") == 0) cfg.use_source_filter = 0;
         else if (strcmp(a, "--json") == 0) json = 1;
+        else if (strcmp(a, "--selftest") == 0) {
+            static char rep[8192];
+            int f = st_selftest(5, rep, sizeof rep);
+            fputs(rep, stdout);
+            return f ? 1 : 0;
+        }
         else if (strcmp(a, "--demo") == 0) { cfg.demo = 1; cfg.demo_fps = 25; cfg.demo_channels = 16; }
         else if (strcmp(a, "--help") == 0 || strcmp(a, "-h") == 0) {
             printf("st2110-probe --video-sdp DATEI --audio-sdp DATEI [--iface en7 --iface-addr IP]\n"
                    "             [--mode preview|rtp|ptp] [--ptp-domain N] [--latency MS] [--fixed-latency] [--duration S]\n"
-                   "             [--audio-out] [--no-ssm] [--json] [--demo]\n");
+                   "             [--audio-out] [--no-ssm] [--json] [--demo] [--selftest]\n");
             return 0;
         } else { fprintf(stderr, "Unbekannte Option %s (--help)\n", a); return 2; }
 #undef OPT

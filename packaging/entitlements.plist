@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Keine Sandbox: Multicast-Empfang auf frei wählbarer Schnittstelle und der
+	     PTP-Hilfsprozess (Ports 319/320) sind in der App-Sandbox nicht möglich.
+	     Hardened Runtime ohne Ausnahmen (ORC-Codeerzeugung ist abgeschaltet). -->
+</dict>
+</plist>

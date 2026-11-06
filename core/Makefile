@@ -5,7 +5,7 @@ PKGS = gstreamer-1.0 gstreamer-app-1.0 gstreamer-video-1.0 gstreamer-net-1.0 gio
 CFLAGS += -std=c11 -D_GNU_SOURCE -D_DARWIN_C_SOURCE -O2 -g -Wall -Wextra -Wno-unused-parameter -Iinclude -Isrc $(shell pkg-config --cflags $(PKGS))
 LDLIBS += $(shell pkg-config --libs $(PKGS)) -lm
 BUILD = build
-SRC = src/st_sdp.c src/st_mediaclock.c src/st_socket.c src/st_receiver.c
+SRC = src/st_sdp.c src/st_mediaclock.c src/st_socket.c src/st_receiver.c src/st_selftest.c
 OBJ = $(SRC:src/%.c=$(BUILD)/%.o)
 
 all: $(BUILD)/st2110-probe $(BUILD)/st2110-testsender $(BUILD)/test_unit

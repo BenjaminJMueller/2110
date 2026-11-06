@@ -1,0 +1,97 @@
+#!/bin/bash
+# Baut „ST 2110 Monitor.app“ und das DMG – reproduzierbar, ohne Homebrew.
+#
+# Voraussetzungen (nur auf dem Build-Mac): macOS 15+ auf Apple Silicon,
+# Xcode 26 (für Liquid Glass; ältere Xcode-Versionen bauen ohne Glas-Effekte),
+# Internetzugang zu gstreamer.freedesktop.org beim ersten Lauf.
+#
+# Umgebungsvariablen (optional):
+#   SIGN_IDENTITY   "-" = ad-hoc (Standard, ohne Apple-Konto) oder
+#                   "Developer ID Application: Name (TEAMID)"
+#   NOTARY_PROFILE  Schlüsselbund-Profil für notarytool (siehe scripts/notarize.sh)
+#   BUNDLE_ID       Standard: de.medienlabor.ST2110Monitor
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+APP_NAME="ST 2110 Monitor"
+EXEC="ST2110Monitor"
+BUNDLE_ID="${BUNDLE_ID:-de.medienlabor.ST2110Monitor}"
+VERSION="${APP_VERSION:-$(cat VERSION)}"
+BUILD="${BUILD_NUMBER:-$(git rev-list --count HEAD 2>/dev/null || echo 1)}"
+SIGN_IDENTITY="${SIGN_IDENTITY:--}"
+DIST="$ROOT/dist"
+APP="$DIST/$APP_NAME.app"
+
+echo "== GStreamer bereitstellen"
+"$ROOT/scripts/fetch-gstreamer.sh"
+export GSTREAMER_PREFIX="$ROOT/vendor/gstreamer"
+
+echo "== Kompilieren (Release, arm64)"
+swift build -c release --arch arm64 --product "$EXEC"
+BIN_DIR="$(swift build -c release --arch arm64 --show-bin-path)"
+
+echo "== App-Bundle zusammenstellen"
+rm -rf "$APP"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Frameworks"
+cp "$BIN_DIR/$EXEC" "$APP/Contents/MacOS/$EXEC"
+sed -e "s/@VERSION@/$VERSION/" -e "s/@BUILD@/$BUILD/" -e "s/@BUNDLE_ID@/$BUNDLE_ID/" \
+    packaging/Info.plist > "$APP/Contents/Info.plist"
+plutil -lint "$APP/Contents/Info.plist"
+
+echo "== Symbol"
+ICONSET="$DIST/AppIcon.iconset"
+rm -rf "$ICONSET" && mkdir -p "$ICONSET"
+if swift scripts/make-icon.swift "$DIST/icon_1024.png" 2>/dev/null; then
+  for s in 16 32 128 256 512; do
+    sips -z $s $s "$DIST/icon_1024.png" --out "$ICONSET/icon_${s}x${s}.png" >/dev/null
+    sips -z $((s*2)) $((s*2)) "$DIST/icon_1024.png" --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null
+  done
+  iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
+else
+  echo "Hinweis: Symbol konnte nicht erzeugt werden (weiter ohne)."
+fi
+
+echo "== GStreamer einbetten"
+python3 scripts/bundle_gstreamer.py --prefix "$GSTREAMER_PREFIX" \
+  --dest "$APP/Contents/Frameworks/GStreamer" \
+  --binary "$APP/Contents/MacOS/$EXEC" \
+  --manifest "$APP/Contents/Resources/gstreamer-files.txt"
+# Entwicklungs-rpath (absoluter Pfad zum vendor-Ordner) entfernen
+install_name_tool -delete_rpath "$GSTREAMER_PREFIX/lib" "$APP/Contents/MacOS/$EXEC" 2>/dev/null || true
+# Nur Apple Silicon ausliefern (halbiert die Größe)
+while IFS= read -r -d '' f; do
+  if lipo -info "$f" 2>/dev/null | grep -q "are:"; then
+    lipo "$f" -thin arm64 -output "$f.thin" && mv "$f.thin" "$f"
+  fi
+done < <(find "$APP/Contents/Frameworks" -type f -print0)
+
+echo "== Lizenzen"
+mkdir -p "$APP/Contents/Resources/Licenses"
+cp packaging/licenses/* "$APP/Contents/Resources/Licenses/"
+cp packaging/THIRD_PARTY.md "$APP/Contents/Resources/Licenses/"
+
+echo "== Signieren ($SIGN_IDENTITY)"
+SIGN_ARGS=(--force --sign "$SIGN_IDENTITY")
+if [ "$SIGN_IDENTITY" != "-" ]; then
+  SIGN_ARGS+=(--options runtime --timestamp)
+fi
+# Von innen nach außen: Bibliotheken, Plugins, Hilfsprogramme, dann die App
+while IFS= read -r -d '' f; do
+  codesign "${SIGN_ARGS[@]}" "$f"
+done < <(find "$APP/Contents/Frameworks" -type f \( -name "*.dylib" -o -perm -u+x \) -print0)
+codesign "${SIGN_ARGS[@]}" --entitlements packaging/entitlements.plist "$APP"
+codesign --verify --deep --strict --verbose=2 "$APP"
+
+echo "== Selbsttest des fertigen Bundles"
+"$APP/Contents/MacOS/$EXEC" --selftest || { echo "Selbsttest fehlgeschlagen"; exit 1; }
+
+echo "== DMG"
+"$ROOT/scripts/make-dmg.sh" "$APP" "$DIST/ST2110-Monitor-$VERSION.dmg"
+
+if [ -n "${NOTARY_PROFILE:-}" ] && [ "$SIGN_IDENTITY" != "-" ]; then
+  "$ROOT/scripts/notarize.sh" "$DIST/ST2110-Monitor-$VERSION.dmg"
+else
+  echo "Hinweis: nicht notarisiert (kein Developer-ID-Zertifikat/NOTARY_PROFILE). Siehe docs/04-Build-und-Verteilung.md."
+fi
+echo "Fertig: $DIST/ST2110-Monitor-$VERSION.dmg"

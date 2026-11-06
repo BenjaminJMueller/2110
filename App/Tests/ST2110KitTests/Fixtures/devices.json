@@ -1,0 +1,1 @@
+[{"id":"d0000000-0000-4000-8000-000000000001","version":"1700000000:0","label":"Studio Converter","description":"","type":"urn:x-nmos:device:pipeline","node_id":"5f2a6f84-0000-4000-8000-000000000001","senders":[],"receivers":[],"controls":[{"href":"http://192.168.10.21/x-nmos/connection/v1.1/","type":"urn:x-nmos:control:sr-ctrl/v1.1"}],"tags":{}}]

@@ -1,0 +1,34 @@
+ST 2110 Monitor – Installation
+==============================
+
+1. „ST 2110 Monitor“ auf den Ordner „Programme“ (Applications) ziehen.
+2. Das Fenster schließen und die Disk image auswerfen.
+3. Im Ordner „Programme“ den ST 2110 Monitor öffnen.
+
+Nichts weiter zu installieren: GStreamer und alle Bestandteile sind in der App
+enthalten. Kein Terminal, kein Homebrew, keine Hintergrunddienste.
+
+Falls macOS beim ersten Öffnen meldet, die App könne nicht überprüft werden
+---------------------------------------------------------------------------
+Das passiert, solange die App nicht mit einem Apple-Developer-ID-Zertifikat
+signiert und von Apple notarisiert ist (siehe Projektdokumentation).
+
+  macOS 15 oder neuer:
+    1. Die Meldung mit „Fertig“ schließen.
+    2. Systemeinstellungen › Datenschutz & Sicherheit öffnen.
+    3. Ganz unten bei „ST 2110 Monitor wurde blockiert …“ auf „Dennoch öffnen“
+       klicken und mit Passwort oder Touch ID bestätigen.
+  macOS 14:
+    Im Ordner „Programme“ mit gedrückter ctrl-Taste auf die App klicken,
+    „Öffnen“ wählen und noch einmal „Öffnen“ bestätigen.
+
+Das ist nur beim ersten Start nötig.
+
+Beim ersten Start fragt macOS gegebenenfalls
+--------------------------------------------
+• „Geräte im lokalen Netzwerk finden und mit ihnen verbinden?“ → Erlauben.
+  Nötig für Geräteerkennung (NMOS) und Empfang der Ströme.
+• Bei aktiver Firewall: „Eingehende Netzwerkverbindungen akzeptieren?“ → Erlauben
+  (für die App und das Hilfsprogramm „gst-ptp-helper“).
+
+Weitere Hilfe: Menü „Hilfe › Kurzanleitung und Berechtigungen“.

@@ -1,0 +1,1 @@
+{"id":"5f2a6f84-0000-4000-8000-000000000001","version":"1700000000:0","label":"Blackmagic 2110 IP Converter 3x3G","description":"synthetisch","tags":{},"hostname":"bmd-3x3g.local","href":"http://192.168.10.21/","api":{"versions":["v1.3"],"endpoints":[{"host":"192.168.10.21","port":80,"protocol":"http"}]},"interfaces":[],"clocks":[]}
