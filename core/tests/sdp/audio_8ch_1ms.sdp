@@ -1,0 +1,10 @@
+v=0
+o=- 1 1 IN IP4 192.168.10.21
+s=Audio
+t=0 0
+c=IN IP4 239.21.1.3/64
+a=ts-refclk:ptp=IEEE1588-2008:08-00-11-FF-FE-21-E1-B0:127
+a=mediaclk:direct=0
+m=audio 5006 RTP/AVP 97
+a=rtpmap:97 L24/48000/8
+a=ptime:1

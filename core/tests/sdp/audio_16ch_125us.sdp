@@ -1,0 +1,12 @@
+v=0
+o=- 1443716956 1443716956 IN IP4 192.168.10.21
+s=SDI 1 Audio
+t=0 0
+m=audio 5004 RTP/AVP 97
+c=IN IP4 239.21.1.2/64
+a=source-filter: incl IN IP4 239.21.1.2 192.168.10.21
+a=rtpmap:97 L24/48000/16
+a=fmtp:97 channel-order=SMPTE2110.(SGRP,SGRP,SGRP,SGRP)
+a=ptime:0.125
+a=ts-refclk:ptp=IEEE1588-2008:08-00-11-FF-FE-21-E1-B0:127
+a=mediaclk:direct=0
