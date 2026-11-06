@@ -55,6 +55,7 @@ fi
 echo "== GStreamer einbetten"
 python3 scripts/bundle_gstreamer.py --prefix "$GSTREAMER_PREFIX" \
   --dest "$APP/Contents/Frameworks/GStreamer" \
+  --helpers-dest "$APP/Contents/Helpers" \
   --binary "$APP/Contents/MacOS/$EXEC" \
   --manifest "$APP/Contents/Resources/gstreamer-files.txt"
 # Entwicklungs-rpath (absoluter Pfad zum vendor-Ordner) entfernen
@@ -64,7 +65,9 @@ while IFS= read -r -d '' f; do
   if lipo -info "$f" 2>/dev/null | grep -q "are:"; then
     lipo "$f" -thin arm64 -output "$f.thin" && mv "$f.thin" "$f"
   fi
-done < <(find "$APP/Contents/Frameworks" -type f -print0)
+done < <(find "$APP/Contents/Frameworks" "$APP/Contents/Helpers" -type f -print0)
+# Hilfsprogramme finden die Bibliotheken über diesen Suchpfad
+install_name_tool -add_rpath "@executable_path/../Frameworks/GStreamer/lib" "$APP/Contents/Helpers/gst-plugin-scanner"
 
 echo "== Lizenzen"
 mkdir -p "$APP/Contents/Resources/Licenses"
@@ -79,7 +82,7 @@ fi
 # Von innen nach außen: Bibliotheken, Plugins, Hilfsprogramme, dann die App
 while IFS= read -r -d '' f; do
   codesign "${SIGN_ARGS[@]}" "$f"
-done < <(find "$APP/Contents/Frameworks" -type f \( -name "*.dylib" -o -perm -u+x \) -print0)
+done < <(find "$APP/Contents/Frameworks" "$APP/Contents/Helpers" -type f \( -name "*.dylib" -o -perm -u+x \) -print0)
 codesign "${SIGN_ARGS[@]}" --entitlements packaging/entitlements.plist "$APP"
 codesign --verify --deep --strict --verbose=2 "$APP"
 

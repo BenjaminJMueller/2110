@@ -91,8 +91,9 @@ final class NMOSDiscovery {
         let key = "\(registry)-\(name)"
         guard !pendingResolve.contains(key), !endpoints.contains(where: { $0.label == name && $0.origin == .mdns }) else { return }
         pendingResolve.insert(key)
-        var proto = "http"
-        if case let .bonjour(txt) = result.metadata, let p = txt["api_proto"] { proto = p }
+        var protoValue = "http"
+        if case let .bonjour(txt) = result.metadata, let p = txt["api_proto"] { protoValue = p }
+        let proto = protoValue
         let params = NWParameters.tcp
         if let ip = params.defaultProtocolStack.internetProtocol as? NWProtocolIP.Options { ip.version = .v4 }
         let c = NWConnection(to: result.endpoint, using: params)

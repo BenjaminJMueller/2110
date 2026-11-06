@@ -134,7 +134,10 @@ enum GStreamerEnvironment {
         if let root = candidates.first(where: { fm.fileExists(atPath: $0.appendingPathComponent("lib/gstreamer-1.0").path) }) {
             bundled = root.path.contains(".app/")
             let plugins = root.appendingPathComponent("lib/gstreamer-1.0").path
-            let libexec = root.appendingPathComponent("libexec/gstreamer-1.0")
+            // Im App-Bundle liegen die Hilfsprogramme in Contents/Helpers
+            let helpers = Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers")
+            let libexec = fm.fileExists(atPath: helpers.appendingPathComponent("gst-ptp-helper").path)
+                ? helpers : root.appendingPathComponent("libexec/gstreamer-1.0")
             setenv("GST_PLUGIN_SYSTEM_PATH_1_0", plugins, 1)
             setenv("GST_PLUGIN_SYSTEM_PATH", plugins, 1)
             setenv("GST_PLUGIN_PATH_1_0", "", 1)

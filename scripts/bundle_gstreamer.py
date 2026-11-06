@@ -51,6 +51,7 @@ def main():
     ap.add_argument("--dest", required=True)
     ap.add_argument("--binary", action="append", default=[])
     ap.add_argument("--otool", default="otool")
+    ap.add_argument("--helpers-dest", help="Ziel für ausführbare Hilfsprogramme (Contents/Helpers)")
     ap.add_argument("--manifest")
     a = ap.parse_args()
     otool = a.otool.split()
@@ -60,7 +61,9 @@ def main():
     lib_src = os.path.join(a.prefix, "lib")
     lib_dst = os.path.join(a.dest, "lib")
     plug_dst = os.path.join(lib_dst, "gstreamer-1.0")
-    exec_dst = os.path.join(a.dest, "libexec", "gstreamer-1.0")
+    # Ausführbare Hilfsprogramme gehören für codesign nach Contents/Helpers,
+    # nicht unter Contents/Frameworks.
+    exec_dst = a.helpers_dest or os.path.join(a.dest, "libexec", "gstreamer-1.0")
     for d in (plug_dst, exec_dst):
         os.makedirs(d, exist_ok=True)
 
