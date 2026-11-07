@@ -83,6 +83,7 @@ int main(int argc, char **argv)
     cfg.auto_latency = 1;
     cfg.use_source_filter = 1;
     int duration = 10, json = 0;
+    const char *record = NULL;
     cfg.audio_null_sink = 1;
     for (int i = 1; i < argc; i++) {
         const char *a = argv[i];
@@ -95,6 +96,7 @@ int main(int argc, char **argv)
         else if (OPT("--duration")) duration = atoi(v);
         else if (OPT("--latency")) cfg.latency_ms = atoi(v);
         else if (OPT("--ptp-domain")) cfg.ptp_domain = atoi(v);
+        else if (OPT("--record")) record = v;
         else if (strcmp(a, "--fixed-latency") == 0) cfg.auto_latency = 0;
         else if (strcmp(a, "--audio-out") == 0) cfg.audio_null_sink = 0;
         else if (strcmp(a, "--no-ssm") == 0) cfg.use_source_filter = 0;
@@ -126,6 +128,7 @@ int main(int argc, char **argv)
     if (st_receiver_start(r, err, sizeof err)) { fprintf(stderr, "%s\n", err); st_receiver_free(r); return 1; }
     signal(SIGINT, on_sig);
     signal(SIGTERM, on_sig);
+    if (record && st_receiver_start_recording(r, record, duration, 0, err, sizeof err) != 0) fprintf(stderr, "%s\n", err);
 
     st_stats s;
     for (int t = 0; (duration <= 0 || t < duration) && !g_stop; t++) {

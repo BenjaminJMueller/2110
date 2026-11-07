@@ -265,6 +265,12 @@ typedef struct {
     int ptp_domains_seen;
 
     int socket_buffer_bytes;         /* tatsächlich gesetzt */
+
+    /* Mitschnitt */
+    int recording;
+    uint64_t rec_packets;
+    uint64_t rec_bytes;
+    double rec_seconds;
 } st_stats;
 
 /* Einmalig vor allem anderen aufrufen. Liefert 0 bei Erfolg. */
@@ -293,6 +299,13 @@ void st_receiver_set_mute(st_receiver *r, int mute);
 void st_receiver_set_monitor_channels(st_receiver *r, int left, int right);
 /* Manueller Audioversatz in Millisekunden (positiv = Ton später). */
 void st_receiver_set_audio_delay_ms(st_receiver *r, int delay_ms);
+
+/* Mitschnitt der empfangenen RTP-Pakete als pcapng (Software-Zeitstempel bei
+ * Ankunft im Programm; mit PTP auf PTP-Zeit bezogen). Endet automatisch nach
+ * max_seconds oder max_bytes. */
+int st_receiver_start_recording(st_receiver *r, const char *path, int max_seconds,
+                                uint64_t max_bytes, char *err, size_t err_len);
+void st_receiver_stop_recording(st_receiver *r);
 
 /* Selbsttest (Demo, Loopback-Empfang, Lippensynchronität, PTP-Helfer).
  * Liefert die Anzahl der Fehler; out erhält ein lesbares Protokoll. */

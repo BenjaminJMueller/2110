@@ -112,6 +112,7 @@ int main(int argc, char **argv)
     const char *vaddr = "239.10.10.1", *aaddr = "239.10.10.2", *iface_addr = NULL, *sdp_dir = NULL;
     int vport = 5004, aport = 5004, duration = 0, no_video = 0, no_audio = 0, tai = 37;
     double loss = 0;
+    int mtu = 1450;
     unsigned ssrc_v = 0, ssrc_a = 0;
     for (int i = 1; i < argc; i++) {
         const char *a = argv[i];
@@ -131,6 +132,7 @@ int main(int argc, char **argv)
         else if (OPT("--audio-ts-offset-ms")) s.audio_offset_ms = atoi(v);
         else if (OPT("--audio-content-offset-ms")) s.content_offset_ms = atoi(v);
         else if (OPT("--loss")) loss = atof(v);
+        else if (OPT("--mtu")) mtu = atoi(v);
         else if (OPT("--tai-offset-s")) tai = atoi(v);
         else if (OPT("--sdp-dir")) sdp_dir = v;
         else if (OPT("--ssrc-video")) ssrc_v = (unsigned)strtoul(v, NULL, 0);
@@ -154,9 +156,9 @@ int main(int argc, char **argv)
     if (!no_video) {
         g_string_append_printf(d,
             "videotestsrc num-buffers=1 pattern=smpte ! videoconvert ! video/x-raw,format=UYVP,width=%d,height=%d ! imagefreeze is-live=true ! video/x-raw,framerate=%d/1 "
-            "! identity name=vtap silent=true ! rtpvrawpay name=vpay pt=96 mtu=1450 timestamp-offset=%u %s "
+            "! identity name=vtap silent=true ! rtpvrawpay name=vpay pt=96 mtu=%d timestamp-offset=%u %s "
             "%s ! udpsink host=%s port=%d ttl-mc=8 auto-multicast=true sync=false async=false ",
-            s.width, s.height, s.fps, voff, vssrc, netsim, vaddr, vport);
+            s.width, s.height, s.fps, mtu, voff, vssrc, netsim, vaddr, vport);
     }
     if (!no_audio) {
         g_string_append_printf(d,

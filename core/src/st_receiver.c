@@ -16,7 +16,9 @@
 #include "st2110core.h"
 #include "st_internal.h"
 
+#include <arpa/inet.h>
 #include <gio/gio.h>
+#include <netinet/in.h>
 #include <gst/app/gstappsink.h>
 #include <gst/gst.h>
 #include <gst/net/gstptpclock.h>
@@ -112,6 +114,12 @@ struct st_receiver {
     int ptp_far_count;        /* Pakete mit unplausiblem PTP-Abstand */
     int ptp_fallback_pending;
     double ptp_far_seconds;
+
+    /* Mitschnitt */
+    FILE *rec;
+    char *rec_buf;
+    uint64_t rec_packets, rec_bytes, rec_max_bytes;
+    int64_t rec_start_us, rec_max_us;
 
     /* Lippensynchron-Messung (Blitz/Ton-Einsatz) */
     int a_rate;
@@ -325,6 +333,128 @@ static void ptp_release(st_receiver *r)
     }
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Mitschnitt (pcapng)                                                */
+
+static void w32(uint8_t *p, uint32_t v) { memcpy(p, &v, 4); }   /* Host-Bytefolge (pcapng erlaubt beide) */
+static void w16(uint8_t *p, uint16_t v) { memcpy(p, &v, 2); }
+
+static void rec_write_header(FILE *f)
+{
+    static const char comment[] = "Essenz Software-Mitschnitt: Zeitstempel bei Ankunft im Programm (nicht am Netzwerkanschluss); "
+                                  "Ethernet-/IP-Köpfe rekonstruiert. Für ST-2110-21-Bewertungen Hardware-Mitschnitt verwenden.";
+    uint8_t b[512];
+    size_t clen = sizeof comment - 1, cpad = (clen + 3) & ~(size_t)3;
+    uint32_t shb_len = (uint32_t)(28 + 4 + cpad + 4);
+    w32(b, 0x0A0D0D0A); w32(b + 4, shb_len); w32(b + 8, 0x1A2B3C4D);
+    w16(b + 12, 1); w16(b + 14, 0);
+    uint64_t sl = (uint64_t)-1; memcpy(b + 16, &sl, 8);
+    w16(b + 24, 1); w16(b + 26, (uint16_t)clen);
+    memset(b + 28, 0, cpad); memcpy(b + 28, comment, clen);
+    size_t o = 28 + cpad;
+    w32(b + o, 0); o += 4;           /* opt_endofopt */
+    w32(b + o, shb_len); o += 4;
+    fwrite(b, 1, o, f);
+    /* IDB: Ethernet, Nanosekunden */
+    uint8_t i[32];
+    w32(i, 1); w32(i + 4, 32); w16(i + 8, 1); w16(i + 10, 0); w32(i + 12, 65535);
+    w16(i + 16, 9); w16(i + 18, 1); i[20] = 9; i[21] = i[22] = i[23] = 0;
+    w32(i + 24, 0); w32(i + 28, 32);
+    fwrite(i, 1, 32, f);
+}
+
+/* Aufruf mit gehaltenem Lock */
+static void rec_packet(st_receiver *r, const st_sdp_media *m, const uint8_t *rtp, size_t n, uint64_t ts_ns)
+{
+    if (!r->rec) return;
+    if ((r->rec_max_bytes && r->rec_bytes > r->rec_max_bytes) ||
+        (r->rec_max_us && g_get_monotonic_time() - r->rec_start_us > r->rec_max_us)) {
+        fclose(r->rec);
+        r->rec = NULL;
+        return;
+    }
+    uint8_t h[28 + 42];
+    size_t caplen = 42 + n;
+    uint32_t blen = (uint32_t)(28 + ((caplen + 3) & ~(size_t)3) + 4);
+    w32(h, 6); w32(h + 4, blen); w32(h + 8, 0);
+    w32(h + 12, (uint32_t)(ts_ns >> 32)); w32(h + 16, (uint32_t)ts_ns);
+    w32(h + 20, (uint32_t)caplen); w32(h + 24, (uint32_t)caplen);
+    uint8_t *e = h + 28;
+    struct in_addr dst = { 0 }, src = { 0 };
+    inet_pton(AF_INET, m->dest_addr, &dst);
+    if (m->source_addr[0]) inet_pton(AF_INET, m->source_addr, &src);
+    else if (m->origin_addr[0]) inet_pton(AF_INET, m->origin_addr, &src);
+    uint32_t d = ntohl(dst.s_addr);
+    uint8_t mac[6] = { 0x01, 0x00, 0x5e, (uint8_t)((d >> 16) & 0x7f), (uint8_t)(d >> 8), (uint8_t)d };
+    if (!IN_MULTICAST(d)) memset(mac, 0, 6);
+    memcpy(e, mac, 6);
+    uint8_t smac[6] = { 0x02, 0x45, 0x53, 0x53, 0x4e, 0x5a };
+    memcpy(e + 6, smac, 6);
+    e[12] = 0x08; e[13] = 0x00;
+    uint8_t *ip = e + 14;
+    uint16_t tot = (uint16_t)(20 + 8 + n);
+    ip[0] = 0x45; ip[1] = 0; ip[2] = (uint8_t)(tot >> 8); ip[3] = (uint8_t)tot;
+    ip[4] = ip[5] = 0; ip[6] = 0x40; ip[7] = 0; ip[8] = 64; ip[9] = 17; ip[10] = ip[11] = 0;
+    memcpy(ip + 12, &src.s_addr, 4); memcpy(ip + 16, &dst.s_addr, 4);
+    uint32_t sum = 0;
+    for (int k = 0; k < 20; k += 2) sum += (uint32_t)(ip[k] << 8 | ip[k + 1]);
+    while (sum >> 16) sum = (sum & 0xffff) + (sum >> 16);
+    ip[10] = (uint8_t)(~sum >> 8); ip[11] = (uint8_t)~sum;
+    uint8_t *udp = ip + 20;
+    uint16_t ul = (uint16_t)(8 + n), port = (uint16_t)m->port;
+    udp[0] = (uint8_t)(port >> 8); udp[1] = (uint8_t)port; udp[2] = (uint8_t)(port >> 8); udp[3] = (uint8_t)port;
+    udp[4] = (uint8_t)(ul >> 8); udp[5] = (uint8_t)ul; udp[6] = udp[7] = 0;
+    fwrite(h, 1, sizeof h, r->rec);
+    fwrite(rtp, 1, n, r->rec);
+    static const uint8_t zero[4] = { 0 };
+    fwrite(zero, 1, ((caplen + 3) & ~(size_t)3) - caplen, r->rec);
+    uint8_t tail[4];
+    w32(tail, blen);
+    fwrite(tail, 1, 4, r->rec);
+    r->rec_packets++;
+    r->rec_bytes += blen;
+}
+
+/* Zeitstempel für den Mitschnitt: PTP-Zeit (als UTC) oder Systemzeit */
+static uint64_t rec_time(st_receiver *r)
+{
+    if (r->active == ST_SYNC_PTP && r->clock) {
+        GstClockTime t = gst_clock_get_time(r->clock);
+        return t - (uint64_t)ST_TAI_UTC_OFFSET_S * 1000000000ULL;
+    }
+    return (uint64_t)g_get_real_time() * 1000ULL;
+}
+
+int st_receiver_start_recording(st_receiver *r, const char *path, int max_seconds, uint64_t max_bytes, char *err, size_t len)
+{
+    FILE *f = fopen(path, "wb");
+    if (!f) { snprintf(err, len, "Datei kann nicht geschrieben werden: %s", path); return -1; }
+    char *buf = malloc(8 * 1024 * 1024);
+    if (buf) setvbuf(f, buf, _IOFBF, 8 * 1024 * 1024);
+    rec_write_header(f);
+    g_mutex_lock(&r->lock);
+    if (r->rec) fclose(r->rec);
+    free(r->rec_buf);
+    r->rec = f;
+    r->rec_buf = buf;
+    r->rec_packets = r->rec_bytes = 0;
+    r->rec_start_us = g_get_monotonic_time();
+    r->rec_max_us = max_seconds > 0 ? (int64_t)max_seconds * 1000000 : 0;
+    r->rec_max_bytes = max_bytes;
+    g_mutex_unlock(&r->lock);
+    return 0;
+}
+
+void st_receiver_stop_recording(st_receiver *r)
+{
+    g_mutex_lock(&r->lock);
+    if (r->rec) { fclose(r->rec); r->rec = NULL; }
+    free(r->rec_buf);
+    r->rec_buf = NULL;
+    g_mutex_unlock(&r->lock);
+}
+
 /* ------------------------------------------------------------------ */
 /* RTP-Sonden                                                         */
 /* ------------------------------------------------------------------ */
@@ -480,6 +610,7 @@ static GstPadProbeReturn video_probe(GstPad *pad, GstPadProbeInfo *info, gpointe
     s->packets++;
     s->bytes += map.size;
     s->last_packet_us = g_get_monotonic_time();
+    if (r->rec) rec_packet(r, &r->cfg.video, map.data, map.size, rec_time(r));
     if (!valid) {
         drop = 1;
     } else if (r->cfg.video.payload_type >= 0 && h.pt != r->cfg.video.payload_type) {
@@ -589,6 +720,7 @@ static GstPadProbeReturn audio_probe(GstPad *pad, GstPadProbeInfo *info, gpointe
     s->packets++;
     s->bytes += map.size;
     s->last_packet_us = g_get_monotonic_time();
+    if (r->rec) rec_packet(r, &r->cfg.audio, map.data, map.size, rec_time(r));
     if (!valid) {
         drop = 1;
     } else if (r->cfg.audio.payload_type >= 0 && h.pt != r->cfg.audio.payload_type) {
@@ -1323,6 +1455,7 @@ void st_receiver_free(st_receiver *r)
 {
     if (!r) return;
     st_receiver_stop(r);
+    st_receiver_stop_recording(r);
     g_mutex_clear(&r->lock);
     g_free(r);
 }
@@ -1399,6 +1532,10 @@ void st_receiver_get_stats(st_receiver *r, st_stats *o)
     if (!r->ptp_gm[0] || !sdp_gm[0]) o->ptp_gm_matches_sdp = -1;
     else o->ptp_gm_matches_sdp = strcasecmp(r->ptp_gm, sdp_gm) == 0;
     o->socket_buffer_bytes = r->rcvbuf;
+    o->recording = r->rec != NULL;
+    o->rec_packets = r->rec_packets;
+    o->rec_bytes = r->rec_bytes;
+    o->rec_seconds = r->rec ? (g_get_monotonic_time() - r->rec_start_us) / 1e6 : 0;
     o->sync_measurements = r->sync_n;
     o->sync_offset_last_ms = r->sync_last_ms;
     o->sync_offset_avg_ms = r->sync_avg_ms;

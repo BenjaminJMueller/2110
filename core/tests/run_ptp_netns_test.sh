@@ -40,8 +40,19 @@ echo "== PTP-Lock, Sender auf Grandmaster-Zeitskala"
 ip netns exec gm $B/st2110-testsender --sdp-dir "$OUT" --tai-offset-s 0 --fps 25 --channels 8 --width 1280 --height 720 --duration 25 > "$OUT/s1.log" 2>&1 &
 SP=$!
 sleep 1
+if command -v tcpdump >/dev/null; then
+  ip netns exec rx timeout 12 tcpdump -i vrx -s 1600 -w "$OUT/ptp.pcap" "igmp or udp port 319 or udp port 320" > /dev/null 2>&1 &
+fi
 ip netns exec rx $B/st2110-probe --sdp "$OUT/video.sdp" --audio-sdp "$OUT/audio.sdp" --iface vrx --iface-addr 10.77.0.2 --mode ptp --duration 20 --json > "$OUT/p1.txt" 2>&1
 wait $SP
+if [ -f "$OUT/ptp.pcap" ]; then
+  $B/st2110-analyze "$OUT/ptp.pcap" > "$OUT/ptp.json" 2>/dev/null
+  if python3 -I -c "import json,sys; d=json.load(open(sys.argv[1])); p=[x for x in d['ptp'] if x['domain']==127]; g=d['igmp']['groups']; sys.exit(0 if p and p[0]['grandmaster'] and p[0]['sync']>10 and any(x['joins']>0 for x in g) else 1)" "$OUT/ptp.json"; then
+    echo "  OK    Analyse: PTP-Domain 127 mit Grandmaster und IGMP-Joins erkannt"; pass=$((pass+1))
+  else
+    echo "  FEHLER Analyse PTP/IGMP"; fail=$((fail+1))
+  fi
+fi
 ok "PTP gelockt und aktiv" "$OUT/p1.txt" "ptp_synced==1 and sync_active==2"
 ok "Lippensynchron |A/V| < 2 ms" "$OUT/p1.txt" "sync_n>=10 and abs(sync_avg_ms)<2"
 ok "Bilder >= 90 %" "$OUT/p1.txt" "v_rendered >= 0.9*25*19"

@@ -5,18 +5,24 @@ PKGS = gstreamer-1.0 gstreamer-app-1.0 gstreamer-video-1.0 gstreamer-net-1.0 gio
 CFLAGS += -std=c11 -D_GNU_SOURCE -D_DARWIN_C_SOURCE -O2 -g -Wall -Wextra -Wno-unused-parameter -Iinclude -Isrc $(shell pkg-config --cflags $(PKGS))
 LDLIBS += $(shell pkg-config --libs $(PKGS)) -lm
 BUILD = build
-SRC = src/st_sdp.c src/st_mediaclock.c src/st_socket.c src/st_receiver.c src/st_selftest.c
+SRC = src/st_sdp.c src/st_mediaclock.c src/st_socket.c src/st_receiver.c src/st_selftest.c src/st_sender.c src/st_analyze.c
 OBJ = $(SRC:src/%.c=$(BUILD)/%.o)
 
-all: $(BUILD)/st2110-probe $(BUILD)/st2110-testsender $(BUILD)/test_unit
+all: $(BUILD)/st2110-probe $(BUILD)/st2110-testsender $(BUILD)/st2110-send $(BUILD)/st2110-analyze $(BUILD)/test_unit
 
-$(BUILD)/%.o: src/%.c include/st2110core.h src/st_internal.h | $(BUILD)
+$(BUILD)/%.o: src/%.c include/st2110core.h include/st2110send.h include/st2110analyze.h src/st_internal.h | $(BUILD)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD)/libst2110core.a: $(OBJ)
 	ar rcs $@ $^
 
 $(BUILD)/st2110-probe: tools/st2110_probe.c $(BUILD)/libst2110core.a
+	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS)
+
+$(BUILD)/st2110-send: tools/st2110_send.c $(BUILD)/libst2110core.a
+	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) -lpthread
+
+$(BUILD)/st2110-analyze: tools/st2110_analyze.c $(BUILD)/libst2110core.a
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS)
 
 $(BUILD)/st2110-testsender: tools/st2110_testsender.c
