@@ -49,21 +49,27 @@ private struct AnalysisEmptyView: View {
     @Binding var importing: Bool
 
     var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "waveform.path.ecg.rectangle").font(.system(size: 44, weight: .light)).foregroundStyle(.secondary)
-            Text("Paketmitschnitt analysieren").font(.title2.weight(.medium))
-            Text("pcap- oder pcapng-Datei hierher ziehen. 2110 Viewer findet die ST-2110-Ströme, prüft Verluste, Paketabstände, das Zeitverhalten nach ST 2110-21, Audio-Laufzeiten, PTP und IGMP.")
-                .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: 520)
-            HStack(spacing: 12) {
-                Button("Mitschnitt öffnen …") { importing = true }.controlButtonStyle(prominent: true)
-            }
-            VStack(alignment: .leading, spacing: 8) {
-                Label("Mitschnitt aus 2110 Viewer: beim Empfang unter Diagnose › Aufzeichnen", systemImage: "record.circle")
-                Label("Hardware-Mitschnitt (genaueste Zeitwerte): Capture-Karte oder Spiegelport am Switch, z. B. mit Wireshark", systemImage: "network")
+        VStack(spacing: 16) {
+            Image(systemName: "waveform.path.ecg.rectangle")
+                .font(.system(size: 56, weight: .thin))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(Color.accentColor)
+            Text("Mitschnitt analysieren").font(.title.weight(.semibold))
+            Text("Eine pcap- oder pcapng-Datei hierher ziehen. Die App findet die ST-2110-Ströme und prüft Verluste, Zeitverhalten, PTP und IGMP.")
+                .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: 460)
+            Button { importing = true } label: { Label("Mitschnitt öffnen …", systemImage: "folder") }
+                .controlButtonStyle(prominent: true)
+                .controlSize(.large)
+                .padding(.top, 4)
+            VStack(alignment: .leading, spacing: 10) {
+                Label("Aufnehmen direkt beim Empfang: Diagnose › Mitschnitt", systemImage: "record.circle")
+                Label("Genaueste Zeitwerte liefert ein Hardware-Mitschnitt, etwa über den Spiegelport des Switches.", systemImage: "network")
             }
             .font(.callout).foregroundStyle(.secondary)
+            .frame(maxWidth: 460, alignment: .leading)
             .padding(16)
             .cardBackground()
+            .padding(.top, 12)
         }
         .padding(32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

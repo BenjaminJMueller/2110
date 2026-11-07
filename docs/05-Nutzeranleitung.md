@@ -13,7 +13,7 @@ Für alle, die Bild und Ton von Blackmagic-ST-2110-Geräten am Mac sehen und hö
 
 1. Den Mac über einen 10-GbE-Adapter (zum Beispiel für Thunderbolt) per Netzwerkkabel mit dem ST-2110-Switch verbinden oder direkt mit der Buchse „10G Ethernet“ am 2110 IP Converter 3x3G.
 2. Die App öffnen.
-3. Links unter **„Im Netzwerk gefunden“** erscheinen die Blackmagic-Eingänge, zum Beispiel „Studio Converter – SDI 1“. Einen davon anklicken.
+3. Links unter **„Im Netzwerk“** erscheinen die Blackmagic-Eingänge, zum Beispiel „Studio Converter – SDI 1“. Einen davon anklicken.
 4. Bild und Ton laufen jetzt. Unten in der Leiste zeigt ein grüner Punkt „Empfang, mit PTP synchronisiert“ oder „Empfang, zeitlich abgestimmt“.
 
 | Bedienelement | Funktion | Tastatur |

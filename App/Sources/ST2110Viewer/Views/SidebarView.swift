@@ -18,18 +18,17 @@ struct SidebarView: View {
                 }
             } header: {
                 HStack {
-                    Text("Im Netzwerk gefunden (NMOS)")
+                    Text("Im Netzwerk")
                     Spacer()
                     if model.discovery.isScanning { ProgressView().controlSize(.mini) }
                 }
             }
 
-            Section("Gespeicherte Quellen") {
+            Section("Gespeichert") {
                 if model.saved.isEmpty {
-                    Text("SDP-Dateien hierher ziehen oder mit ＋ hinzufügen.")
-                        .font(.callout)
+                    Label("SDP-Datei hierher ziehen", systemImage: "arrow.down.doc")
                         .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .help("SDP-Dateien ins Fenster ziehen oder mit ＋ hinzufügen")
                 } else {
                     ForEach(model.saved.sorted(by: { ($0.lastUsed ?? $0.createdAt) > ($1.lastUsed ?? $1.createdAt) })) { s in
                         SavedRow(source: s)
@@ -44,16 +43,16 @@ struct SidebarView: View {
                 }
             }
 
-            Section("Test") {
+            Section("Ausprobieren") {
                 Label {
-                    VStack(alignment: .leading) {
-                        Text("Demo: Testbild und Testton")
-                        Text("Ohne Netzwerk, zum Prüfen von Bild, Ton und Bedienung")
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Testbild und Testton")
+                        Text("Ohne Netzwerk")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 } icon: {
-                    Image(systemName: "testtube.2")
+                    Image(systemName: "tv")
                 }
                 .tag(SidebarItem.demo)
             }
@@ -81,16 +80,27 @@ private struct DiscoveryEmptyRow: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(model.discovery.endpoints.isEmpty ? "Noch keine Blackmagic-Geräte gefunden." : "Geräte gefunden, aber keine Video-/Audiosender.")
+        let state = model.discovery.browserState
+        let problem = state != "aktiv" && !state.hasPrefix("aus")
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                if problem {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                } else {
+                    ProgressView().controlSize(.small)
+                }
+                Text(model.discovery.endpoints.isEmpty ? "Suche nach Geräten …" : "Geräte gefunden, aber keine Sender")
+                    .foregroundStyle(.secondary)
+            }
+            if problem || state.hasPrefix("aus") {
+                Text(state).font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Button("Per Adresse hinzufügen …") { model.showAddNode = true }
+                .buttonStyle(.link)
                 .font(.callout)
-            Text("Suche per mDNS: \(model.discovery.browserState)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Button("Gerät per Adresse hinzufügen …") { model.showAddNode = true }
-                .controlSize(.small)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 4)
     }
 }
 
@@ -100,8 +110,9 @@ private struct DiscoveredRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: source.video != nil ? "video" : "speaker.wave.2")
-                .foregroundStyle(.secondary)
+            Image(systemName: source.video != nil ? "video.fill" : "waveform")
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 18)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 1) {
                 Text(source.title)
@@ -147,7 +158,8 @@ private struct SavedRow: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 18)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 1) {
                 Text(source.name)
@@ -161,15 +173,15 @@ private struct SavedRow: View {
     private var icon: String {
         switch source.origin {
         case .nmos: return "network"
-        case .manual: return "slider.horizontal.below.square.filled.and.square"
-        case .sdp: return "doc.text"
+        case .manual: return "slider.horizontal.3"
+        case .sdp: return "doc.text.fill"
         }
     }
 
     private var subtitle: String {
         var parts: [String] = []
         if let v = source.videoSDP, let m = SDPMedia.parse(v).media.first(where: { $0.kind == .video }) { parts.append(m.summary) }
-        if let a = source.audioSDP, let m = SDPMedia.parse(a).media.first(where: { $0.kind == .audio }) { parts.append("\(m.channels) ch") }
+        if let a = source.audioSDP, let m = SDPMedia.parse(a).media.first(where: { $0.kind == .audio }) { parts.append("\(m.channels) Kanäle") }
         if source.origin == .nmos { parts.append("NMOS") }
         return parts.joined(separator: ", ")
     }

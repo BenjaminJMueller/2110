@@ -79,30 +79,48 @@ private struct VideoOverlay: View {
         let p = model.player
         ZStack {
             if noPicture {
-                VStack(spacing: 10) {
+                VStack(spacing: 14) {
                     Image(systemName: icon)
-                        .font(.system(size: 44, weight: .light))
-                    Text(title).font(.title2)
+                        .font(.system(size: 52, weight: .thin))
+                        .symbolRenderingMode(.hierarchical)
+                        .symbolEffect(.pulse, options: .repeating, isActive: waiting)
+                        .foregroundStyle(.white.opacity(0.7))
+                    Text(title).font(.title2.weight(.semibold)).foregroundStyle(.white)
                     if let d = detail {
                         Text(d)
                             .font(.callout)
+                            .foregroundStyle(.white.opacity(0.65))
                             .multilineTextAlignment(.center)
-                            .frame(maxWidth: 560)
+                            .frame(maxWidth: 520)
+                    }
+                    if p.current == nil {
+                        HStack(spacing: 12) {
+                            Button { model.selection = .demo } label: { Label("Testbild ansehen", systemImage: "tv") }
+                                .controlButtonStyle(prominent: true)
+                            Button { model.showImporter = true } label: { Label("SDP öffnen …", systemImage: "doc") }
+                                .controlButtonStyle()
+                        }
+                        .controlSize(.large)
+                        .padding(.top, 6)
                     }
                 }
-                .foregroundStyle(.white.opacity(0.85))
-                .padding()
-                .accessibilityElement(children: .combine)
+                .padding(24)
+                .environment(\.colorScheme, .dark)
+                .transition(.opacity)
             }
             if p.isDemo {
                 VStack {
                     HStack {
-                        Text("Demo: Testbild und Testton ohne Netzwerk")
-                            .font(.caption.weight(.semibold))
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(Color.orange, in: Capsule())
-                            .foregroundStyle(.black)
+                        HStack(spacing: 6) {
+                            Circle().fill(Color.orange).frame(width: 7, height: 7)
+                            Text("Demo ohne Netzwerk")
+                        }
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .environment(\.colorScheme, .dark)
                         Spacer()
                     }
                     Spacer()
@@ -120,6 +138,12 @@ private struct VideoOverlay: View {
         }
     }
 
+    /// Warten auf Signal: das Symbol pulsiert leise.
+    private var waiting: Bool {
+        let p = model.player
+        return p.isActive && (p.coreState == ST_STATE_WAITING || p.coreState == ST_STATE_STARTING)
+    }
+
     private var icon: String {
         let p = model.player
         if case .failed = p.phase { return "exclamationmark.triangle" }
@@ -131,7 +155,7 @@ private struct VideoOverlay: View {
     private var title: String {
         let p = model.player
         if case .failed = p.phase { return "Wiedergabe nicht möglich" }
-        if p.current == nil { return "Quelle links auswählen" }
+        if p.current == nil { return "Keine Quelle ausgewählt" }
         if !p.isActive { return "Gestoppt" }
         if p.video == nil && p.audio != nil && !p.isDemo { return "Nur Audio" }
         switch p.coreState {
@@ -147,7 +171,7 @@ private struct VideoOverlay: View {
         let p = model.player
         if case .failed(let e) = p.phase { return e }
         if p.current == nil {
-            return "Blackmagic-Geräte erscheinen automatisch unter „Im Netzwerk gefunden“. Alternativ SDP-Dateien in dieses Fenster ziehen."
+            return "Geräte im Netzwerk erscheinen links in der Seitenleiste. Sie können auch eine SDP-Datei in das Fenster ziehen."
         }
         return p.hints.first.map { $0.detail }
     }

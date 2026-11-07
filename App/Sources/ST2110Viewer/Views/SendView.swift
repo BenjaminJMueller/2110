@@ -14,75 +14,96 @@ struct SendView: View {
     var body: some View {
         @Bindable var s = model.sender
         ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                header(s)
             HStack(alignment: .top, spacing: 24) {
                 VStack(alignment: .leading, spacing: 20) {
                     card("Quelle") {
-                        Picker("Quelle", selection: sourceBinding) {
-                            Text("Testbild: Farbbalken und 1 kHz").tag("bars")
-                            Text("Lippensynchron-Test: Blitz und Piep").tag("sync")
-                            Text("Videodatei …").tag("file")
-                            ForEach(CaptureFeeder.cameras, id: \.uniqueID) { c in Text("Kamera: \(c.localizedName)").tag("cam:" + c.uniqueID) }
-                        }
-                        .labelsHidden()
-                        if case .file(let u) = s.source {
-                            HStack {
-                                Text(u.lastPathComponent).font(.callout).lineLimit(1)
-                                Button("Andere Datei …") { importing = true }.controlSize(.small)
+                        LabeledContent("Quelle") {
+                            Picker("Quelle", selection: sourceBinding) {
+                                Text("Testbild mit 1-kHz-Ton").tag("bars")
+                                Text("Lippensynchron-Test").tag("sync")
+                                Text("Videodatei …").tag("file")
+                                ForEach(CaptureFeeder.cameras, id: \.uniqueID) { c in Text(c.localizedName).tag("cam:" + c.uniqueID) }
                             }
-                            Text("macOS dekodiert die Datei selbst (z. B. H.264, HEVC, ProRes, AAC). Sie wird in Echtzeit und in Schleife gesendet.")
+                            .labelsHidden().fixedSize()
+                        }
+                        if case .file(let u) = s.source {
+                            Divider()
+                            LabeledContent("Datei") {
+                                HStack {
+                                    Text(u.lastPathComponent).lineLimit(1).truncationMode(.middle).foregroundStyle(.secondary)
+                                    Button("Ändern …") { importing = true }.controlSize(.small)
+                                }
+                            }
+                            Text("Läuft in Echtzeit und in Schleife. macOS dekodiert H.264, HEVC, ProRes und AAC selbst.")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                         if case .camera = s.source {
-                            Picker("Mikrofon", selection: $s.microphoneID) {
-                                Text("Standard").tag(String?.none)
-                                ForEach(CaptureFeeder.microphones, id: \.uniqueID) { m in Text(m.localizedName).tag(Optional(m.uniqueID)) }
+                            Divider()
+                            LabeledContent("Mikrofon") {
+                                Picker("Mikrofon", selection: $s.microphoneID) {
+                                    Text("Standard").tag(String?.none)
+                                    ForEach(CaptureFeeder.microphones, id: \.uniqueID) { m in Text(m.localizedName).tag(Optional(m.uniqueID)) }
+                                }
+                                .labelsHidden().fixedSize()
                             }
                         }
                     }
                     card("Format") {
-                        Picker("Video", selection: $s.format) {
-                            ForEach(SenderController.Format.allCases) { f in Text("\(f.rawValue), YCbCr 4:2:2, 10 Bit").tag(f) }
+                        LabeledContent("Video") {
+                            Picker("Video", selection: $s.format) {
+                                ForEach(SenderController.Format.allCases) { f in Text(f.rawValue).tag(f) }
+                            }
+                            .labelsHidden().fixedSize()
                         }
-                        Stepper(channelsLabel, value: $s.audioChannels, in: 0...16)
-                        Toggle("Paketzeit 0,125 ms (nötig ab 9 Kanälen)", isOn: ptimeBinding)
+                        Divider()
+                        LabeledContent("Audiokanäle") {
+                            Stepper(value: $s.audioChannels, in: 0...16) {
+                                Text(s.audioChannels == 0 ? "aus" : String(s.audioChannels)).monospacedDigit().foregroundStyle(.secondary)
+                            }
+                        }
+                        Divider()
+                        Toggle("Paketzeit 0,125 ms", isOn: ptimeBinding)
+                            .toggleStyle(.switch)
                             .disabled(s.audioChannels > 8 || s.audioChannels == 0)
+                            .help("Ab 9 Kanälen vorgeschrieben")
                         Text(rateText).font(.caption).foregroundStyle(rateWarning ? .orange : .secondary)
                     }
-                    card("Netz") {
+                    card("Netzwerk") {
                         LabeledContent("Video an") {
-                            TextField("Multicast-Adresse", text: $s.videoAddress).frame(width: 150).monospacedDigit()
+                            TextField("Multicast-Adresse", text: $s.videoAddress).frame(width: 150).monospacedDigit().multilineTextAlignment(.trailing)
                         }
+                        Divider()
                         LabeledContent("Audio an") {
-                            TextField("Multicast-Adresse", text: $s.audioAddress).frame(width: 150).monospacedDigit()
+                            TextField("Multicast-Adresse", text: $s.audioAddress).frame(width: 150).monospacedDigit().multilineTextAlignment(.trailing)
                         }
+                        Divider()
                         LabeledContent("Port") {
-                            TextField("Port", value: $s.port, format: .number.grouping(.never)).frame(width: 80)
+                            TextField("Port", value: $s.port, format: .number.grouping(.never)).frame(width: 80).multilineTextAlignment(.trailing)
                         }
-                        Button("Adressen vorschlagen") {
-                            s.suggestAddresses(range: model.settings.multicastRange, interface: chosenInterface)
+                        HStack {
+                            Spacer()
+                            Button("Adressen vorschlagen") {
+                                s.suggestAddresses(range: model.settings.multicastRange, interface: chosenInterface)
+                            }
+                            .controlSize(.small)
                         }
-                        .controlSize(.small)
-                        Toggle("Zeit vom PTP-Grandmaster übernehmen (passiv)", isOn: $s.usePTP)
-                        Toggle("Als NMOS-Quelle im Netz anbieten", isOn: $s.announceNMOS)
-                        TextField("Name im Netz", text: $s.label)
+                        Divider()
+                        Toggle("Zeit vom PTP-Grandmaster", isOn: $s.usePTP).toggleStyle(.switch)
+                            .help("Übernimmt die Zeit passiv; die App wird nie Master")
+                        Divider()
+                        Toggle("Als NMOS-Quelle anbieten", isOn: $s.announceNMOS).toggleStyle(.switch)
+                        Divider()
+                        LabeledContent("Name im Netz") {
+                            TextField("Name", text: $s.label).frame(maxWidth: 220).multilineTextAlignment(.trailing)
+                        }
                     }
                     .disabled(s.isSending)
 
-                    HStack(spacing: 12) {
-                        Button {
-                            if s.isSending { s.stop() } else { Task { await s.start() } }
-                        } label: {
-                            Label(s.isSending ? "Senden beenden" : "Senden starten", systemImage: s.isSending ? "stop.fill" : "dot.radiowaves.up.forward")
-                                .frame(minWidth: 160)
-                        }
-                        .controlButtonStyle(prominent: !s.isSending)
-                        .controlSize(.large)
-                        .disabled(s.isStarting)
-                        .keyboardShortcut(.return, modifiers: [.command])
-                        if s.isStarting { ProgressView().controlSize(.small); Text("Starte, suche PTP …").font(.callout).foregroundStyle(.secondary) }
-                    }
                     if let m = s.message {
-                        Label(m, systemImage: "exclamationmark.triangle").font(.callout).foregroundStyle(.orange)
+                        Label(m, systemImage: "exclamationmark.triangle.fill").font(.callout)
+                            .symbolRenderingMode(.multicolor)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -148,6 +169,7 @@ struct SendView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+            }
             }
             .padding(24)
         }
@@ -219,6 +241,38 @@ struct SendView: View {
             else if v == "file" { importing = true }
             else if v.hasPrefix("cam:") { model.sender.source = .camera(String(v.dropFirst(4))) }
         })
+    }
+
+    private func header(_ s: SenderController) -> some View {
+        HStack(spacing: 16) {
+            Image(systemName: "dot.radiowaves.up.forward")
+                .font(.system(size: 30, weight: .regular))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(s.isSending ? Color.accentColor : Color.secondary)
+                .symbolEffect(.variableColor.iterative, options: .repeating, isActive: s.isSending)
+                .frame(width: 44)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(s.isSending ? "Sendet" : "Bereit zum Senden").font(.title2.weight(.semibold))
+                Text(s.isSending ? s.format.rawValue + " an " + s.videoAddress : "Quelle, Format und Netzwerk wählen, dann starten.")
+                    .font(.callout).foregroundStyle(.secondary)
+            }
+            Spacer()
+            if s.isStarting { ProgressView().controlSize(.small) }
+            Button {
+                if s.isSending { s.stop() } else { Task { await s.start() } }
+            } label: {
+                Label(s.isSending ? "Beenden" : "Senden", systemImage: s.isSending ? "stop.fill" : "play.fill")
+                    .contentTransition(.symbolEffect(.replace))
+                    .frame(minWidth: 100)
+            }
+            .controlButtonStyle(prominent: !s.isSending)
+            .controlSize(.extraLarge)
+            .disabled(s.isStarting)
+            .keyboardShortcut(.return, modifiers: [.command])
+            .help(s.isSending ? "Senden beenden (⌘↩)" : "Senden starten (⌘↩)")
+        }
+        .padding(16)
+        .cardBackground(cornerRadius: 16)
     }
 
     private func card<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {

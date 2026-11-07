@@ -32,7 +32,7 @@ Ziel: Nachweis mit **echter Blackmagic-Hardware**. Bitte jede Zeile mit Ergebnis
 
 | # | Schritt | Erwartung / zu notieren |
 |---|---|---|
-| T1 | Mac am Switch, App öffnen, 30 s warten | 3x3G-Eingänge erscheinen unter „Im Netzwerk gefunden“ (mDNS). Bezeichnungen, Format und Zahl der Audiosender notieren. |
+| T1 | Mac am Switch, App öffnen, 30 s warten | 3x3G-Eingänge erscheinen unter „Im Netzwerk“ (mDNS). Bezeichnungen, Format und Zahl der Audiosender notieren. |
 | T1b | Falls nichts erscheint: Gerät per Adresse hinzufügen | erscheint; Hinweis an uns: mDNS im Netz blockiert? |
 | T1c | Mit Registry (falls vorhanden): Erweitert › Registry eintragen | Quellen auch über Registry |
 | T2 | Quelle SDI 1 mit **1080p25** auswählen | Bild + Ton; Diagnose: 1920×1080, 25,000 B/s, Audio-Kanalzahl und **Paketzeit (gemessen)** notieren; Bericht anhängen |
