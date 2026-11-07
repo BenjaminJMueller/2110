@@ -134,6 +134,19 @@ enum SnapshotRunner {
     private static func save(_ w: NSWindow, _ name: String) {
         guard let view = w.contentView?.superview ?? w.contentView, let dir = outputDir else { return }
         view.layoutSubtreeIfNeeded()
+        // Bevorzugt das Systemwerkzeug: nimmt das Fenster so auf, wie der Window Server
+        // es zeigt (Liquid Glass, Metal, Schatten). cacheDisplay ist nur der Rückfall.
+        let url = dir.appendingPathComponent("\(name).png")
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+        p.arguments = ["-x", "-o", "-l", String(w.windowNumber), url.path]
+        if (try? p.run()) != nil {
+            p.waitUntilExit()
+            if p.terminationStatus == 0, let img = NSImage(contentsOf: url), img.size.width > 0 {
+                log("Bild: \(name).png (\(Int(img.size.width))×\(Int(img.size.height)), screencapture)")
+                return
+            }
+        }
         let rect = view.bounds
         guard let rep = view.bitmapImageRepForCachingDisplay(in: rect) else { return }
         view.cacheDisplay(in: rect, to: rep)

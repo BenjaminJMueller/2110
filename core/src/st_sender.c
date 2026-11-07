@@ -177,11 +177,20 @@ static void tx(st_sender *s, int fd, const uint8_t *p, size_t n)
             nanosleep(&ts, NULL);
             continue;
         }
+        /* Unicast-Ziel ohne Empfänger: Das ICMP „Port unreachable“ eines früheren
+         * Pakets erscheint als ECONNREFUSED beim nächsten send(); der Fehler ist
+         * damit abgeholt, das Paket selbst wird erneut gesendet. */
+        if (r < 0 && errno == ECONNREFUSED && tries < 2) continue;
         break;
     }
+    int e = errno;
     pthread_mutex_lock(&s->slock);
     s->st.send_errors++;
-    snprintf(s->st.last_error, sizeof s->st.last_error, "Senden fehlgeschlagen: %s", strerror(errno));
+    if (e == ECONNREFUSED)
+        snprintf(s->st.last_error, sizeof s->st.last_error,
+                 "Ziel meldet „Port geschlossen“: Am Unicast-Ziel läuft (noch) kein Empfänger.");
+    else
+        snprintf(s->st.last_error, sizeof s->st.last_error, "Senden fehlgeschlagen: %s", strerror(e));
     pthread_mutex_unlock(&s->slock);
 }
 

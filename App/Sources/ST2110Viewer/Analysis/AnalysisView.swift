@@ -299,12 +299,15 @@ private struct MainChart: View {
                         .foregroundStyle(Color.accentColor)
                         .lineStyle(StrokeStyle(lineWidth: 1.5))
                 }
-                ForEach(limits, id: \.0) { l in
+                ForEach(Array(limits.enumerated()), id: \.offset) { i, l in
+                    // nahe beieinander liegende Grenzen abwechselnd links und rechts beschriften
+                    let align: Alignment = i % 2 == 0 ? .trailing : .leading
+                    let label: String = l.0 + " " + String(format: "%g", l.1)
                     RuleMark(y: .value(l.0, l.1))
                         .foregroundStyle(Color.secondary)
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
-                        .annotation(position: .top, alignment: .trailing) {
-                            Text(l.0).font(.caption).foregroundStyle(.secondary)
+                        .annotation(position: .top, alignment: align) {
+                            Text(label).font(.caption).foregroundStyle(.secondary)
                         }
                 }
             }
