@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 // Liquid Glass ab macOS 26 (offizielle SwiftUI-APIs), sonst native Materialien.
@@ -65,4 +66,15 @@ private struct FallbackSurface: ViewModifier {
                 .overlay(shape.strokeBorder(Color.primary.opacity(0.08)))
         }
     }
+}
+
+
+/// Farbwelt: neutrale Systemflächen, eine kühle Kobalt-Akzentfarbe für die
+/// eine wichtige Aktion bzw. Auswahl je Ansicht.
+enum Theme {
+    static let accent = Color(nsColor: NSColor(name: "EssenzAccent") { a in
+        a.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            ? NSColor(srgbRed: 0.42, green: 0.62, blue: 1.0, alpha: 1)
+            : NSColor(srgbRed: 0.15, green: 0.40, blue: 0.86, alpha: 1)
+    })
 }

@@ -82,22 +82,26 @@ static uint64_t media_now(st_sender *s)
     return (uint64_t)ts.tv_sec * NS + (uint64_t)ts.tv_nsec + (uint64_t)ST_TAI_UTC_OFFSET_S * NS;
 }
 
-/* Wartet bis zur Medienzeit t (grob schlafen, zuletzt aktiv warten). */
-static void wait_until(st_sender *s, uint64_t t)
+/* Wartet bis zur Medienzeit t. spin_ns: so lange vor dem Ziel wird aktiv
+ * gewartet (Schlafen ist auf Desktop-Systemen auf ~50–100 µs ungenau). */
+static void wait_until_spin(st_sender *s, uint64_t t, uint64_t spin_ns)
 {
     for (;;) {
         if (s->stop) return;
         uint64_t now = media_now(s);
         if (now >= t) return;
         uint64_t d = t - now;
-        /* Schlafen ist auf Desktop-Systemen auf ~50–100 µs ungenau: die
-         * letzte Millisekunde wird aktiv gewartet (eigener Thread). */
-        if (d > 1500000) {
-            struct timespec ts = { (time_t)((d - 1000000) / NS), (long)((d - 1000000) % NS) };
+        if (d > spin_ns) {
+            uint64_t sl = d - spin_ns;
+            if (sl > 20000000ULL) sl = 20000000ULL;
+            struct timespec ts = { (time_t)(sl / NS), (long)(sl % NS) };
             nanosleep(&ts, NULL);
         }
     }
 }
+
+/* Video: letzte 0,5 ms aktiv warten (gleichmäßige Paketabstände) */
+static void wait_until(st_sender *s, uint64_t t) { wait_until_spin(s, t, 500000ULL); }
 
 static void format_id(guint64 id, char *out, size_t len)
 {
@@ -444,7 +448,7 @@ static void *audio_thread(void *arg)
     int started = 0;
 
     while (!s->stop) {
-        wait_until(s, t + 50000); /* kurz nach Paketbeginn: Daten sind vollständig */
+        wait_until_spin(s, t + 50000, 0); /* Audio: schlafen genügt (Paketzeit ≥ 125 µs) */
         if (s->stop) break;
         uint64_t now = media_now(s);
         if (now > t + 100 * pt_ns) { t = (now / pt_ns + 1) * pt_ns; continue; }

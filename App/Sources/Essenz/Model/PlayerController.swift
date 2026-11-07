@@ -363,6 +363,35 @@ final class PlayerController {
         }
     }
 
+    // MARK: Mitschnitt
+
+    private(set) var recordingURL: URL?
+
+    /// Zeichnet die empfangenen Pakete als pcapng auf (Software-Zeitstempel).
+    func startRecording(seconds: Int) -> URL? {
+        guard let r = receiver else { return nil }
+        let dir = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask)[0].appendingPathComponent("Essenz-Mitschnitte", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+        let name = (current?.name ?? "Mitschnitt").replacingOccurrences(of: "/", with: "-")
+        let url = dir.appendingPathComponent("\(name)_\(f.string(from: Date())).pcapng")
+        if let e = r.startRecording(path: url.path, seconds: seconds) {
+            addLog(.error, e)
+            return nil
+        }
+        recordingURL = url
+        addLog(.info, "Mitschnitt läuft (\(seconds) s): \(url.lastPathComponent)")
+        return url
+    }
+
+    func stopRecording() {
+        receiver?.stopRecording()
+        if let u = recordingURL { addLog(.info, "Mitschnitt gespeichert: \(u.path)") }
+    }
+
+    var isRecording: Bool { (stats?.recording ?? 0) != 0 }
+
     // MARK: Audio
 
     func setVolume(_ v: Double) { let r = receiver; queue.async { r?.setVolume(v) } }

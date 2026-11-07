@@ -4,6 +4,18 @@ import ST2110Kit
 import SwiftUI
 import UniformTypeIdentifiers
 
+enum AppMode: String, CaseIterable, Identifiable {
+    case receive = "Empfangen", send = "Senden", analyze = "Analysieren"
+    var id: String { rawValue }
+    var icon: String {
+        switch self {
+        case .receive: return "play.rectangle"
+        case .send: return "dot.radiowaves.up.forward"
+        case .analyze: return "waveform.path.ecg.rectangle"
+        }
+    }
+}
+
 enum SidebarItem: Hashable {
     case demo
     case saved(UUID)
@@ -22,6 +34,7 @@ final class AppModel {
     var settings: AppSettings {
         didSet {
             settings.save()
+            if oldValue.appearance != settings.appearance { applyAppearance() }
             if oldValue.mdnsDiscovery != settings.mdnsDiscovery || oldValue.registryURL != settings.registryURL
                 || oldValue.manualNodes != settings.manualNodes {
                 discovery.start(settings: settings)
@@ -38,12 +51,16 @@ final class AppModel {
     var inspectorShown = false
     var isFullScreen = false
     var alert: String?
+    var mode: AppMode = .receive
+    var explainerPage = 0
 
     let store = SourceStore()
     let player = PlayerController()
     let discovery = NMOSDiscovery()
     let interfaces = NetworkInterfaceList()
     let audioDevices = AudioDeviceList()
+    let sender = SenderController()
+    let analysis = AnalysisModel()
 
     var appVersion: String {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
@@ -63,10 +80,37 @@ final class AppModel {
         }
         player.refreshSource = { [weak self] src in await self?.refreshNMOS(src) }
         discovery.start(settings: settings)
+        sender.interfacesProvider = { [weak self] in self?.interfaces.interfaces ?? [] }
+        sender.settingsProvider = { [weak self] in self?.settings ?? AppSettings() }
+        applyAppearance()
         if let e = GStreamerEnvironment.initError {
             alert = "Die Medienkomponente (GStreamer) konnte nicht gestartet werden: \(e)"
         } else if !GStreamerEnvironment.missingPlugins.isEmpty {
             alert = "Es fehlen Bestandteile der Medienkomponente: \(GStreamerEnvironment.missingPlugins). Bitte die App neu installieren."
+        }
+    }
+
+    func applyAppearance() {
+        switch settings.appearance {
+        case 1: NSApp?.appearance = NSAppearance(named: .aqua)
+        case 2: NSApp?.appearance = NSAppearance(named: .darkAqua)
+        default: NSApp?.appearance = nil
+        }
+    }
+
+    /// Mitschnitt aufzeichnen und danach automatisch analysieren.
+    func recordAndAnalyze(seconds: Int) {
+        guard let url = player.startRecording(seconds: seconds) else {
+            alert = "Aufzeichnen ist nur während des Empfangs möglich."
+            return
+        }
+        let sdps = [player.current?.videoSDP, player.current?.audioSDP].compactMap { $0 }
+        Task {
+            try? await Task.sleep(nanoseconds: UInt64(seconds + 1) * 1_000_000_000)
+            player.stopRecording()
+            analysis.sdpTexts = sdps
+            analysis.open(url)
+            mode = .analyze
         }
     }
 

@@ -84,6 +84,38 @@ final class VideoFrameSink: @unchecked Sendable {
         lock.unlock()
     }
 
+    /// CPU-Umrechnung des neuesten Bildes (nur für Bildschirmfotos/Vorschau).
+    func cgImage(width tw: Int) -> CGImage? {
+        guard let f = beginRead() else { endRead(); return nil }
+        defer { endRead() }
+        let th = max(1, tw * f.height / max(1, f.width))
+        var px = [UInt8](repeating: 255, count: tw * th * 4)
+        let src = f.buffer.contents().assumingMemoryBound(to: UInt8.self)
+        for y in 0..<th {
+            let row = src + (y * f.height / th) * f.stride
+            for x in 0..<tw {
+                let sx = (x * f.width / tw) & ~1
+                var Y = 0.0, Cb = 0.0, Cr = 0.0
+                if f.pixfmt == 1 {
+                    let p = row + (sx / 2) * 5
+                    let v = UInt64(p[0]) << 32 | UInt64(p[1]) << 24 | UInt64(p[2]) << 16 | UInt64(p[3]) << 8 | UInt64(p[4])
+                    Y = (Double((v >> 20) & 0x3ff) - 64) / 876; Cb = (Double((v >> 30) & 0x3ff) - 512) / 896; Cr = (Double((v >> 10) & 0x3ff) - 512) / 896
+                } else {
+                    let p = row + (sx / 2) * 4
+                    Y = (Double(p[1]) - 16) / 219; Cb = (Double(p[0]) - 128) / 224; Cr = (Double(p[2]) - 128) / 224
+                }
+                let r = Y + 1.5748 * Cr, g = Y - 0.187324 * Cb - 0.468124 * Cr, b = Y + 1.8556 * Cb
+                let o = (y * tw + x) * 4
+                px[o] = UInt8(max(0, min(1, r)) * 255); px[o + 1] = UInt8(max(0, min(1, g)) * 255); px[o + 2] = UInt8(max(0, min(1, b)) * 255)
+            }
+        }
+        guard let prov = CGDataProvider(data: Data(px) as CFData) else { return nil }
+        return CGImage(width: tw, height: th, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: tw * 4,
+                       space: CGColorSpace(name: CGColorSpace.itur_709) ?? CGColorSpaceCreateDeviceRGB(),
+                       bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
+                       provider: prov, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+    }
+
     var secondsSinceLastFrame: Double {
         lock.lock(); defer { lock.unlock() }
         return lastFrameTime == 0 ? .infinity : CFAbsoluteTimeGetCurrent() - lastFrameTime

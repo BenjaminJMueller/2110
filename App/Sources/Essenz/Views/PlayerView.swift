@@ -17,6 +17,7 @@ struct PlayerView: View {
             ZStack {
                 Color.black
                 VideoSurface(renderer: model.player.renderer)
+                if SnapshotRunner.outputDir != nil { SnapshotVideo() }
                 VideoOverlay()
                 if model.isFullScreen && controlsVisible {
                     VStack {
@@ -181,5 +182,24 @@ private struct HintBanner: View {
         .padding(10)
         .background(color.opacity(0.10), in: RoundedRectangle(cornerRadius: 10))
         .accessibilityElement(children: .combine)
+    }
+}
+
+
+/// Nur im Bildschirmfoto-Modus: Metal-Inhalte erscheinen nicht in
+/// cacheDisplay, daher wird das Bild hier zusätzlich per CPU gezeigt.
+private struct SnapshotVideo: View {
+    @Environment(AppModel.self) private var model
+    @State private var image: CGImage?
+    var body: some View {
+        Group {
+            if let image { Image(decorative: image, scale: 1).resizable().aspectRatio(contentMode: .fit) }
+        }
+        .task {
+            while !Task.isCancelled {
+                image = model.player.sink.secondsSinceLastFrame < 1 ? model.player.sink.cgImage(width: 960) : nil
+                try? await Task.sleep(nanoseconds: 400_000_000)
+            }
+        }
     }
 }

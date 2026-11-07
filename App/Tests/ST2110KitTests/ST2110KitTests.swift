@@ -99,3 +99,42 @@ final class ST2110KitTests: XCTestCase {
         XCTAssertTrue(h.contains { $0.id == "mc-causes" && $0.certainty == .suspected })
     }
 }
+
+final class NodeResourceTests: XCTestCase {
+    func testNodeResourcesAreConsistent() throws {
+        let ids = NMOSNodeResources.Identity.make()
+        let r = NMOSNodeResources(ids: ids, label: "Essenz", hostname: "mac.local", hostIP: "192.168.10.50", port: 8123,
+                                  interfaceName: "en7",
+                                  video: .init(width: 1920, height: 1080, fpsNum: 25, fpsDen: 1, destination: "239.50.0.1", port: 5004),
+                                  audio: .init(channels: 2, destination: "239.50.0.2", port: 5004), active: true)
+        // Die eigenen Ressourcen müssen sich mit dem eigenen IS-04-Client lesen lassen
+        let node = try JSONDecoder().decode(NMOSNode.self, from: NMOSNodeResources.json(r.node))
+        XCTAssertEqual(node.api?.endpoints?.first?.port, 8123)
+        let dev = try JSONDecoder().decode(NMOSDevice.self, from: NMOSNodeResources.json(r.device))
+        XCTAssertEqual(dev.connectionAPI?.absoluteString, "http://192.168.10.50:8123/x-nmos/connection/v1.1/")
+        let flows = try JSONDecoder().decode([NMOSFlow].self, from: NMOSNodeResources.json(r.flows))
+        let senders = try JSONDecoder().decode([NMOSSender].self, from: NMOSNodeResources.json(r.senders))
+        var inv = NMOSInventory(baseURL: URL(string: "http://192.168.10.50:8123/x-nmos/node/v1.3/")!, isRegistry: false)
+        inv.nodes = [node]; inv.devices = [dev]; inv.flows = flows; inv.senders = senders
+        let groups = SourceGrouping.group(inv)
+        XCTAssertEqual(groups.count, 1)
+        XCTAssertEqual(groups.first?.formatSummary, "1920×1080p25, 10 Bit")
+        XCTAssertTrue(groups.first?.pairingCertain ?? false)
+        XCTAssertEqual(groups.first?.audio.count, 1)
+    }
+
+    func testDestinationsGrouping() throws {
+        let recs = """
+        [{"id":"r1","label":"SDI Out 1 Video","format":"urn:x-nmos:format:video","transport":"urn:x-nmos:transport:rtp.mcast","device_id":"d"},
+         {"id":"r2","label":"SDI Out 1 Audio","format":"urn:x-nmos:format:audio","transport":"urn:x-nmos:transport:rtp.mcast","device_id":"d","subscription":{"sender_id":"s9","active":true}},
+         {"id":"r3","label":"SDI Out 2 Video","format":"urn:x-nmos:format:video","transport":"urn:x-nmos:transport:rtp.mcast","device_id":"d"}]
+        """
+        var inv = NMOSInventory(baseURL: URL(string: "http://x/x-nmos/node/v1.3/")!, isRegistry: false)
+        inv.receivers = try JSONDecoder().decode([NMOSReceiver].self, from: Data(recs.utf8))
+        let d = SourceGrouping.destinations(inv)
+        XCTAssertEqual(d.count, 2)
+        XCTAssertEqual(d.first?.title, "SDI Out 1")
+        XCTAssertEqual(d.first?.audio.first?.id, "r2")
+        XCTAssertEqual(d.first?.connectedSenderIDs, ["s9"])
+    }
+}

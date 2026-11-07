@@ -39,18 +39,14 @@ sed -e "s/@VERSION@/$VERSION/" -e "s/@BUILD@/$BUILD/" -e "s/@BUNDLE_ID@/$BUNDLE_
     packaging/Info.plist > "$APP/Contents/Info.plist"
 plutil -lint "$APP/Contents/Info.plist"
 
-echo "== Symbol"
+echo "== Symbol (packaging/icon/AppIcon.svg, gerendert als AppIcon-1024.png)"
 ICONSET="$DIST/AppIcon.iconset"
 rm -rf "$ICONSET" && mkdir -p "$ICONSET"
-if swift scripts/make-icon.swift "$DIST/icon_1024.png" 2>/dev/null; then
-  for s in 16 32 128 256 512; do
-    sips -z $s $s "$DIST/icon_1024.png" --out "$ICONSET/icon_${s}x${s}.png" >/dev/null
-    sips -z $((s*2)) $((s*2)) "$DIST/icon_1024.png" --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null
-  done
-  iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
-else
-  echo "Hinweis: Symbol konnte nicht erzeugt werden (weiter ohne)."
-fi
+for s in 16 32 128 256 512; do
+  sips -z $s $s packaging/icon/AppIcon-1024.png --out "$ICONSET/icon_${s}x${s}.png" >/dev/null
+  sips -z $((s*2)) $((s*2)) packaging/icon/AppIcon-1024.png --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null
+done
+iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
 
 echo "== GStreamer einbetten"
 python3 scripts/bundle_gstreamer.py --prefix "$GSTREAMER_PREFIX" \

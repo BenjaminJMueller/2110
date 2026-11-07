@@ -23,6 +23,7 @@ final class NMOSDiscovery {
     private(set) var inventories: [URL: NMOSInventory] = [:]
     private(set) var errors: [URL: String] = [:]
     private(set) var sources: [DiscoveredSource] = []
+    private(set) var destinations: [DiscoveredDestination] = []
     private(set) var isScanning = false
     private(set) var scanProgress = 0.0
     private(set) var lastRefresh: Date?
@@ -175,6 +176,10 @@ final class NMOSDiscovery {
             }
         }
         sources = all
+        var seenD = Set<String>()
+        destinations = invs.flatMap { SourceGrouping.destinations($0) }.filter { d in
+            seenD.insert(d.video?.id ?? d.audio.first?.id ?? d.id).inserted
+        }
     }
 
     /// Durchsucht die in „Erweitert“ eingestellten Adressbereiche nach NMOS-Knoten.

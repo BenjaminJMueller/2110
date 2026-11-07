@@ -48,6 +48,25 @@ struct DiagnosticsView: View {
                     }
                 }
 
+                if !p.isDemo && p.isActive {
+                    GroupBox("Mitschnitt") {
+                        VStack(alignment: .leading, spacing: 6) {
+                            if p.isRecording, let s = p.stats {
+                                Text(String(format: "Zeichnet auf: %.0f s, %llu Pakete", s.rec_seconds, s.rec_packets)).font(.callout.monospacedDigit())
+                            } else {
+                                HStack {
+                                    Button("10 s aufzeichnen und analysieren") { model.recordAndAnalyze(seconds: 10) }
+                                    Button("60 s") { model.recordAndAnalyze(seconds: 60) }
+                                }
+                                .controlSize(.small)
+                            }
+                            Text("Speichert die empfangenen Pakete als pcapng im Ordner Filme › Essenz-Mitschnitte. Zeitstempel stammen vom Programm; für genaue ST-2110-21-Werte einen Hardware-Mitschnitt verwenden.")
+                                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+
                 section("Quelle") {
                     row("Name", p.current?.name ?? "–")
                     row("Herkunft", p.isDemo ? "Demo (synthetisch)" : origin)

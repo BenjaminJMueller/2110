@@ -105,6 +105,7 @@ public struct NMOSClient: Sendable {
         inv.sources = (try? await list(base, "sources", [NMOSSource].self)) ?? []
         inv.flows = (try? await list(base, "flows", [NMOSFlow].self)) ?? []
         inv.senders = try await list(base, "senders", [NMOSSender].self)
+        inv.receivers = (try? await list(base, "receivers", [NMOSReceiver].self)) ?? []
         inv.fetchedAt = Date()
         return inv
     }
@@ -133,6 +134,29 @@ public struct NMOSClient: Sendable {
 
     public func activeParams(connectionAPI: URL, senderID: String) async throws -> IS05SenderParams {
         try await list(connectionAPI, "single/senders/\(senderID)/active", IS05SenderParams.self)
+    }
+
+    /// Verbindet einen Empfänger (z. B. SDI-Ausgang eines 2110 IP Converter) per
+    /// IS-05 mit einem Sender: SDP als transport_file, sofort aktiv.
+    /// Achtung: ändert das Routing des Geräts.
+    public func connectReceiver(connectionAPI: URL, receiverID: String, senderID: String?, sdp: String?, enable: Bool) async throws {
+        var body: [String: Any] = [
+            "master_enable": enable,
+            "activation": ["mode": "activate_immediate"],
+        ]
+        if enable {
+            body["sender_id"] = senderID ?? NSNull()
+            if let sdp { body["transport_file"] = ["data": sdp, "type": "application/sdp"] }
+        } else {
+            body["sender_id"] = NSNull()
+        }
+        let data = try JSONSerialization.data(withJSONObject: body)
+        let url = connectionAPI.appendingPathComponent("single/receivers/\(receiverID)/staged")
+        let (resp, code) = try await http.send(url, method: "PATCH", body: data)
+        guard code == 200 || code == 202 else {
+            let msg = String(data: resp, encoding: .utf8) ?? ""
+            throw NMOSError.http(code, url.absoluteString + (msg.isEmpty ? "" : " – \(msg.prefix(300))"))
+        }
     }
 
     /// Aktiviert einen Sender und setzt optional Ziel-Multicastadresse/-port.

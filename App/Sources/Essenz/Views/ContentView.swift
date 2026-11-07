@@ -9,29 +9,59 @@ struct ContentView: View {
     var body: some View {
         @Bindable var model = model
         NavigationSplitView(columnVisibility: $columns) {
-            SidebarView()
-                .navigationSplitViewColumnWidth(min: 250, ideal: 290, max: 420)
-        } detail: {
-            PlayerView()
-                .inspector(isPresented: $model.inspectorShown) {
-                    DiagnosticsView()
-                        .inspectorColumnWidth(min: 320, ideal: 400, max: 560)
+            Group {
+                switch model.mode {
+                case .receive: SidebarView()
+                case .send: SendSidebar()
+                case .analyze: AnalysisSidebar()
                 }
+            }
+            .navigationSplitViewColumnWidth(min: 250, ideal: 280, max: 400)
+        } detail: {
+            Group {
+                switch model.mode {
+                case .receive:
+                    PlayerView()
+                        .inspector(isPresented: $model.inspectorShown) {
+                            DiagnosticsView()
+                                .inspectorColumnWidth(min: 320, ideal: 400, max: 560)
+                        }
+                case .send: SendView()
+                case .analyze: AnalysisView()
+                }
+            }
         }
-        .navigationTitle(model.player.current?.name ?? "Essenz")
-        .navigationSubtitle(model.player.isDemo ? "DEMO – Testbild und Testton" : "")
+        .navigationTitle(title)
+        .navigationSubtitle(model.mode == .receive && model.player.isDemo ? "Demo: Testbild und Testton" : "")
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                Picker("Modus", selection: $model.mode) {
+                    ForEach(AppMode.allCases) { m in Label(m.rawValue, systemImage: m.icon).tag(m) }
+                }
+                .pickerStyle(.segmented)
+                .labelStyle(.titleAndIcon)
+                .help("Empfangen (⌘1), Senden (⌘2), Analysieren (⌘3)")
+            }
             ToolbarItemGroup(placement: .primaryAction) {
+                Button {
+                    model.explainerPage = 0
+                    model.showOnboarding = true
+                } label: {
+                    Label("So funktioniert ST 2110", systemImage: "questionmark.circle")
+                }
+                .help("Erklärung: Essenzen, Multicast, PTP, NMOS")
                 SettingsLink {
                     Label("Erweitert", systemImage: "slider.horizontal.3")
                 }
                 .help("Erweiterte Einstellungen: Netzwerk, Synchronisation, NMOS, Adressbereiche (⌘,)")
-                Button {
-                    model.inspectorShown.toggle()
-                } label: {
-                    Label("Diagnose", systemImage: "waveform.path.ecg.rectangle")
+                if model.mode == .receive {
+                    Button {
+                        model.inspectorShown.toggle()
+                    } label: {
+                        Label("Diagnose", systemImage: "sidebar.trailing")
+                    }
+                    .help("Diagnose ein-/ausblenden (⌘I)")
                 }
-                .help("Diagnose ein-/ausblenden (⌘I)")
             }
         }
         .dropDestination(for: URL.self) { urls, _ in
@@ -47,7 +77,7 @@ struct ContentView: View {
             SourceEditorView(request: req)
         }
         .sheet(isPresented: $model.showOnboarding) {
-            OnboardingView()
+            ExplainerView()
         }
         .sheet(isPresented: $model.showManualEntry) {
             ManualEntryView()
@@ -72,5 +102,71 @@ struct ContentView: View {
         .onChange(of: model.selection) { _, new in
             model.activate(new)
         }
+        .onAppear { model.applyAppearance() }
+        .tint(Theme.accent)
+        .task {
+            if let dir = SnapshotRunner.outputDir { await SnapshotRunner.run(model: model, dir: dir) }
+        }
+    }
+
+    private var title: String {
+        switch model.mode {
+        case .receive: return model.player.current?.name ?? "Essenz"
+        case .send: return model.sender.isSending ? "Sendet: \(model.sender.sourceTitle)" : "Senden"
+        case .analyze: return model.analysis.selected?.url.lastPathComponent ?? "Analyse"
+        }
+    }
+}
+
+/// Seitenleiste im Modus „Senden“: Ziele im Netz
+struct SendSidebar: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        List {
+            Section("Empfänger im Netz (NMOS)") {
+                if model.discovery.destinations.isEmpty {
+                    Text("Keine gefunden. Senden geht trotzdem: Der Strom ist per Multicast und als NMOS-Quelle verfügbar.")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+                ForEach(model.discovery.destinations) { d in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(d.title)
+                        Text(d.deviceLabel).font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            Section("Hinweis") {
+                Text("Blackmagic-Geräte wählen den Essenz-Strom im LCD-Menü unter „Outputs“ oder per NMOS-Controller. Mit „Verbinden“ stellt Essenz das Routing selbst per IS-05 her.")
+                    .font(.callout).foregroundStyle(.secondary)
+            }
+        }
+        .listStyle(.sidebar)
+    }
+}
+
+/// Seitenleiste im Modus „Analysieren“: geöffnete Mitschnitte
+struct AnalysisSidebar: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        @Bindable var a = model.analysis
+        List(selection: $a.selectedID) {
+            Section("Mitschnitte") {
+                if a.entries.isEmpty {
+                    Text("pcap- oder pcapng-Dateien hierher ziehen.").font(.callout).foregroundStyle(.secondary)
+                }
+                ForEach(a.entries) { e in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(e.url.lastPathComponent).lineLimit(1)
+                        Text(e.report.map { "\($0.streams.count) Ströme · \(String(format: "%.1f", $0.capture.duration_s)) s" } ?? (e.error ?? ""))
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    .tag(e.id)
+                    .contextMenu { Button("Entfernen") { a.remove(e.id) } }
+                }
+            }
+        }
+        .listStyle(.sidebar)
     }
 }

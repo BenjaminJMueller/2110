@@ -5,6 +5,7 @@ import SwiftUI
 struct AdvancedSettingsView: View {
     var body: some View {
         TabView {
+            GeneralTab().tabItem { Label("Allgemein", systemImage: "gearshape") }
             NetworkTab().tabItem { Label("Netzwerk", systemImage: "network") }
             SyncTab().tabItem { Label("Synchronisation", systemImage: "clock.arrow.2.circlepath") }
             AudioTab().tabItem { Label("Audio", systemImage: "speaker.wave.2") }
@@ -12,6 +13,25 @@ struct AdvancedSettingsView: View {
             AboutTab().tabItem { Label("Info", systemImage: "info.circle") }
         }
         .frame(width: 640, height: 500)
+    }
+}
+
+private struct GeneralTab: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        @Bindable var model = model
+        Form {
+            Picker("Darstellung", selection: $model.settings.appearance) {
+                Text("Wie System").tag(0)
+                Text("Hell").tag(1)
+                Text("Dunkel").tag(2)
+            }
+            .pickerStyle(.segmented)
+            Text("Das Videobild selbst bleibt in jeder Darstellung unverändert.").font(.caption).foregroundStyle(.secondary)
+            Button("Erklärung „So funktioniert ST 2110“ zeigen") { model.explainerPage = 0; model.showOnboarding = true }
+        }
+        .formStyle(.grouped)
     }
 }
 

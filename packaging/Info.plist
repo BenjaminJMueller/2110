@@ -36,6 +36,10 @@
 	<string>Für Lehre und Tests im Medienlabor. Enthält GStreamer (LGPL).</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Der Essenz sucht Blackmagic-Geräte im lokalen Netzwerk (NMOS) und empfängt deren Video- und Audioströme (Multicast). Ohne diese Erlaubnis sind weder Geräteerkennung noch Empfang möglich.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Essenz sendet das Kamerabild als ST-2110-Videostrom ins Netz, wenn Sie beim Senden eine Kamera als Quelle wählen.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Essenz sendet den Mikrofonton als ST-2110-Audiostrom, wenn Sie beim Senden eine Kamera mit Ton als Quelle wählen.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_nmos-node._tcp</string>

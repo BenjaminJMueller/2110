@@ -26,7 +26,7 @@ jobs:
           ./core/build/test_unit core/tests/sdp
           ./core/build/st2110-probe --selftest
           sudo TEST_WIDTH=960 TEST_HEIGHT=540 ./core/tests/run_loopback_tests.sh
-          if [ -x core/tests/run_sender_tests.sh ]; then sudo ./core/tests/run_sender_tests.sh; fi
+          if [ -x core/tests/run_sender_tests.sh ]; then sudo TEST_WIDTH=640 TEST_HEIGHT=360 ./core/tests/run_sender_tests.sh; fi
           if [ -x core/tests/run_analyzer_tests.sh ]; then ./core/tests/run_analyzer_tests.sh; fi
 
   app-macos:
@@ -55,7 +55,9 @@ jobs:
       - name: Bildschirmfotos für Usability-Prüfung und Webseite
         run: |
           mkdir -p dist/screenshots
-          "dist/Essenz.app/Contents/MacOS/Essenz" --render-screenshots dist/screenshots || echo "Bildschirmfotos nicht erzeugt"
+          # Zeitbegrenzung 5 min (macOS hat kein „timeout“)
+          perl -e 'alarm 300; exec @ARGV' "dist/Essenz.app/Contents/MacOS/Essenz" --render-screenshots "$PWD/dist/screenshots" || echo "Bildschirmfotos nicht vollständig"
+          cat dist/screenshots/bericht.txt || true
           ls -la dist/screenshots || true
       - name: Quellcode der Drittanbieter-Bibliotheken (LGPL)
         run: ./scripts/fetch-third-party-sources.sh

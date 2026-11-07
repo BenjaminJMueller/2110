@@ -19,6 +19,9 @@ enum Entry {
             print("Bundle: \(GStreamerEnvironment.bundled ? "eingebettetes GStreamer" : "Entwicklungsumgebung")")
             exit(fails == 0 ? 0 : 1)
         }
+        if let i = CommandLine.arguments.firstIndex(of: "--render-screenshots"), i + 1 < CommandLine.arguments.count {
+            SnapshotRunner.outputDir = URL(fileURLWithPath: CommandLine.arguments[i + 1])
+        }
         EssenzApp.main()
     }
 }
@@ -66,6 +69,12 @@ struct AppCommands: Commands {
             Button("Manuelle Eingabe (Experte) …") { model.showManualEntry = true }
             Button("NMOS-Gerät per Adresse hinzufügen …") { model.showAddNode = true }
         }
+        CommandGroup(after: .sidebar) {
+            Button("Empfangen") { model.mode = .receive }.keyboardShortcut("1", modifiers: [.command])
+            Button("Senden") { model.mode = .send }.keyboardShortcut("2", modifiers: [.command])
+            Button("Analysieren") { model.mode = .analyze }.keyboardShortcut("3", modifiers: [.command])
+            Divider()
+        }
         CommandMenu("Wiedergabe") {
             Button(model.player.isActive ? "Stopp" : "Start") { model.togglePlay() }
                 .keyboardShortcut(.return, modifiers: [.command])
@@ -99,7 +108,8 @@ struct AppCommands: Commands {
                 .keyboardShortcut("f", modifiers: [.command, .control])
         }
         CommandGroup(replacing: .help) {
-            Button("Kurzanleitung und Berechtigungen") { model.showOnboarding = true }
+            Button("So funktioniert ST 2110") { model.explainerPage = 0; model.showOnboarding = true }
+            Button("Erste Schritte und Berechtigungen") { model.explainerPage = ExplainerView.pageCount - 1; model.showOnboarding = true }
         }
     }
 }

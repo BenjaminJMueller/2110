@@ -41,6 +41,7 @@ struct AppSettings: Codable, Equatable {
     var defaultVideoPort: Int = 5004
     var defaultAudioPort: Int = 5004
 
+    var appearance: Int = 0                 // 0 System, 1 Hell, 2 Dunkel
     var onboardingDone: Bool = false
     var allowSenderControl: Bool = false    // IS-05-Schreibzugriffe erst nach Freischaltung
 
@@ -82,6 +83,7 @@ struct AppSettings: Codable, Equatable {
         multicastRange = (try? c.decode(String.self, forKey: .multicastRange)) ?? d.multicastRange
         defaultVideoPort = (try? c.decode(Int.self, forKey: .defaultVideoPort)) ?? d.defaultVideoPort
         defaultAudioPort = (try? c.decode(Int.self, forKey: .defaultAudioPort)) ?? d.defaultAudioPort
+        appearance = (try? c.decode(Int.self, forKey: .appearance)) ?? d.appearance
         onboardingDone = (try? c.decode(Bool.self, forKey: .onboardingDone)) ?? d.onboardingDone
         allowSenderControl = (try? c.decode(Bool.self, forKey: .allowSenderControl)) ?? d.allowSenderControl
     }

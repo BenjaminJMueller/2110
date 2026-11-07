@@ -128,3 +128,51 @@ public enum SourceGrouping {
         return l.trimmingCharacters(in: .whitespaces)
     }
 }
+
+
+/// Ein Ziel im Netz, an das Essenz senden kann (z. B. SDI-Ausgang 1 eines
+/// 2110 IP Converter 3x3G): Video- und Audioempfänger derselben Gruppe.
+public struct DiscoveredDestination: Identifiable, Hashable, Sendable {
+    public var id: String
+    public var title: String
+    public var deviceLabel: String
+    public var video: NMOSReceiver?
+    public var audio: [NMOSReceiver]
+    public var connectionAPI: URL?
+    public var pairingCertain: Bool
+    public var connectedSenderIDs: [String] {
+        ([video] + audio.map { Optional($0) }).compactMap { $0?.subscription?.sender_id }
+    }
+}
+
+extension SourceGrouping {
+    public static func destinations(_ inv: NMOSInventory) -> [DiscoveredDestination] {
+        let devices = Dictionary(inv.devices.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        var out: [DiscoveredDestination] = []
+        let byDevice = Dictionary(grouping: inv.receivers.filter { ($0.transport ?? "rtp").contains("rtp") }, by: { $0.device_id ?? "?" })
+        for (deviceID, recs) in byDevice {
+            let dev = devices[deviceID]
+            var groups: [String: (v: [NMOSReceiver], a: [NMOSReceiver], certain: Bool)] = [:]
+            var order: [String] = []
+            for r in recs.sorted(by: { ($0.label ?? "") < ($1.label ?? "") }) {
+                let fmt: NMOSFormat = r.format ?? ((r.label ?? "").lowercased().contains("audio") ? .audio : .video)
+                guard fmt == .video || fmt == .audio else { continue }
+                var key = r.id
+                var certain = false
+                if let h = r.groupHints.first { key = h.group; certain = true }
+                else if let n = firstNumber(in: r.label ?? "") { key = "#\(n)" }
+                if groups[key] == nil { groups[key] = ([], [], certain); order.append(key) }
+                if fmt == .video { groups[key]!.v.append(r) } else { groups[key]!.a.append(r) }
+            }
+            for k in order {
+                guard let g = groups[k] else { continue }
+                let v = g.v.first
+                let title = k.hasPrefix("#") ? stripMedia(v?.label ?? g.a.first?.label ?? k) : k
+                out.append(DiscoveredDestination(id: "\(deviceID)/\(k)", title: title, deviceLabel: dev?.label ?? "Gerät",
+                                                 video: v, audio: g.a, connectionAPI: dev?.connectionAPI,
+                                                 pairingCertain: g.certain))
+            }
+        }
+        return out.sorted { ($0.deviceLabel, $0.title) < ($1.deviceLabel, $1.title) }
+    }
+}

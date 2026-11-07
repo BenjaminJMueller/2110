@@ -239,6 +239,14 @@ final class CoreReceiver: @unchecked Sendable {
         return Array(buf.prefix(Int(max(0, n))))
     }
 
+    func startRecording(path: String, seconds: Int) -> String? {
+        guard let h = handle else { return "Kein Empfang aktiv." }
+        var err = [CChar](repeating: 0, count: 512)
+        return st_receiver_start_recording(h, path, Int32(seconds), 4_000_000_000, &err, err.count) == 0 ? nil : String(cString: err)
+    }
+
+    func stopRecording() { if let h = handle { st_receiver_stop_recording(h) } }
+
     func setVolume(_ v: Double) { if let h = handle { st_receiver_set_volume(h, v) } }
     func setMute(_ m: Bool) { if let h = handle { st_receiver_set_mute(h, m ? 1 : 0) } }
     func setMonitor(left: Int, right: Int) { if let h = handle { st_receiver_set_monitor_channels(h, Int32(left), Int32(right)) } }

@@ -137,6 +137,32 @@ public struct NMOSSender: Codable, Hashable, Sendable {
     }
 }
 
+public struct NMOSReceiver: Codable, Hashable, Sendable {
+    public var id: String
+    public var version: String?
+    public var label: String?
+    public var description: String?
+    public var format: NMOSFormat?
+    public var transport: String?
+    public var device_id: String?
+    public var tags: [String: [String]]?
+    public var caps: Caps?
+    public var subscription: Subscription?
+    public struct Caps: Codable, Hashable, Sendable {
+        public var media_types: [String]?
+    }
+    public struct Subscription: Codable, Hashable, Sendable {
+        public var sender_id: String?
+        public var active: Bool?
+    }
+    public var groupHints: [(group: String, role: String)] {
+        (tags?["urn:x-nmos:tag:grouphint/v1.0"] ?? []).map { v in
+            if let i = v.firstIndex(of: ":") { return (String(v[..<i]), String(v[v.index(after: i)...])) }
+            return (v, "")
+        }
+    }
+}
+
 /// IS-05 Sender-Parameter (aktiv bzw. vorbereitet)
 public struct IS05SenderParams: Codable, Hashable, Sendable {
     public var master_enable: Bool?
@@ -177,6 +203,7 @@ public struct NMOSInventory: Sendable {
     public var sources: [NMOSSource] = []
     public var flows: [NMOSFlow] = []
     public var senders: [NMOSSender] = []
+    public var receivers: [NMOSReceiver] = []
     public var fetchedAt = Date()
 
     public init(baseURL: URL, isRegistry: Bool) {
