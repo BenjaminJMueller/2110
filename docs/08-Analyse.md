@@ -1,5 +1,7 @@
 # 8 Paketmitschnitte analysieren
 
+[English](en/analysis.md)
+
 2110 Viewer analysiert pcap- und pcapng-Dateien mit ST-2110-Verkehr. Der Funktionsumfang orientiert sich an EBU LIST; der Code ist eigenständig. Der Schwerpunkt liegt auf der Fehlersuche, nicht auf der Wiedergabe.
 
 ## Woher kommt der Mitschnitt?

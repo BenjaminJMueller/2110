@@ -1,5 +1,7 @@
 # 6 Testplan mit Blackmagic-Hardware
 
+[English](en/test-plan.md)
+
 Ziel: Nachweis mit **echter Blackmagic-Hardware**. Bitte jede Zeile mit Ergebnis (✔/✘), Datum und, wo verlangt, dem **Diagnosebericht** (Diagnose › Bericht kopieren) zurückmelden. Vorlage: Abschnitt 8.
 
 ## 0 Bestandsaufnahme (vor den Tests ausfüllen)
@@ -25,7 +27,7 @@ Ziel: Nachweis mit **echter Blackmagic-Hardware**. Bitte jede Zeile mit Ergebnis
 | I1 | DMG aus dem Actions-Artefakt auf einen Mac **ohne Xcode, ohne Homebrew, ohne GStreamer** kopieren (Prüfen: `/Library/Frameworks/GStreamer.framework` existiert nicht) | |
 | I2 | App nach „Programme“ ziehen, öffnen, ggf. „Dennoch öffnen“ | App startet, Einführung erscheint |
 | I3 | Abfrage „Lokales Netzwerk“ | erscheint, nach „Erlauben“ keine weitere Abfrage |
-| I4 | Demo-Modus | Farbbalken, Laufbalken, Blitz + Tick je Sekunde, „DEMO“ sichtbar, Pegel ca. −6 dBFS |
+| I4 | Demo-Modus | Farbbalken, Laufbalken, Blitz + Tick je Sekunde, „Demo ohne Netzwerk“ sichtbar, Pegel ca. −6 dBFS |
 | I5 | Hilfe › Kurzanleitung, Erweitert › Info | GStreamer 1.28.8 „(in der App enthalten)“, keine fehlenden Komponenten |
 
 ## 2 Erkennung und Formate
@@ -47,7 +49,7 @@ Ziel: Nachweis mit **echter Blackmagic-Hardware**. Bitte jede Zeile mit Ergebnis
 
 | # | Schritt | Erwartung |
 |---|---|---|
-| T9 | Modus Senden, Testbild 1080p25, 2 Kanäle, PTP an, „Als NMOS-Quelle anbieten“ an, starten | Status „PTP, Grandmaster …“, Datenrate ca. 1,1 Gbit/s |
+| T9 | Modus Senden, Testbild 1080p25, 2 Kanäle, „Zeit vom PTP-Grandmaster“ an, „Als NMOS-Quelle anbieten“ an, „Senden“ | Status „PTP, Grandmaster …“, Datenrate ca. 1,1 Gbit/s |
 | T10 | Am 3x3G im LCD-Menü *Outputs* bzw. Converters Setup › 2110 › Receiver suchen | 2110-Viewer-Strom erscheint in der Liste; nach Auswahl Farbbalken und 1 kHz am SDI-Ausgang |
 | T11 | Alternativ in 2110 Viewer „An ein Gerät senden › Verbinden“ (IS-05) | SDI-Ausgang zeigt Farbbalken; Ergebnis und ggf. Fehlermeldung notieren |
 | T12 | Lippensynchron-Test senden, SDI-Ausgang auf Monitor mit Lautsprecher, Zeitlupe filmen | Blitz und Piep gleichzeitig (± 1 Bild) |
@@ -105,7 +107,7 @@ Ziel: Nachweis mit **echter Blackmagic-Hardware**. Bitte jede Zeile mit Ergebnis
 
 ## 7 Kommandozeilen-Prüfung (optional, für Betreuung)
 
-Im Bundle liegt der Selbsttest: `"/Applications/2110 Viewer.app/Contents/MacOS/2110 Viewer" --selftest`.
+Im Bundle liegt der Selbsttest: `"/Applications/2110 Viewer.app/Contents/MacOS/ST2110Viewer" --selftest`.
 Der Empfangskern ist auch als Werkzeug `st2110-probe` baubar (siehe 04); es zeichnet mit `--json` maschinenlesbare Ergebnisse auf.
 
 ## 8 Rückmeldevorlage

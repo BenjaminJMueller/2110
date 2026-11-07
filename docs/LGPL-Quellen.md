@@ -1,5 +1,7 @@
 # Quellcode der eingebetteten Bibliotheken (LGPL)
 
+[English](en/lgpl-sources.md)
+
 2110 Viewer.app enthält GStreamer und weitere Bibliotheken unter LGPL-2.1-or-later
 (sowie BSD, MIT, zlib). Die vollständige Liste mit Versionen steht in
 [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md).
@@ -10,7 +12,7 @@
 |---|---|
 | Hinweis auf die Bibliothek und ihre Lizenz | `THIRD_PARTY_NOTICES.md` und Lizenztexte in `2110 Viewer.app/Contents/Resources/Licenses/`; außerdem auf dem DMG |
 | Quellcode bereitstellen (§ 6) | Mit jeder Veröffentlichung liegt neben dem DMG `2110-Viewer-<Version>-third-party-sources.tar.gz`: alle Upstream-Archive (Prüfsummen aus den cerbero-Rezepten) und **cerbero 1.28.8** mit allen Patches und Build-Rezepten. Erzeugt durch `scripts/fetch-third-party-sources.sh` im CI. |
-| Austausch der Bibliothek ermöglichen | Dynamisch gelinkt, unveränderte Einzeldateien in `Contents/Frameworks` und `Contents/PlugIns`. Nach dem Ersetzen die App neu signieren (`codesign --force --deep --sign - 2110 Viewer.app`). |
+| Austausch der Bibliothek ermöglichen | Dynamisch gelinkt, unveränderte Einzeldateien in `Contents/Frameworks` und `Contents/PlugIns`. Nach dem Ersetzen die App neu signieren (`codesign --force --deep --sign - "2110 Viewer.app"`). |
 | Keine Einschränkung durch die Lizenz des Hauptprogramms | 2110 Viewer steht unter MIT und schränkt Änderungen, Reverse Engineering zur Fehlersuche oder Austausch der LGPL-Bibliotheken nicht ein. |
 
 ## Nachbauen

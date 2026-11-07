@@ -1,65 +1,70 @@
-<p align="center"><img src="packaging/icon/AppIcon-1024.png" width="128" alt="2110-Viewer-Symbol"></p>
+<p align="center"><img src="packaging/icon/AppIcon-1024.png" width="128" alt="2110 Viewer icon"></p>
 
 # 2110 Viewer
 
-**ST 2110 am Mac empfangen, senden und analysieren.** Entstanden für die Lehre.
+**English** | [Deutsch](README.de.md)
 
-**[DMG laden](https://github.com/BenjaminJMueller/2110/releases/latest/download/2110-Viewer.dmg)** (macOS 14 oder neuer, Apple Silicon)
+**Receive, send and analyze ST 2110 on the Mac.** Made for teaching.
 
-| Empfangen | Senden | Analysieren |
+**[Download DMG](https://github.com/BenjaminJMueller/2110/releases/latest/download/2110-Viewer.dmg)** (macOS 14 or later, Apple Silicon)
+
+| Receive | Send | Analyze |
 |---|---|---|
-| ST 2110-20 (YCbCr 4:2:2, 10/8 Bit) und ST 2110-30 (bis 64 Kanäle) | Testbild, Lippensynchron-Test, Videodatei oder Kamera als ST 2110-20/-30 | pcap/pcapng mit ST-2110-Verkehr, angelehnt an EBU LIST |
-| Quellen per NMOS IS-04 automatisch, oder SDP per Drag-and-drop | Kündigt sich als NMOS-Quelle an, verbindet Empfänger per IS-05 | Verluste, Paketabstände, Format ohne SDP, Cinst/VRX nach ST 2110-21 |
-| Lippensynchron über RTP-Zeitstempel bzw. als passiver PTP-Slave | Zeitstempel vom PTP-Grandmaster, Pakete gleichmäßig verteilt | Audio-TS-DF, PTP-Domains und Grandmaster, IGMP-Querier, Vorschaubild |
-| Einzelkanal oder freies Stereopaar abhören, Ausgabegerät wählbar; Bild randlos auf zweitem Bildschirm oder Beamer | Dateien dekodiert macOS selbst (H.264, HEVC, ProRes, AAC) | Mitschnitt direkt aus dem Empfang aufzeichnen |
+| ST 2110-20 (YCbCr 4:2:2, 10/8-bit) and ST 2110-30 (up to 64 channels) | Test pattern, lip-sync test, video file or camera as ST 2110-20/-30 | pcap/pcapng with ST 2110 traffic, modeled on EBU LIST |
+| Sources found automatically via NMOS IS-04, or SDP by drag and drop | Announces itself as an NMOS source, connects receivers via IS-05 | Loss, packet spacing, format detection without SDP, Cinst/VRX per ST 2110-21 |
+| Lip sync via RTP timestamps or as a passive PTP slave | Timestamps from the PTP grandmaster, evenly paced packets | Audio TS-DF, PTP domains and grandmasters, IGMP querier, thumbnail |
+| Monitor a single channel or any stereo pair, choose the output device; full-screen picture on a second display or projector | macOS decodes files itself (H.264, HEVC, ProRes, AAC) | Record a capture straight from reception |
 
-Projektseite: `site/` (GitHub Pages, Einrichtung siehe unten).
+The app follows the system language (English or German).
 
 ## Installation
 
-DMG öffnen, **2110 Viewer** in **Programme** ziehen, starten. GStreamer und alle Bibliotheken sind in der App enthalten. Solange die App nicht notarisiert ist (es fehlt ein Apple-Developer-Konto), beim ersten Start einmal *Systemeinstellungen › Datenschutz & Sicherheit › Dennoch öffnen*. Details: [Nutzeranleitung](docs/05-Nutzeranleitung.md).
+Open the DMG, drag **2110 Viewer** to **Applications** and launch it. GStreamer and all libraries are included in the app. Until the app is notarized (there is no Apple Developer account yet), choose *System Settings › Privacy & Security › Open Anyway* once on first launch. Details: [user guide](docs/en/user-guide.md).
 
-Die DMG liegt unter [Releases](https://github.com/BenjaminJMueller/2110/releases), zusammen mit dem Quellpaket der eingebetteten Bibliotheken und den Lizenzprüfberichten. Zwischenstände gibt es als Artefakt jedes CI-Laufs (Actions › „Build und Tests“ › *2110-Viewer-dmg*).
+The DMG is published under [Releases](https://github.com/BenjaminJMueller/2110/releases), together with the source package of the embedded libraries and the license reports. Builds in between are available as an artifact of every CI run (Actions › “Build und Tests” › *2110-Viewer-dmg*).
 
-## Dokumentation
+## Documentation
 
 | | |
 |---|---|
-| [01 Machbarkeit](docs/01-Machbarkeit.md) | Gerätebestand, Herstellerangaben, GStreamer-Prüfung |
-| [02 Kompatibilität](docs/02-Kompatibilitaet.md) | Modelle, Firmware, Formate mit Prüfstatus |
-| [03 Synchronisation](docs/03-Synchronisation.md) | Vorschau, RTP-abgestimmt, PTP; Rolle im PTP-Netz |
-| [04 Build und Verteilung](docs/04-Build-und-Verteilung.md) | reproduzierbarer Build, DMG, Signierung, Notarisierung |
-| [05 Nutzeranleitung](docs/05-Nutzeranleitung.md) | für Anwender ohne Vorkenntnisse |
-| [06 Testplan](docs/06-Testplan.md) | Abnahme mit dem Equipment, Rückmeldevorlage |
-| [07 Netzwerkadapter](docs/07-Netzwerkadapter.md) | kompatible 10-GbE-Adapter in Deutschland mit Richtpreisen |
-| [08 Analyse](docs/08-Analyse.md) | Messgrößen, Formeln, Grenzen |
-| [09 Senden](docs/09-Senden.md) | Quellen, Zeitbezug, NMOS/IS-05, Datenraten |
-| [LGPL-Quellen](docs/LGPL-Quellen.md) | Bereitstellung des Quellcodes der eingebetteten Bibliotheken |
+| [User guide](docs/en/user-guide.md) | for users without prior knowledge |
+| [Compatibility](docs/en/compatibility.md) | models, firmware and formats with test status |
+| [Synchronization](docs/en/synchronization.md) | preview, RTP-aligned, PTP; role in the PTP network |
+| [Sending](docs/en/sending.md) | sources, time reference, NMOS/IS-05, data rates |
+| [Analysis](docs/en/analysis.md) | measurements, formulas, limits |
+| [Network adapters](docs/en/network-adapters.md) | compatible 10GbE adapters with approximate prices |
+| [Test plan](docs/en/test-plan.md) | acceptance tests with real equipment, feedback template |
+| [Feasibility](docs/en/feasibility.md) | devices, manufacturer information, GStreamer review |
+| [Build and distribution](docs/en/build-and-distribution.md) | reproducible build, DMG, signing, notarization |
+| [LGPL sources](docs/en/lgpl-sources.md) | source code of the embedded libraries |
 
-## Aufbau
+German originals are in [docs/](docs/).
+
+## Layout
 
 ```
-core/              C-Kern (GStreamer), plattformneutral, unter Linux getestet
-  src/             SDP, Multicast-Socket, Medienuhr, Empfänger, Sender, Analyse, Selbsttest
+core/              C core (GStreamer), platform-neutral, tested on Linux
+  src/             SDP, multicast socket, media clock, receiver, sender, analyzer, self-test
   tools/           st2110-probe, st2110-send, st2110-analyze, st2110-testsender
-  tests/           Unit-, Loopback-, Sender-, Analyse- und PTP-Tests
+  tests/           unit, loopback, sender, analyzer and PTP tests
 App/Sources/
-  ST2110Kit/       NMOS-Client und -Knoten, Gruppierung, Adressbereiche, Diagnose (testbar)
-  2110 Viewer/          SwiftUI-App, Metal-Renderer, AVFoundation, CoreAudio
-scripts/           GStreamer laden, App bauen, einbetten, prüfen, DMG, notarisieren, Quellpaket
-packaging/         Info.plist, Symbol (SVG), Lizenztexte, DMG-Hinweise
-site/              Projektseite (GitHub Pages)
+  ST2110Kit/       NMOS client and node, grouping, address ranges, diagnostics (testable)
+  ST2110Viewer/    SwiftUI app, Metal renderer, AVFoundation, CoreAudio
+App/Localization/  translation table German → English
+scripts/           fetch GStreamer, build, embed, audit, DMG, notarize, source package
+packaging/         Info.plist, icon (SVG), license texts, DMG notes
+site/              project website (GitHub Pages)
 ```
 
-## Bauen
+## Building
 
 ```bash
-./scripts/build-app.sh          # macOS mit Xcode 26, ergibt dist/2110 Viewer.app und dist/2110-Viewer-<Version>.dmg
-make -C core && make -C core test   # Kern und Tests (Linux oder macOS mit pkg-config)
+./scripts/build-app.sh          # macOS with Xcode 26, produces dist/2110 Viewer.app and dist/2110-Viewer-<version>.dmg
+make -C core && make -C core test   # core and tests (Linux, or macOS with pkg-config)
 ```
 
-GitHub Pages: in den Repository-Einstellungen *Pages › Source: GitHub Actions* wählen; der Workflow `Webseite` veröffentlicht `site/` bei Änderungen auf `main`.
+GitHub Pages: in the repository settings choose *Pages › Source: GitHub Actions*; the `Webseite` workflow publishes `site/` on changes to `main`.
 
-## Lizenz
+## License
 
-Code: [MIT](LICENSE). Die App enthält GStreamer und weitere Bibliotheken unter LGPL-2.1, BSD, MIT und zlib, Einzelheiten stehen in [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.md). Das Repository enthält keine Herstellerdateien.
+Code: [MIT](LICENSE). The app includes GStreamer and other libraries under LGPL-2.1, BSD, MIT and zlib; see [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.md). The repository contains no manufacturer files.

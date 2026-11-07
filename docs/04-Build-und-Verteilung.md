@@ -1,10 +1,11 @@
 # 4 Build, Paketierung, Signierung und Verteilung
 
+[English](en/build-and-distribution.md)
+
 ## 4.1 Für Endanwender
 
 Endanwender laden nur das **DMG**, ziehen die App in „Programme“ und starten sie.
-GStreamer und alle Bibliotheken stecken in der App (`Contents/Frameworks`, `Contents/PlugIns`, `Contents/Helpers`).
-Terminal, Homebrew oder eigene Hintergrunddienste werden nicht gebraucht, und nichts wird in Systemordner installiert.
+GStreamer und alle Bibliotheken stecken in der App (`Contents/Frameworks`, `Contents/PlugIns`, `Contents/Helpers`). Nichts wird in Systemordner installiert.
 
 Systemvoraussetzungen: Mac mit Apple Silicon (M1 oder neuer, Ziel M4), **macOS 14 Sonoma oder neuer**.
 Liquid-Glass-Oberfläche ab macOS 26; unter macOS 14/15 erscheinen dieselben Bedienelemente mit nativen Materialien.
@@ -19,7 +20,9 @@ Jeder Push startet den Workflow `.github/workflows/macos.yml`. Er:
 4. baut die App, bettet GStreamer ein, signiert sie ad hoc und führt den **Selbsttest der fertigen App** aus (`2110 Viewer --selftest`: Demo, Loopback-Empfang, Lippensynchronität, PTP-Helfer),
 5. erstellt das DMG und stellt es als Artefakt „2110-Viewer-dmg“ bereit (Actions › Lauf › Artifacts).
 
-Hinweis: macOS-Minuten zählen bei privaten Repositories zehnfach gegen das Actions-Kontingent.
+Hinweis: macOS-Minuten zählen bei privaten Repositories zehnfach gegen das Actions-Kontingent. Bei öffentlichen Repositories sind sie frei.
+
+Eine Veröffentlichung (Release) mit DMG entsteht über *Actions › Build und Tests › Run workflow* mit der Option „Release“ oder durch ein Tag `v<Version>`.
 
 ## 4.3 Auf einem eigenen Mac bauen (reproduzierbar)
 
@@ -44,7 +47,8 @@ Was das Skript macht:
 | Lizenztexte beilegen | `packaging/licenses`, `packaging/THIRD_PARTY.md` |
 | Signieren (von innen nach außen) und prüfen | `codesign` |
 | Selbsttest des fertigen Bundles | `--selftest` |
-| DMG mit Verknüpfung „Programme“ und Kurzanleitung | `scripts/make-dmg.sh` |
+| Sprachdateien Deutsch und Englisch aus `App/Localization/en.json` | `scripts/gen-l10n.py` |
+| DMG mit Verknüpfung „Applications“ und Kurzanleitung (Deutsch, Englisch) | `scripts/make-dmg.sh` |
 
 Entwicklung in Xcode: `Package.swift` mit Xcode öffnen. Vorher einmal `./scripts/fetch-gstreamer.sh` ausführen; im Schema die Umgebungsvariable `GSTREAMER_PREFIX=<Repo>/vendor/gstreamer` setzen.
 

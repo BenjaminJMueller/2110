@@ -1,5 +1,7 @@
 # 2 Kompatibilität: Modelle, Firmware, Formate
 
+[English](en/compatibility.md)
+
 **Legende:** **D** = nur dokumentiert (Herstellerangabe bzw. Norm); **S** = synthetisch getestet (eigener Testsender, Linux bzw. macOS-CI); **H** = mit Blackmagic-Hardware geprüft
 
 > Stand dieser Version: **Es wurde noch nichts mit Blackmagic-Hardware geprüft.** Die Spalte H füllt sich mit Ihren Testergebnissen (siehe [06-Testplan](06-Testplan.md)).

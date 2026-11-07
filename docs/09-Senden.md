@@ -1,5 +1,7 @@
 # 9 Senden
 
+[English](en/sending.md)
+
 2110 Viewer sendet ST 2110-20 (YCbCr 4:2:2, 10 Bit) und ST 2110-30 (L24, 1–16 Kanäle). Empfänger können Blackmagic-Geräte sein, aber auch jedes andere ST-2110-Gerät.
 
 ## Quellen
@@ -17,7 +19,7 @@
 
 ## Zeitbezug
 
-Mit „Zeit vom PTP-Grandmaster übernehmen“ synchronisiert sich 2110 Viewer passiv auf den Grandmaster (nur Follower) und setzt die RTP-Zeitstempel auf die PTP-Zeit. Das ist die Voraussetzung dafür, dass Empfänger Bild und Ton zeitrichtig zuordnen. Ohne Grandmaster dient die Systemzeit als Näherung; die SDP nennt dann `ts-refclk:localmac`.
+Mit dem Schalter „Zeit vom PTP-Grandmaster“ synchronisiert sich 2110 Viewer passiv auf den Grandmaster (nur Follower) und setzt die RTP-Zeitstempel auf die PTP-Zeit. Das ist die Voraussetzung dafür, dass Empfänger Bild und Ton zeitrichtig zuordnen. Ohne Grandmaster dient die Systemzeit als Näherung; die SDP nennt dann `ts-refclk:localmac`.
 
 ## Paketverteilung
 

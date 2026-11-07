@@ -1,5 +1,7 @@
 # 3 Synchronisation von Bild und Ton
 
+[English](en/synchronization.md)
+
 ## 3.1 Grundlage
 
 Nach ST 2110-10 und ST 2059-1 ist der RTP-Zeitstempel eines Pakets

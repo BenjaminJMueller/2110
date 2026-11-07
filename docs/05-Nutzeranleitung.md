@@ -1,5 +1,7 @@
 # 2110 Viewer – Kurzanleitung
 
+[English](en/user-guide.md)
+
 Für alle, die Bild und Ton von Blackmagic-ST-2110-Geräten am Mac sehen und hören möchten. Programmierkenntnisse sind nicht nötig.
 
 ## Installieren (einmalig)
@@ -53,7 +55,7 @@ Hell, Dunkel oder wie das System: Einstellungen (⌘,) › Allgemein. Das Videob
 * Oder eine **SDP-Datei** ins Fenster ziehen. Getrennte Video- und Audio-SDPs lassen sich zusammen ziehen bzw. im Fenster „Neue Quelle“ den Feldern **Video-SDP** und **Audio-SDP** zuordnen.
 * Unter **Erweitert › NMOS & Adressen** kann ein Adressbereich (z. B. `192.168.10.1-254`) durchsucht werden.
 
-Gespeicherte Quellen erscheinen beim nächsten Start unter „Gespeicherte Quellen“.
+Gespeicherte Quellen erscheinen beim nächsten Start unter „Gespeichert“.
 
 ## Wenn kein Bild kommt
 
@@ -72,7 +74,7 @@ Für Rückmeldungen: **Diagnose › Bericht kopieren** und den Text an die Betre
 
 ## Demo-Modus
 
-**„Demo: Testbild und Testton“** (Seitenleiste unten) zeigt Farbbalken mit Laufbalken und einen Ton-Tick pro Sekunde, gleichzeitig mit einem weißen Blitz. Das ist deutlich als **DEMO** gekennzeichnet und nützlich, um Bildschirm, Ton und Bedienung ohne Netzwerk zu prüfen.
+**„Testbild und Testton“** (Seitenleiste unter „Ausprobieren“) zeigt Farbbalken und einen Ton-Tick pro Sekunde, gleichzeitig mit einem weißen Blitz. Oben links steht „Demo ohne Netzwerk“. So lassen sich Bildschirm, Ton und Bedienung ohne Netzwerk prüfen.
 
 ## Für die Lehre: Vorschau vs. synchron
 

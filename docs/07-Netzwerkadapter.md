@@ -1,5 +1,7 @@
 # 7 Netzwerkadapter für den Mac
 
+[English](en/network-adapters.md)
+
 Stand der Recherche: 7. November 2026. Preise sind Richtwerte (Geizhals bzw. Herstellerpreis), **ohne Gewähr**. Vor dem Kauf bitte aktuelle Preise prüfen. Mit 2110 Viewer und Blackmagic-Hardware geprüft ist bisher **keiner** dieser Adapter; das ist Teil des Testplans (Abschnitt 0.10).
 
 ## Was der Adapter können muss

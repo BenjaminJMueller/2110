@@ -1,5 +1,7 @@
 # 1 Gerätebestand und Machbarkeitsprüfung
 
+[English](en/feasibility.md)
+
 Stand: 6. November 2026
 
 ## 1.1 Erfasster Gerätebestand
