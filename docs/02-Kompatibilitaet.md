@@ -57,7 +57,18 @@
 | RTP-abgestimmte Lippensynchronität | S: Versatz < 0,2 ms an den Ausgabezeitstempeln |
 | Senderneustart, Unterbrechung, Formatwechsel, Paketverlust | S |
 
-## 2.6 Empfohlene Geräteeinstellungen (3x3G)
+## 2.6 Senden und Analyse
+
+| Funktion | Status |
+|---|---|
+| Senden ST 2110-20 1080p25/50/29,97/59,94, 720p50/59,94 (10 Bit) | S (eigener Empfänger, Linux und macOS-CI) |
+| Senden ST 2110-30 L24, 1–16 Kanäle, 1 ms/125 µs | S |
+| Quellen Datei (AVFoundation) und Kamera | D – implementiert, auf echtem Mac zu prüfen (T13) |
+| NMOS-Knoten (IS-04 Node API, mDNS) und IS-05 für Sender | S (Unit-Tests: eigener Client liest die Ressourcen) |
+| IS-05: Empfänger am 3x3G verbinden | D – implementiert, **H ausstehend** (T11) |
+| Analyse pcap/pcapng: Formate, Verluste, Cinst/VRX, TS-DF, PTP, IGMP | S |
+
+## 2.7 Empfohlene Geräteeinstellungen (3x3G)
 
 * **Videoformat:** am SDI-Quellgerät progressiv, 1080p25 oder 1080p50, YUV 4:2:2 10 Bit.
 * **PTP:** Mit Grandmaster im Netz „PTP follower only“ aktivieren und Domain wie am Grandmaster (meist 127). Ohne Grandmaster darf genau ein Gerät Master sein. Die App wird nie Master.
