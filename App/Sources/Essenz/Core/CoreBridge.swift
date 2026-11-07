@@ -127,31 +127,35 @@ enum GStreamerEnvironment {
         guard !done else { return }
         done = true
         let fm = FileManager.default
-        let candidates: [URL] = [
-            Bundle.main.bundleURL.appendingPathComponent("Contents/Frameworks/GStreamer"),
-            URL(fileURLWithPath: ProcessInfo.processInfo.environment["GSTREAMER_PREFIX"] ?? "/nonexistent"),
-        ]
-        if let root = candidates.first(where: { fm.fileExists(atPath: $0.appendingPathComponent("lib/gstreamer-1.0").path) }) {
-            bundled = root.path.contains(".app/")
-            let plugins = root.appendingPathComponent("lib/gstreamer-1.0").path
-            // Im App-Bundle liegen die Hilfsprogramme in Contents/Helpers
-            let helpers = Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers")
-            let libexec = fm.fileExists(atPath: helpers.appendingPathComponent("gst-ptp-helper").path)
-                ? helpers : root.appendingPathComponent("libexec/gstreamer-1.0")
-            setenv("GST_PLUGIN_SYSTEM_PATH_1_0", plugins, 1)
-            setenv("GST_PLUGIN_SYSTEM_PATH", plugins, 1)
+        let contents = Bundle.main.bundleURL.appendingPathComponent("Contents")
+        let bundledPlugins = contents.appendingPathComponent("PlugIns")
+        let dev = URL(fileURLWithPath: ProcessInfo.processInfo.environment["GSTREAMER_PREFIX"] ?? "/nonexistent")
+        var plugins: URL?
+        var helpers: URL?
+        if fm.fileExists(atPath: bundledPlugins.appendingPathComponent("libgstcoreelements.dylib").path) {
+            // Ausgeliefertes App-Bundle (flaches Apple-Layout)
+            bundled = true
+            plugins = bundledPlugins
+            helpers = contents.appendingPathComponent("Helpers")
+        } else if fm.fileExists(atPath: dev.appendingPathComponent("lib/gstreamer-1.0").path) {
+            // Entwicklung mit vendor/gstreamer
+            plugins = dev.appendingPathComponent("lib/gstreamer-1.0")
+            helpers = dev.appendingPathComponent("libexec/gstreamer-1.0")
+        }
+        if let plugins, let helpers {
+            setenv("GST_PLUGIN_SYSTEM_PATH_1_0", plugins.path, 1)
+            setenv("GST_PLUGIN_SYSTEM_PATH", plugins.path, 1)
             setenv("GST_PLUGIN_PATH_1_0", "", 1)
-            setenv("GST_PLUGIN_SCANNER_1_0", libexec.appendingPathComponent("gst-plugin-scanner").path, 1)
-            setenv("GST_PLUGIN_SCANNER", libexec.appendingPathComponent("gst-plugin-scanner").path, 1)
-            setenv("GST_PTP_HELPER_1_0", libexec.appendingPathComponent("gst-ptp-helper").path, 1)
-            setenv("GST_PTP_HELPER", libexec.appendingPathComponent("gst-ptp-helper").path, 1)
-            setenv("GIO_MODULE_DIR", root.appendingPathComponent("lib/gio/modules").path, 1)
+            setenv("GST_PLUGIN_SCANNER_1_0", helpers.appendingPathComponent("gst-plugin-scanner").path, 1)
+            setenv("GST_PLUGIN_SCANNER", helpers.appendingPathComponent("gst-plugin-scanner").path, 1)
+            setenv("GST_PTP_HELPER_1_0", helpers.appendingPathComponent("gst-ptp-helper").path, 1)
+            setenv("GST_PTP_HELPER", helpers.appendingPathComponent("gst-ptp-helper").path, 1)
         }
         // ORC (Laufzeit-Codeerzeugung) abschalten: C-Ersatzfunktionen genügen und
         // vertragen sich mit der „Hardened Runtime“ notarisierter Apps.
         setenv("ORC_CODE", "backup", 0)
         let caches = fm.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("ST2110 Monitor", isDirectory: true)
+            .appendingPathComponent("Essenz", isDirectory: true)
         try? fm.createDirectory(at: caches, withIntermediateDirectories: true)
         let version = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "dev"
         setenv("GST_REGISTRY_1_0", caches.appendingPathComponent("gst-registry-\(version).bin").path, 1)

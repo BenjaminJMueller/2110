@@ -1,6 +1,6 @@
 // swift-tools-version:5.10
 //
-// ST 2110 Monitor – native macOS-App (SwiftUI) mit eingebettetem GStreamer.
+// Essenz – native macOS-App (SwiftUI) mit eingebettetem GStreamer.
 //
 // GStreamer wird NICHT systemweit installiert. scripts/fetch-gstreamer.sh lädt
 // die offiziellen macOS-Pakete von gstreamer.freedesktop.org, prüft die
@@ -14,11 +14,11 @@ let root = Context.packageDirectory
 let gst = Context.environment["GSTREAMER_PREFIX"] ?? "\(root)/vendor/gstreamer"
 
 let package = Package(
-    name: "ST2110Monitor",
+    name: "Essenz",
     defaultLocalization: "de",
     platforms: [.macOS(.v14)],
     products: [
-        .executable(name: "ST2110Monitor", targets: ["ST2110Monitor"]),
+        .executable(name: "Essenz", targets: ["Essenz"]),
     ],
     targets: [
         // C-Empfangskern (auch unter Linux mit make baubar und getestet)
@@ -44,7 +44,7 @@ let package = Package(
                     "-lgstreamer-1.0", "-lgstbase-1.0", "-lgstapp-1.0", "-lgstvideo-1.0",
                     "-lgstnet-1.0", "-lgobject-2.0", "-lglib-2.0", "-lgio-2.0",
                     // Zur Laufzeit liegen die Bibliotheken im App-Bundle
-                    "-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks/GStreamer/lib",
+                    "-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks",
                     // Für „swift run“ während der Entwicklung
                     "-Xlinker", "-rpath", "-Xlinker", "\(gst)/lib",
                 ]),
@@ -56,9 +56,9 @@ let package = Package(
             path: "App/Sources/ST2110Kit"
         ),
         .executableTarget(
-            name: "ST2110Monitor",
+            name: "Essenz",
             dependencies: ["ST2110Core", "ST2110Kit"],
-            path: "App/Sources/ST2110Monitor",
+            path: "App/Sources/Essenz",
             linkerSettings: [
                 .linkedFramework("Metal"),
                 .linkedFramework("MetalKit"),

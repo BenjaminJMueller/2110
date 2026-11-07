@@ -18,7 +18,7 @@ struct ContentView: View {
                         .inspectorColumnWidth(min: 320, ideal: 400, max: 560)
                 }
         }
-        .navigationTitle(model.player.current?.name ?? "ST 2110 Monitor")
+        .navigationTitle(model.player.current?.name ?? "Essenz")
         .navigationSubtitle(model.player.isDemo ? "DEMO – Testbild und Testton" : "")
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {

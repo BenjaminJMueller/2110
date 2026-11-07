@@ -7,7 +7,7 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("Willkommen beim ST 2110 Monitor").font(.largeTitle.weight(.semibold))
+            Text("Willkommen beim Essenz").font(.largeTitle.weight(.semibold))
             Text("Bild und Ton von Blackmagic-ST-2110-Geräten direkt über Ethernet ansehen und abhören.")
                 .font(.title3).foregroundStyle(.secondary)
 

@@ -1,5 +1,5 @@
 /*
- * Selbsttest für die ausgelieferte App (ST2110Monitor --selftest) und CI:
+ * Selbsttest für die ausgelieferte App (Essenz --selftest) und CI:
  *  1. GStreamer startet, alle benötigten Plugins sind vorhanden
  *  2. Demo-Pipeline liefert Bild und Ton
  *  3. Loopback: ein interner RFC-4175-/L24-Sender schickt per UDP (Unicast
@@ -79,7 +79,7 @@ static GstPadProbeReturn tick_probe(GstPad *pad, GstPadProbeInfo *info, gpointer
     return GST_PAD_PROBE_OK;
 }
 
-int st_selftest(int seconds, char *out, size_t len)
+int st_selftest(int seconds, int strict_licenses, char *out, size_t len)
 {
     out[0] = '\0';
     int fails = 0;
@@ -95,6 +95,26 @@ int st_selftest(int seconds, char *out, size_t len)
         return 1;
     }
     say(out, len, "OK    alle benötigten Elemente vorhanden\n");
+
+    /* Lizenzen aller geladenen Plugins (im ausgelieferten Bundle: nur LGPL/BSD/MIT) */
+    {
+        GList *plugins = gst_registry_get_plugin_list(gst_registry_get());
+        int n = 0, bad = 0;
+        for (GList *l = plugins; l; l = l->next) {
+            GstPlugin *pl = l->data;
+            const char *lic = gst_plugin_get_license(pl);
+            n++;
+            int ok = lic && (g_str_equal(lic, "LGPL") || g_str_equal(lic, "BSD") || g_str_equal(lic, "MIT/X11") || g_str_equal(lic, "MIT"));
+            if (!ok) {
+                bad++;
+                if (strict_licenses) say(out, len, "FEHLER Plugin %s hat Lizenz „%s“\n", gst_plugin_get_name(pl), lic ? lic : "?");
+            }
+        }
+        gst_plugin_list_free(plugins);
+        if (strict_licenses && bad) fails++;
+        else say(out, len, "%s %d Plugins geladen%s\n", bad ? "INFO " : "OK   ", n,
+                 bad ? (strict_licenses ? "" : " (nicht-LGPL-Plugins der Systeminstallation, im Bundle nicht enthalten)") : ", alle LGPL/BSD/MIT");
+    }
 
     /* 2. Demo */
     {

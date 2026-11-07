@@ -1,11 +1,11 @@
-# ST 2110 Monitor – Kurzanleitung
+# Essenz – Kurzanleitung
 
 Für alle, die im Medienlabor Bild und Ton von Blackmagic-ST-2110-Geräten am Mac sehen und hören möchten. Programmierkenntnisse sind nicht nötig.
 
 ## Installieren (einmalig)
 
-1. `ST2110-Monitor-….dmg` doppelklicken.
-2. **ST 2110 Monitor** auf **Programme** ziehen.
+1. `Essenz-….dmg` doppelklicken.
+2. **Essenz** auf **Programme** ziehen.
 3. App aus „Programme“ öffnen. Meldet macOS, die App könne nicht überprüft werden: **Systemeinstellungen › Datenschutz & Sicherheit › „Dennoch öffnen“** (nur beim ersten Mal).
 4. Fragt macOS nach dem **lokalen Netzwerk**: **Erlauben**. Ohne diese Erlaubnis findet die App keine Geräte und empfängt nichts.
 

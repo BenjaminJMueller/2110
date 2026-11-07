@@ -9,8 +9,10 @@ trap 'rm -rf "$STAGE"' EXIT
 ditto "$APP" "$STAGE/$(basename "$APP")"
 ln -s /Applications "$STAGE/Programme"
 cp "$ROOT/packaging/DMG-LIESMICH.txt" "$STAGE/Bitte zuerst lesen.txt"
+cp "$ROOT/LICENSE" "$STAGE/LICENSE.txt"
+cp "$ROOT/THIRD_PARTY_NOTICES.md" "$STAGE/THIRD_PARTY_NOTICES.md"
 rm -f "$DMG"
-hdiutil create -volname "ST 2110 Monitor" -srcfolder "$STAGE" -fs HFS+ -format UDZO -ov "$DMG" >/dev/null
+hdiutil create -volname "Essenz" -srcfolder "$STAGE" -fs HFS+ -format UDZO -ov "$DMG" >/dev/null
 if [ "${SIGN_IDENTITY:--}" != "-" ]; then
   codesign --force --sign "$SIGN_IDENTITY" --timestamp "$DMG"
 fi

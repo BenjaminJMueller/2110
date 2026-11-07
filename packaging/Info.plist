@@ -5,11 +5,11 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>de</string>
 	<key>CFBundleDisplayName</key>
-	<string>ST 2110 Monitor</string>
+	<string>Essenz</string>
 	<key>CFBundleName</key>
-	<string>ST 2110 Monitor</string>
+	<string>Essenz</string>
 	<key>CFBundleExecutable</key>
-	<string>ST2110Monitor</string>
+	<string>Essenz</string>
 	<key>CFBundleIdentifier</key>
 	<string>@BUNDLE_ID@</string>
 	<key>CFBundlePackageType</key>
@@ -35,7 +35,7 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>Für Lehre und Tests im Medienlabor. Enthält GStreamer (LGPL).</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Der ST 2110 Monitor sucht Blackmagic-Geräte im lokalen Netzwerk (NMOS) und empfängt deren Video- und Audioströme (Multicast). Ohne diese Erlaubnis sind weder Geräteerkennung noch Empfang möglich.</string>
+	<string>Der Essenz sucht Blackmagic-Geräte im lokalen Netzwerk (NMOS) und empfängt deren Video- und Audioströme (Multicast). Ohne diese Erlaubnis sind weder Geräteerkennung noch Empfang möglich.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_nmos-node._tcp</string>

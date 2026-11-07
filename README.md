@@ -1,4 +1,4 @@
-# ST 2110 Monitor
+# Essenz
 
 Native macOS-App (Apple Silicon, SwiftUI) zum **Empfangen, Ansehen und Abhören von SMPTE-ST-2110-Video und -Audio** von Blackmagic-2110-IP-Geräten über Ethernet, für Tests und Lehre im Medienlabor.
 
@@ -43,7 +43,7 @@ core/            C-Empfangskern auf GStreamer-Basis (plattformneutral, Linux-Tes
   tests/         Unit-, Loopback- und PTP-Tests
 App/Sources/
   ST2110Kit/     NMOS-Client, Gruppierung, Adressbereiche, Diagnose, Quellen (testbar)
-  ST2110Monitor/ SwiftUI-App, Metal-Renderer, CoreAudio, Netzwerkschnittstellen
+  Essenz/ SwiftUI-App, Metal-Renderer, CoreAudio, Netzwerkschnittstellen
 scripts/         GStreamer laden, App bauen, einbetten, signieren, DMG, notarisieren
 packaging/       Info.plist, Entitlements, Lizenztexte, DMG-Hinweise
 ```

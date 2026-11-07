@@ -296,7 +296,7 @@ void st_receiver_set_audio_delay_ms(st_receiver *r, int delay_ms);
 
 /* Selbsttest (Demo, Loopback-Empfang, Lippensynchronität, PTP-Helfer).
  * Liefert die Anzahl der Fehler; out erhält ein lesbares Protokoll. */
-int st_selftest(int seconds, char *out, size_t out_len);
+int st_selftest(int seconds, int strict_licenses, char *out, size_t out_len);
 
 /* Hilfsfunktionen für Diagnose */
 const char *st_state_name(st_state s);

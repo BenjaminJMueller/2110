@@ -7,6 +7,9 @@ B=./build
 OUT=${OUT:-$(mktemp -d)}
 IFACE_ADDR=${IFACE_ADDR:-127.0.0.1}
 LONG=${LONG_SECONDS:-0}
+# Auf schwachen CI-Rechnern kleiner testen (TEST_WIDTH/TEST_HEIGHT)
+W=${TEST_WIDTH:-1920}
+H=${TEST_HEIGHT:-1080}
 pass=0; fail=0
 SENDER_PID=
 
@@ -27,13 +30,13 @@ probe() { local f=$1; shift; timeout 600 $B/st2110-probe --iface-addr "$IFACE_AD
 echo "== 1 Unit-Tests"
 if $B/test_unit tests/sdp; then pass=$((pass+1)); else fail=$((fail+1)); fi
 
-echo "== 2 1080p25, 10 Bit, 16 Kanäle 125 µs, RTP-abgestimmt"
-sender --fps 25 --channels 16 --ptime 0.125 --duration 20
+echo "== 2 ${W}x${H}p25, 10 Bit, 16 Kanäle 125 µs, RTP-abgestimmt"
+sender --fps 25 --channels 16 --ptime 0.125 --width $W --height $H --duration 20
 probe "$OUT/t2.txt" --video-sdp "$OUT/video.sdp" --audio-sdp "$OUT/audio.sdp" --mode rtp --duration 12
 stop_sender
 check "Bilder empfangen (>= 90 %)" "$OUT/t2.txt" "v_rendered >= 0.9*25*11"
 check "Bildrate 25 erkannt" "$OUT/t2.txt" "abs(v_fps-25) < 0.1"
-check "Bildgröße 1920x1080 erkannt" "$OUT/t2.txt" "v_width==1920 and v_height==1080"
+check "Bildgröße ${W}x${H} erkannt" "$OUT/t2.txt" "v_width==$W and v_height==$H"
 check "Audio-Paketzeit 0,125 ms" "$OUT/t2.txt" "abs(a_ptime_ms-0.125) < 0.001"
 # Bei hoher Paketverlustrate (überlasteter Testrechner) sind Blitzbilder
 # unvollständig; dann ist die Messung nicht aussagekräftig.
@@ -44,7 +47,7 @@ else
 fi
 
 echo "== 3 Gleiche Quelle, einfache Vorschau (nur Messung, keine Synchronisation erwartet)"
-sender --fps 25 --channels 16 --ptime 0.125 --duration 14
+sender --fps 25 --channels 16 --ptime 0.125 --width $W --height $H --duration 14
 probe "$OUT/t3.txt" --video-sdp "$OUT/video.sdp" --audio-sdp "$OUT/audio.sdp" --mode preview --duration 10
 stop_sender
 check "Vorschau läuft" "$OUT/t3.txt" "v_rendered > 200 and a_rendered > 1000"

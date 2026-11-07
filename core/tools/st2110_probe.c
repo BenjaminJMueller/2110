@@ -101,7 +101,7 @@ int main(int argc, char **argv)
         else if (strcmp(a, "--json") == 0) json = 1;
         else if (strcmp(a, "--selftest") == 0) {
             static char rep[8192];
-            int f = st_selftest(5, rep, sizeof rep);
+            int f = st_selftest(5, 0, rep, sizeof rep);
             fputs(rep, stdout);
             return f ? 1 : 0;
         }

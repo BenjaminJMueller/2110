@@ -1,5 +1,5 @@
 #!/bin/bash
-# Baut „ST 2110 Monitor.app“ und das DMG – reproduzierbar, ohne Homebrew.
+# Baut „Essenz.app“ und das DMG – reproduzierbar, ohne Homebrew.
 #
 # Voraussetzungen (nur auf dem Build-Mac): macOS 15+ auf Apple Silicon,
 # Xcode 26 (für Liquid Glass; ältere Xcode-Versionen bauen ohne Glas-Effekte),
@@ -9,14 +9,14 @@
 #   SIGN_IDENTITY   "-" = ad-hoc (Standard, ohne Apple-Konto) oder
 #                   "Developer ID Application: Name (TEAMID)"
 #   NOTARY_PROFILE  Schlüsselbund-Profil für notarytool (siehe scripts/notarize.sh)
-#   BUNDLE_ID       Standard: de.medienlabor.ST2110Monitor
+#   BUNDLE_ID       Standard: io.github.benjaminjmueller.essenz
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-APP_NAME="ST 2110 Monitor"
-EXEC="ST2110Monitor"
-BUNDLE_ID="${BUNDLE_ID:-de.medienlabor.ST2110Monitor}"
+APP_NAME="Essenz"
+EXEC="Essenz"
+BUNDLE_ID="${BUNDLE_ID:-io.github.benjaminjmueller.essenz}"
 VERSION="${APP_VERSION:-$(cat VERSION)}"
 BUILD="${BUILD_NUMBER:-$(git rev-list --count HEAD 2>/dev/null || echo 1)}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"
@@ -54,7 +54,8 @@ fi
 
 echo "== GStreamer einbetten"
 python3 scripts/bundle_gstreamer.py --prefix "$GSTREAMER_PREFIX" \
-  --dest "$APP/Contents/Frameworks/GStreamer" \
+  --dest "$APP/Contents/Frameworks" \
+  --plugin-dest "$APP/Contents/PlugIns" \
   --helpers-dest "$APP/Contents/Helpers" \
   --binary "$APP/Contents/MacOS/$EXEC" \
   --manifest "$APP/Contents/Resources/gstreamer-files.txt"
@@ -65,14 +66,17 @@ while IFS= read -r -d '' f; do
   if lipo -info "$f" 2>/dev/null | grep -q "are:"; then
     lipo "$f" -thin arm64 -output "$f.thin" && mv "$f.thin" "$f"
   fi
-done < <(find "$APP/Contents/Frameworks" "$APP/Contents/Helpers" -type f -print0)
-# Hilfsprogramme finden die Bibliotheken über diesen Suchpfad
-install_name_tool -add_rpath "@executable_path/../Frameworks/GStreamer/lib" "$APP/Contents/Helpers/gst-plugin-scanner"
+done < <(find "$APP/Contents/Frameworks" "$APP/Contents/PlugIns" "$APP/Contents/Helpers" -type f -print0)
+# Suchpfade für das flache Layout
+install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/Helpers/gst-plugin-scanner"
+for f in "$APP/Contents/PlugIns/"*.dylib; do
+  install_name_tool -add_rpath "@loader_path/../Frameworks" "$f"
+done
 
 echo "== Lizenzen"
 mkdir -p "$APP/Contents/Resources/Licenses"
 cp packaging/licenses/* "$APP/Contents/Resources/Licenses/"
-cp packaging/THIRD_PARTY.md "$APP/Contents/Resources/Licenses/"
+cp LICENSE THIRD_PARTY_NOTICES.md "$APP/Contents/Resources/Licenses/"
 
 echo "== Signieren ($SIGN_IDENTITY)"
 SIGN_ARGS=(--force --sign "$SIGN_IDENTITY")
@@ -82,19 +86,28 @@ fi
 # Von innen nach außen: Bibliotheken, Plugins, Hilfsprogramme, dann die App
 while IFS= read -r -d '' f; do
   codesign "${SIGN_ARGS[@]}" "$f"
-done < <(find "$APP/Contents/Frameworks" "$APP/Contents/Helpers" -type f \( -name "*.dylib" -o -perm -u+x \) -print0)
+done < <(find "$APP/Contents/Frameworks" "$APP/Contents/PlugIns" "$APP/Contents/Helpers" -type f \( -name "*.dylib" -o -perm -u+x \) -print0)
 codesign "${SIGN_ARGS[@]}" --entitlements packaging/entitlements.plist "$APP"
 codesign --verify --deep --strict --verbose=2 "$APP"
 
 echo "== Selbsttest des fertigen Bundles"
 "$APP/Contents/MacOS/$EXEC" --selftest || { echo "Selbsttest fehlgeschlagen"; exit 1; }
 
+echo "== Lizenzprüfung des Bundles"
+python3 scripts/audit-bundle.py "$APP" --report "$DIST/license-audit-app.txt"
+
 echo "== DMG"
-"$ROOT/scripts/make-dmg.sh" "$APP" "$DIST/ST2110-Monitor-$VERSION.dmg"
+"$ROOT/scripts/make-dmg.sh" "$APP" "$DIST/Essenz-$VERSION.dmg"
+
+echo "== Lizenzprüfung des DMG"
+MNT="$(mktemp -d)"
+hdiutil attach -nobrowse -readonly -mountpoint "$MNT" "$DIST/Essenz-$VERSION.dmg" >/dev/null
+python3 scripts/audit-bundle.py "$MNT" --report "$DIST/license-audit-dmg.txt" || { hdiutil detach "$MNT" >/dev/null; exit 1; }
+hdiutil detach "$MNT" >/dev/null
 
 if [ -n "${NOTARY_PROFILE:-}" ] && [ "$SIGN_IDENTITY" != "-" ]; then
-  "$ROOT/scripts/notarize.sh" "$DIST/ST2110-Monitor-$VERSION.dmg"
+  "$ROOT/scripts/notarize.sh" "$DIST/Essenz-$VERSION.dmg"
 else
   echo "Hinweis: nicht notarisiert (kein Developer-ID-Zertifikat/NOTARY_PROFILE). Siehe docs/04-Build-und-Verteilung.md."
 fi
-echo "Fertig: $DIST/ST2110-Monitor-$VERSION.dmg"
+echo "Fertig: $DIST/Essenz-$VERSION.dmg"

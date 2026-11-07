@@ -14,21 +14,21 @@ enum Entry {
                 exit(1)
             }
             var out = [CChar](repeating: 0, count: 16384)
-            let fails = st_selftest(5, &out, out.count)
+            let fails = st_selftest(5, GStreamerEnvironment.bundled ? 1 : 0, &out, out.count)
             print(String(cString: out), terminator: "")
             print("Bundle: \(GStreamerEnvironment.bundled ? "eingebettetes GStreamer" : "Entwicklungsumgebung")")
             exit(fails == 0 ? 0 : 1)
         }
-        ST2110MonitorApp.main()
+        EssenzApp.main()
     }
 }
 
-struct ST2110MonitorApp: App {
+struct EssenzApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @State private var model = AppModel()
 
     var body: some Scene {
-        Window("ST 2110 Monitor", id: "main") {
+        Window("Essenz", id: "main") {
             ContentView()
                 .environment(model)
                 .frame(minWidth: 960, minHeight: 600)

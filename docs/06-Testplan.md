@@ -86,7 +86,7 @@ Ziel: Nachweis mit **echter Blackmagic-Hardware**. Bitte jede Zeile mit Ergebnis
 
 ## 7 Kommandozeilen-Prüfung (optional, für Betreuung)
 
-Im Bundle liegt der Selbsttest: `"/Applications/ST 2110 Monitor.app/Contents/MacOS/ST2110Monitor" --selftest`.
+Im Bundle liegt der Selbsttest: `"/Applications/Essenz.app/Contents/MacOS/Essenz" --selftest`.
 Der Empfangskern ist auch als Werkzeug `st2110-probe` baubar (siehe 04); es zeichnet mit `--json` maschinenlesbare Ergebnisse auf.
 
 ## 8 Rückmeldevorlage

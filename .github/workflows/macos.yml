@@ -1,13 +1,17 @@
-name: macOS-Build
+name: Build und Tests
 
 on:
   push:
     branches: [main, "claude/**"]
+  pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   core-linux:
-    name: Empfangskern (Linux, synthetische Tests)
+    name: Kern (Linux, synthetische Tests)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -15,16 +19,18 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-            gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-tools
+            gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-tools tcpdump
       - name: Bauen und testen
         run: |
           make -C core
           ./core/build/test_unit core/tests/sdp
           ./core/build/st2110-probe --selftest
-          sudo ./core/tests/run_loopback_tests.sh
+          sudo TEST_WIDTH=960 TEST_HEIGHT=540 ./core/tests/run_loopback_tests.sh
+          if [ -x core/tests/run_sender_tests.sh ]; then sudo ./core/tests/run_sender_tests.sh; fi
+          if [ -x core/tests/run_analyzer_tests.sh ]; then ./core/tests/run_analyzer_tests.sh; fi
 
   app-macos:
-    name: App und DMG (macOS, Apple Silicon)
+    name: App, DMG und Lizenzprüfung (macOS, Apple Silicon)
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
@@ -35,7 +41,6 @@ jobs:
           X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
           [ -n "$X" ] && sudo xcode-select -s "$X"
           xcodebuild -version
-          swift --version
       - name: GStreamer-Pakete (Cache)
         uses: actions/cache@v4
         with:
@@ -43,22 +48,36 @@ jobs:
           key: gstreamer-1.28.8
       - name: GStreamer entpacken
         run: ./scripts/fetch-gstreamer.sh
-      - name: Unit-Tests (NMOS, Adressbereiche, Diagnose)
+      - name: Unit-Tests
         run: GSTREAMER_PREFIX=$PWD/vendor/gstreamer swift test --filter ST2110KitTests
-      - name: App bauen, signieren (ad hoc), Selbsttest, DMG
+      - name: App bauen, signieren (ad hoc), Selbsttest, Lizenzprüfung, DMG
         run: ./scripts/build-app.sh
+      - name: Bildschirmfotos für Usability-Prüfung und Webseite
+        run: |
+          mkdir -p dist/screenshots
+          "dist/Essenz.app/Contents/MacOS/Essenz" --render-screenshots dist/screenshots || echo "Bildschirmfotos nicht erzeugt"
+          ls -la dist/screenshots || true
+      - name: Quellcode der Drittanbieter-Bibliotheken (LGPL)
+        run: ./scripts/fetch-third-party-sources.sh
       - name: Bundle prüfen
         run: |
-          APP="dist/ST 2110 Monitor.app"
-          codesign -dv --verbose=2 "$APP" 2>&1 | head -20
-          otool -L "$APP/Contents/MacOS/ST2110Monitor" | head -20
-          du -sh "$APP"
-          # Prüft, dass keine Bibliothek außerhalb des Bundles (z. B. /Library/Frameworks oder Homebrew) referenziert wird
+          APP="dist/Essenz.app"
+          codesign -dv --verbose=2 "$APP" 2>&1 | head -12
+          du -sh "$APP" dist/*.dmg
           ! find "$APP" -type f \( -name "*.dylib" -o -perm -u+x \) -exec otool -L {} \; | grep -E "/(opt|usr/local|Library/Frameworks)/"
           spctl -a -vv "$APP" || echo "Erwartet: Gatekeeper lehnt ad-hoc-signierte Apps ab (keine Developer ID)."
-      - name: DMG hochladen
+      - name: Artefakte hochladen
         uses: actions/upload-artifact@v4
         with:
-          name: ST2110-Monitor-dmg
-          path: dist/*.dmg
+          name: Essenz-dmg
+          path: |
+            dist/*.dmg
+            dist/*third-party-sources.tar.gz
+            dist/license-audit-*.txt
           retention-days: 30
+      - name: Bildschirmfotos hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: Essenz-screenshots
+          path: dist/screenshots
+          if-no-files-found: ignore

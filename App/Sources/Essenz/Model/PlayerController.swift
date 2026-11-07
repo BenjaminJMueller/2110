@@ -442,7 +442,7 @@ final class PlayerController {
 
     /// Textbericht für Rückmeldungen (Testplan) – kopierbar.
     func reportText(appVersion: String) -> String {
-        var t = "ST 2110 Monitor \(appVersion) – Diagnosebericht \(ISO8601DateFormatter().string(from: Date()))\n"
+        var t = "Essenz \(appVersion) – Diagnosebericht \(ISO8601DateFormatter().string(from: Date()))\n"
         t += "macOS \(ProcessInfo.processInfo.operatingSystemVersionString), GStreamer \(GStreamerEnvironment.version)\n"
         t += "Quelle: \(current?.name ?? "-") (\(isDemo ? "Demo" : current?.origin.rawValue ?? "-"))\n"
         if let i = interface { t += "Schnittstelle: \(i.menuTitle)\n" }

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Kopiert die benötigten GStreamer-Plugins samt aller abhängigen Bibliotheken
-in das App-Bundle (Contents/Frameworks/GStreamer). Nur LGPL-/BSD-/MIT-lizenzierte
+in das App-Bundle (Contents/Frameworks, Contents/PlugIns, Contents/Helpers). Nur LGPL-/BSD-/MIT-lizenzierte
 Bestandteile; GPL-Plugins werden nicht verwendet.
 
 Aufruf:
   bundle_gstreamer.py --prefix vendor/gstreamer --dest "App.app/Contents/Frameworks/GStreamer" \
-                      --binary "App.app/Contents/MacOS/ST2110Monitor" [--otool otool]
+                      --binary "App.app/Contents/MacOS/Essenz" [--otool otool]
 """
 import argparse
 import os
@@ -48,7 +48,8 @@ def deps(otool, path):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--prefix", required=True)
-    ap.add_argument("--dest", required=True)
+    ap.add_argument("--dest", required=True, help="Ziel für Bibliotheken (Contents/Frameworks)")
+    ap.add_argument("--plugin-dest", help="Ziel für Plugins (Contents/PlugIns)")
     ap.add_argument("--binary", action="append", default=[])
     ap.add_argument("--otool", default="otool")
     ap.add_argument("--helpers-dest", help="Ziel für ausführbare Hilfsprogramme (Contents/Helpers)")
@@ -59,12 +60,14 @@ def main():
         otool += ["-arch", "arm64"]
 
     lib_src = os.path.join(a.prefix, "lib")
-    lib_dst = os.path.join(a.dest, "lib")
-    plug_dst = os.path.join(lib_dst, "gstreamer-1.0")
+    # Apple-Konvention: keine Unterverzeichnisse in Frameworks/PlugIns, sonst
+    # hält codesign sie für (ungültige) Bundles.
+    lib_dst = a.dest
+    plug_dst = a.plugin_dest or os.path.join(a.dest, "gstreamer-1.0")
     # Ausführbare Hilfsprogramme gehören für codesign nach Contents/Helpers,
     # nicht unter Contents/Frameworks.
     exec_dst = a.helpers_dest or os.path.join(a.dest, "libexec", "gstreamer-1.0")
-    for d in (plug_dst, exec_dst):
+    for d in (lib_dst, plug_dst, exec_dst):
         os.makedirs(d, exist_ok=True)
 
     todo = []
@@ -117,9 +120,10 @@ def main():
         with open(a.manifest, "w") as m:
             m.write("\n".join(files) + "\n")
     total = 0
-    for root, _, fs in os.walk(a.dest):
-        for x in fs:
-            total += os.path.getsize(os.path.join(root, x))
+    for d in {lib_dst, plug_dst, exec_dst}:
+        for root, _, fs in os.walk(d):
+            for x in fs:
+                total += os.path.getsize(os.path.join(root, x))
     print(f"{len(copied)} Bibliotheken, {len(PLUGINS)} Plugins, {len(HELPERS)} Hilfsprogramme gebündelt ({total / 1e6:.1f} MB)")
 
 
