@@ -45,6 +45,8 @@ typedef struct {
     double fps;                /* aus RTP-Zeitstempeln */
     /* Video-Formaterkennung */
     int cur_max_line, cur_max_pix, cur_interlace;
+    int cur_marker;            /* letztes Paket des Bildes gesehen */
+    uint64_t cur_lost_start;   /* Verlustzähler bei Bildbeginn */
     int seen_w, seen_h, seen_interlace;
     int mismatch_count;
     int mismatch_reported;
@@ -626,8 +628,11 @@ static GstPadProbeReturn video_probe(GstPad *pad, GstPadProbeInfo *info, gpointe
                     double f = 90000.0 / d;
                     s->fps = s->fps <= 0 ? f : s->fps * 0.9 + f * 0.1;
                 }
-                /* Formaterkennung des abgeschlossenen Bildes */
-                if (s->cur_max_line > 0) {
+                /* Formaterkennung des abgeschlossenen Bildes – nur bei vollständigen
+                 * Bildern (Marker gesehen, kein Paketverlust). Sonst fehlen Zeilen
+                 * und das Bild wirkt kleiner, ohne dass sich das Format geändert hat. */
+                int complete = s->cur_marker && s->lost == s->cur_lost_start;
+                if (s->cur_max_line > 0 && complete) {
                     s->seen_w = s->cur_max_pix;
                     s->seen_h = s->cur_max_line;
                     if (s->cur_interlace && !s->seen_interlace) interlace_new = 1;
@@ -650,6 +655,8 @@ static GstPadProbeReturn video_probe(GstPad *pad, GstPadProbeInfo *info, gpointe
             s->cur_max_line = 0;
             s->cur_max_pix = 0;
             s->cur_interlace = 0;
+            s->cur_marker = 0;
+            s->cur_lost_start = s->lost;
             s->have_ts = 1;
             s->last_ts = h.ts;
             if (map_timestamp(r, s, h.ts, 90000, &pts, &resynced)) {
@@ -662,7 +669,7 @@ static GstPadProbeReturn video_probe(GstPad *pad, GstPadProbeInfo *info, gpointe
         } else if (s->have_map) {
             pts = s->map_pts;
         }
-        if (h.marker) s->frames++;
+        if (h.marker) { s->frames++; s->cur_marker = 1; }
         /* RFC 4175 Nutzlastkopf: ESN (2 Byte), danach SRD-Köpfe à 6 Byte */
         if (h.payload_len >= 8) {
             const uint8_t *p = h.payload + 2;

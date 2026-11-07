@@ -67,6 +67,14 @@ check "Verluste gezählt" "$OUT/t5.txt" "v_lost > 0 and a_lost >= 0"
 check "Wiedergabe läuft trotz Verlust" "$OUT/t5.txt" "v_rendered > 0.8*50*9"
 check "Bildrate 50 erkannt" "$OUT/t5.txt" "abs(v_fps-50) < 0.2"
 
+echo "== 5b Starker Paketverlust (5 %): keine falsche Formatwarnung"
+stop_sender
+sender --fps 25 --channels 2 --ptime 1 --width 640 --height 360 --loss 0.05 --duration 10
+probe "$OUT/t5b.txt" --video-sdp "$OUT/video.sdp" --audio-sdp "$OUT/audio.sdp" --mode rtp --duration 7
+stop_sender
+check "Verluste gezählt" "$OUT/t5b.txt" "v_lost > 0"
+if grep -q -- "passt nicht zur SDP" "$OUT/t5b.txt"; then echo "  FEHLER Unvollständige Bilder als Formatwechsel gemeldet"; fail=$((fail+1)); else echo "  OK    Keine Formatwarnung bei Paketverlust"; pass=$((pass+1)); fi
+
 echo "== 6 Senderneustart (neue SSRC) und Unterbrechung"
 sender --fps 25 --channels 2 --width 640 --height 360 --ssrc-video 1111 --ssrc-audio 2222 --duration 30
 ( probe "$OUT/t6.txt" --video-sdp "$OUT/video.sdp" --audio-sdp "$OUT/audio.sdp" --mode rtp --duration 16 ) &
