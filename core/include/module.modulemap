@@ -1,0 +1,6 @@
+module ST2110Core {
+    header "st2110core.h"
+    header "st2110send.h"
+    header "st2110analyze.h"
+    export *
+}

@@ -43,8 +43,8 @@ struct SendView: View {
                         Picker("Video", selection: $s.format) {
                             ForEach(SenderController.Format.allCases) { f in Text("\(f.rawValue) · YCbCr 4:2:2 10 Bit").tag(f) }
                         }
-                        Stepper("Audiokanäle: \(s.audioChannels == 0 ? "aus" : String(s.audioChannels))", value: $s.audioChannels, in: 0...16)
-                        Toggle("Paketzeit 0,125 ms (nötig ab 9 Kanälen)", isOn: Binding(get: { s.ptime125 || s.audioChannels > 8 }, set: { s.ptime125 = $0 }))
+                        Stepper(channelsLabel, value: $s.audioChannels, in: 0...16)
+                        Toggle("Paketzeit 0,125 ms (nötig ab 9 Kanälen)", isOn: ptimeBinding)
                             .disabled(s.audioChannels > 8 || s.audioChannels == 0)
                         Text(rateText).font(.caption).foregroundStyle(rateWarning ? .orange : .secondary)
                     }
@@ -172,6 +172,17 @@ struct SendView: View {
         if !d.audio.isEmpty { parts.append("Audio") }
         let kinds: String = parts.joined(separator: " + ")
         return d.pairingCertain ? kinds : kinds + " · Zuordnung vermutet"
+    }
+
+    private var channelsLabel: String {
+        let n: Int = model.sender.audioChannels
+        let value: String = n == 0 ? "aus" : String(n)
+        return "Audiokanäle: " + value
+    }
+
+    private var ptimeBinding: Binding<Bool> {
+        let sender: SenderController = model.sender
+        return Binding<Bool>(get: { sender.ptime125 || sender.audioChannels > 8 }, set: { sender.ptime125 = $0 })
     }
 
     private var chosenInterface: InterfaceSnapshot? {
