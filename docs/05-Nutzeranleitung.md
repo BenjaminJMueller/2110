@@ -23,12 +23,17 @@ Für alle, die Bild und Ton von Blackmagic-ST-2110-Geräten am Mac sehen und hö
 | Lautsprecher-Symbol, Regler | Stumm, Lautstärke | M, ⌘↑ / ⌘↓ |
 | HiFi-Symbol | Audioausgabegerät (Standard: Systemausgang) | |
 | Pfeile | Vollbild (Esc beendet) | ⌃⌘F |
+| Zweiter Bildschirm (Symbolleiste) | Bild randlos auf Monitor oder Beamer, Bedienung bleibt im Hauptfenster | ⌘⇧B |
 | Diagnose (Symbolleiste) | Formate, Paketverluste, Synchronisation, PTP, Aufzeichnen | ⌘I |
 | Modus | Empfangen, Senden, Analysieren | ⌘1, ⌘2, ⌘3 |
 | „?“ (Symbolleiste) | Erklärung „So funktioniert ST 2110“ | |
 | Erweitert (Symbolleiste) | Netzwerk, Synchronisation, NMOS, Adressbereiche | ⌘, |
 
 Die Pegelanzeige zeigt alle Kanäle; abgehörte Kanäle sind umrandet.
+
+## Ausgabe auf einem zweiten Bildschirm
+
+Monitor oder Beamer anschließen und in *Systemeinstellungen › Displays* „Erweitern“ (nicht „Spiegeln“) wählen. In der Symbolleiste **Zweiter Bildschirm** den Bildschirm wählen. Dort erscheint nur das Videobild, randlos und ohne Mauszeiger, im richtigen Seitenverhältnis mit schwarzen Rändern. Start, Kanäle, Lautstärke und Diagnose bleiben im Hauptfenster. ⌘⇧B schaltet die Ausgabe ein und aus (zuletzt benutzter Bildschirm). Wird der Bildschirm getrennt, schaltet sich die Ausgabe ab.
 
 ## Senden
 

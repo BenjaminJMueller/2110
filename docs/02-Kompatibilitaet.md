@@ -56,6 +56,7 @@
 | Rückfall, wenn der Sender nicht zum Grandmaster passt | S |
 | RTP-abgestimmte Lippensynchronität | S: Versatz < 0,2 ms an den Ausgabezeitstempeln |
 | Senderneustart, Unterbrechung, Formatwechsel, Paketverlust | S |
+| Bildausgabe auf zweitem Bildschirm (randloses Fenster, eigener Renderer) | D – implementiert, auf echtem Mac mit zweitem Bildschirm zu prüfen |
 
 ## 2.6 Senden und Analyse
 

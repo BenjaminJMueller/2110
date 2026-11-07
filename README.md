@@ -11,7 +11,7 @@
 | ST 2110-20 (YCbCr 4:2:2, 10/8 Bit) und ST 2110-30 (bis 64 Kanäle) | Testbild, Lippensynchron-Test, Videodatei oder Kamera als ST 2110-20/-30 | pcap/pcapng mit ST-2110-Verkehr, angelehnt an EBU LIST |
 | Quellen per NMOS IS-04 automatisch, oder SDP per Drag-and-drop | Kündigt sich als NMOS-Quelle an, verbindet Empfänger per IS-05 | Verluste, Paketabstände, Format ohne SDP, Cinst/VRX nach ST 2110-21 |
 | Lippensynchron über RTP-Zeitstempel bzw. als passiver PTP-Slave | Zeitstempel vom PTP-Grandmaster, Pakete gleichmäßig verteilt | Audio-TS-DF, PTP-Domains und Grandmaster, IGMP-Querier, Vorschaubild |
-| Einzelkanal oder freies Stereopaar abhören, Ausgabegerät wählbar | Dateien dekodiert macOS selbst (H.264, HEVC, ProRes, AAC) | Mitschnitt direkt aus dem Empfang aufzeichnen |
+| Einzelkanal oder freies Stereopaar abhören, Ausgabegerät wählbar; Bild randlos auf zweitem Bildschirm oder Beamer | Dateien dekodiert macOS selbst (H.264, HEVC, ProRes, AAC) | Mitschnitt direkt aus dem Empfang aufzeichnen |
 
 Projektseite: `site/` (GitHub Pages, Einrichtung siehe unten).
 

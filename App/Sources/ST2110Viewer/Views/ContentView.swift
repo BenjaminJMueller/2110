@@ -55,6 +55,7 @@ struct ContentView: View {
                 }
                 .help("Erweiterte Einstellungen: Netzwerk, Synchronisation, NMOS, Adressbereiche (⌘,)")
                 if model.mode == .receive {
+                    ExternalOutputMenu()
                     Button {
                         model.inspectorShown.toggle()
                     } label: {

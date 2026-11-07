@@ -106,6 +106,8 @@ struct AppCommands: Commands {
                 .keyboardShortcut("i", modifiers: [.command])
             Button("Vollbild") { NSApp.keyWindow?.toggleFullScreen(nil) }
                 .keyboardShortcut("f", modifiers: [.command, .control])
+            Button(model.output.isActive ? "Ausgabe auf zweitem Bildschirm beenden" : "Ausgabe auf zweitem Bildschirm") { model.output.toggle() }
+                .keyboardShortcut("b", modifiers: [.command, .shift])
         }
         CommandGroup(replacing: .help) {
             Button("So funktioniert ST 2110") { model.explainerPage = 0; model.showOnboarding = true }

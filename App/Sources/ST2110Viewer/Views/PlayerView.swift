@@ -32,6 +32,7 @@ struct PlayerView: View {
             if !model.isFullScreen {
                 VStack(spacing: 8) {
                     ControlBar()
+                    OutputStatus()
                     HintBanner()
                 }
                 .padding(12)
@@ -199,6 +200,29 @@ private struct SnapshotVideo: View {
             while !Task.isCancelled {
                 image = model.player.sink.secondsSinceLastFrame < 1 ? model.player.sink.cgImage(width: 960) : nil
                 try? await Task.sleep(nanoseconds: 400_000_000)
+            }
+        }
+    }
+}
+
+/// Zustand der Ausgabe auf dem zweiten Bildschirm, nur wenn es etwas zu sagen gibt.
+private struct OutputStatus: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let out = model.output
+        if let m = out.message {
+            HStack(spacing: 8) {
+                Label(m, systemImage: "rectangle.on.rectangle").font(.callout)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer()
+                Button("OK") { out.dismissMessage() }.controlSize(.small)
+            }
+        } else if let name = out.activeName {
+            HStack(spacing: 8) {
+                Label("Ausgabe auf " + name, systemImage: "rectangle.on.rectangle.fill").font(.callout).foregroundStyle(.secondary)
+                Spacer()
+                Button("Beenden") { out.hide() }.controlSize(.small)
             }
         }
     }

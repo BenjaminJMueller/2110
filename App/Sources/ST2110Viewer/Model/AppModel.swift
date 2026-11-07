@@ -61,6 +61,7 @@ final class AppModel {
     let audioDevices = AudioDeviceList()
     let sender = SenderController()
     let analysis = AnalysisModel()
+    let output: ExternalOutput
 
     var appVersion: String {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
@@ -70,6 +71,7 @@ final class AppModel {
 
     init() {
         GStreamerEnvironment.setUp()
+        output = ExternalOutput(sink: player.sink)
         settings = AppSettings.load()
         saved = store.load()
         showOnboarding = !settings.onboardingDone
