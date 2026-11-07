@@ -3,8 +3,14 @@ name: Build und Tests
 on:
   push:
     branches: [main, "claude/**"]
+    tags: ["v*"]
   pull_request:
   workflow_dispatch:
+    inputs:
+      release:
+        description: "DMG als GitHub-Release veröffentlichen (Tag v<VERSION>)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -32,6 +38,8 @@ jobs:
   app-macos:
     name: App, DMG und Lizenzprüfung (macOS, Apple Silicon)
     runs-on: macos-26
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -83,3 +91,24 @@ jobs:
           name: 2110-Viewer-screenshots
           path: dist/screenshots
           if-no-files-found: ignore
+      - name: Release-Dateien vorbereiten
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.release
+        run: |
+          V=$(cat VERSION)
+          mkdir -p dist/release
+          cp "dist/2110-Viewer-$V.dmg" dist/release/2110-Viewer.dmg
+          cp "dist/2110-Viewer-$V.dmg" dist/*third-party-sources.tar.gz dist/license-audit-*.txt dist/release/
+          echo "TAG=v$V" >> "$GITHUB_ENV"
+      - name: GitHub-Release veröffentlichen
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          target_commitish: ${{ github.sha }}
+          name: 2110 Viewer ${{ env.TAG }}
+          make_latest: true
+          body: |
+            DMG öffnen, „2110 Viewer“ in „Programme“ ziehen. Die App ist ad hoc signiert, nicht notarisiert: beim ersten Start einmal Systemeinstellungen › Datenschutz & Sicherheit › „Dennoch öffnen“.
+
+            Enthält GStreamer und weitere Bibliotheken (LGPL-2.1, BSD, MIT, zlib). Den vollständigen Quellcode dieser Bibliotheken enthält das Archiv *third-party-sources.tar.gz*, die Lizenzprüfberichte liegen bei.
+          files: dist/release/*

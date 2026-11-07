@@ -4,6 +4,8 @@
 
 **ST 2110 am Mac empfangen, senden und analysieren.** Entstanden für die Lehre.
 
+**[⬇ DMG laden](https://github.com/BenjaminJMueller/2110/releases/latest/download/2110-Viewer.dmg)** · macOS 14 oder neuer, Apple Silicon
+
 | Empfangen | Senden | Analysieren |
 |---|---|---|
 | ST 2110-20 (YCbCr 4:2:2, 10/8 Bit) und ST 2110-30 (bis 64 Kanäle) | Testbild, Lippensynchron-Test, Videodatei oder Kamera als ST 2110-20/-30 | pcap/pcapng mit ST-2110-Verkehr, angelehnt an EBU LIST |
@@ -17,7 +19,7 @@ Projektseite: `site/` (GitHub Pages, Einrichtung siehe unten).
 
 DMG öffnen, **2110 Viewer** in **Programme** ziehen, starten. GStreamer ist eingebettet: kein Terminal, kein Homebrew, keine Dienste. Solange die App nicht notarisiert ist (es fehlt ein Apple-Developer-Konto), beim ersten Start einmal *Systemeinstellungen › Datenschutz & Sicherheit › Dennoch öffnen*. Details: [Nutzeranleitung](docs/05-Nutzeranleitung.md).
 
-DMG-Builds liegen als Artefakt jedes CI-Laufs vor (Actions › „Build und Tests“ › *2110-Viewer-dmg*), zusammen mit dem Quellpaket der eingebetteten Bibliotheken und den Lizenzprüfberichten.
+Die DMG liegt unter [Releases](https://github.com/BenjaminJMueller/2110/releases), zusammen mit dem Quellpaket der eingebetteten Bibliotheken und den Lizenzprüfberichten. Zwischenstände gibt es als Artefakt jedes CI-Laufs (Actions › „Build und Tests“ › *2110-Viewer-dmg*).
 
 ## Dokumentation
 
