@@ -697,7 +697,7 @@ static GstPadProbeReturn video_probe(GstPad *pad, GstPadProbeInfo *info, gpointe
     if (resynced) emit(r, ST_EVENT_WARNING, 1, "Zeitbezug neu ausgerichtet (Sprung in den Zeitstempeln).");
     if (interlace_new) emit(r, ST_EVENT_FORMAT_MISMATCH, 2, "Der Sender überträgt Halbbilder (Zeilensprung). Dieses Format wird nicht unterstützt. Abhilfe: am SDI-Quellgerät ein progressives Format (z. B. 1080p25/1080p50) einstellen.");
     if (mismatch) emit(r, ST_EVENT_FORMAT_MISMATCH, 1,
-                       "Empfangenes Bild %d×%d passt nicht zur SDP (%d×%d). Vermutlich hat der Sender das Format geändert – bitte SDP neu laden.",
+                       "Empfangenes Bild %d×%d passt nicht zur SDP (%d×%d). Vermutlich hat der Sender das Format geändert. Bitte die SDP neu laden.",
                        seen_w, seen_h, r->cfg.video.width, r->cfg.video.height);
     if (drop) return GST_PAD_PROBE_DROP;
     if (r->active != ST_SYNC_PREVIEW && pts != GST_CLOCK_TIME_NONE) {
@@ -762,7 +762,7 @@ static GstPadProbeReturn audio_probe(GstPad *pad, GstPadProbeInfo *info, gpointe
     if (restart) emit(r, ST_EVENT_SENDER_RESTART, 0, "Audio: Der Sender wurde vermutlich neu gestartet (neue SSRC oder Sequenzsprung).");
     if (resynced) emit(r, ST_EVENT_WARNING, 1, "Zeitbezug neu ausgerichtet (Sprung in den Zeitstempeln).");
     if (bad_size) emit(r, ST_EVENT_FORMAT_MISMATCH, 3,
-                       "Die Audiopakete (%d Byte Nutzlast) passen nicht zu %d Kanälen à %d Bit laut SDP. Vermutlich stimmen Kanalzahl oder Format nicht – bitte SDP neu laden.",
+                       "Die Audiopakete (%d Byte Nutzlast) passen nicht zu %d Kanälen à %d Bit laut SDP. Vermutlich stimmen Kanalzahl oder Format nicht. Bitte die SDP neu laden.",
                        (int)h.payload_len, r->a_channels, r->a_bytes_per_sample * 8);
     if (drop) return GST_PAD_PROBE_DROP;
     if (r->active != ST_SYNC_PREVIEW && pts != GST_CLOCK_TIME_NONE) {

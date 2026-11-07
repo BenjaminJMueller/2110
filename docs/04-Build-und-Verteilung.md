@@ -4,7 +4,7 @@
 
 Endanwender laden nur das **DMG**, ziehen die App in „Programme“ und starten sie.
 GStreamer und alle Bibliotheken stecken in der App (`Contents/Frameworks`, `Contents/PlugIns`, `Contents/Helpers`).
-Es gibt kein Terminal, kein Homebrew, keine separat zu startenden Dienste und keine Installation in Systemordnern.
+Terminal, Homebrew oder eigene Hintergrunddienste werden nicht gebraucht, und nichts wird in Systemordner installiert.
 
 Systemvoraussetzungen: Mac mit Apple Silicon (M1 oder neuer, Ziel M4), **macOS 14 Sonoma oder neuer**.
 Liquid-Glass-Oberfläche ab macOS 26; unter macOS 14/15 erscheinen dieselben Bedienelemente mit nativen Materialien.
@@ -87,4 +87,4 @@ Das Skript signiert dann mit Hardened Runtime und Zeitstempel, reicht das DMG zu
 | Lokales Netzwerk (macOS 15+) | NMOS-Erkennung (mDNS), HTTP zu den Geräten, Multicast-Empfang | Systemabfrage beim ersten Zugriff, Begründungstext in der Info.plist |
 | Eingehende Verbindungen | nur bei eingeschalteter Firewall, für App und `gst-ptp-helper` | Systemabfrage |
 | keine Sandbox | Multicast auf frei wählbarer Schnittstelle und PTP-Ports 319/320 sind in der App-Sandbox nicht möglich | nur für Developer-ID-Verteilung relevant (nicht App Store) |
-| kein Mikrofon, keine Kamera, keine Administratorrechte | | |
+| Administratorrechte | werden nicht benötigt | |

@@ -88,7 +88,7 @@ footer p{margin:4px 0}
       <a class="btn primary" href="https://github.com/BenjaminJMueller/2110/releases/latest/download/2110-Viewer.dmg">DMG laden</a>
       <a class="btn" href="https://github.com/BenjaminJMueller/2110/blob/main/docs/05-Nutzeranleitung.md">Kurzanleitung</a>
     </div>
-    <p class="note">macOS 14 oder neuer, Apple Silicon · Liquid Glass ab macOS 26 · MIT-Lizenz</p>
+    <p class="note">Für macOS 14 oder neuer auf Apple Silicon, frei unter der MIT-Lizenz.</p>
   </div>
   <div class="shot">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="t" style="width:100%;height:auto;display:block">
@@ -118,7 +118,7 @@ footer p{margin:4px 0}
 
 <section id="funktionen"><div class="wrap">
   <h2>Drei Arbeitsweisen</h2>
-  <p class="sub">ST 2110 zerlegt ein SDI-Signal in einzelne Essenzen – Video, Audio, Daten – mit je eigener Multicast-Adresse. 2110 Viewer arbeitet mit allen dreien.</p>
+  <p class="sub">ST 2110 zerlegt ein SDI-Signal in einzelne Essenzen, also Video, Audio und Daten, jede mit eigener Multicast-Adresse. 2110 Viewer arbeitet mit allen dreien.</p>
   <div class="grid3">
     <div class="card">
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z"/></svg>
@@ -129,13 +129,13 @@ footer p{margin:4px 0}
     <div class="card">
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M7.8 16.2a6 6 0 0 1 0-8.4M16.2 7.8a6 6 0 0 1 0 8.4M4.9 19.1a10 10 0 0 1 0-14.2M19.1 4.9a10 10 0 0 1 0 14.2"/></svg>
       <h3>Senden</h3>
-      <p>Testbild, Videodatei oder Kamera als ST 2110 ins Netz – zum Beispiel an einen SDI-Ausgang des Converters.</p>
+      <p>Schickt ein Testbild, eine Videodatei oder das Kamerabild als ST 2110 ins Netz, zum Beispiel an einen SDI-Ausgang des Converters.</p>
       <ul><li>Dateien dekodiert macOS selbst (H.264, HEVC, ProRes, AAC)</li><li>Gleichmäßig verteilte Pakete, Zeitstempel vom PTP-Grandmaster</li><li>Kündigt sich als NMOS-Quelle an, verbindet per IS-05</li></ul>
     </div>
     <div class="card">
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>
       <h3>Analysieren</h3>
-      <p>Paketmitschnitte (pcap, pcapng) prüfen – angelehnt an den Umfang von EBU LIST, eigenständig umgesetzt.</p>
+      <p>Prüft Paketmitschnitte im Format pcap oder pcapng. Der Umfang orientiert sich an EBU LIST, der Code ist eigenständig.</p>
       <ul><li>Verluste, Paketabstände, Bildrate und -größe</li><li>Zeitverhalten nach ST 2110-21 (Cinst, VRX)</li><li>Audio-TS-DF, PTP-Domains und Grandmaster, IGMP-Querier</li><li>Mitschnitt direkt aus dem Empfang aufzeichnen</li></ul>
     </div>
   </div>
@@ -154,18 +154,18 @@ footer p{margin:4px 0}
 
 <section id="start"><div class="wrap">
   <h2>Erste Schritte</h2>
-  <p class="sub">Kein Terminal, kein Homebrew, keine Dienste. GStreamer steckt in der App.</p>
+  <p class="sub">Die Installation funktioniert wie bei jeder anderen Mac-App. GStreamer und alle Bibliotheken sind bereits enthalten.</p>
   <div class="steps">
     <div class="card"><h3>DMG öffnen</h3><p>2110 Viewer in den Ordner Programme ziehen. Beim ersten Start einmal „Dennoch öffnen“ in den Systemeinstellungen, solange die App nicht notarisiert ist.</p></div>
-    <div class="card"><h3>Mac verbinden</h3><p>10-GbE-Adapter an den Switch oder direkt an den Converter.</p></div>
-    <div class="card"><h3>Quelle wählen</h3><p>Blackmagic-Eingänge erscheinen unter „Im Netzwerk gefunden“. Lokales Netzwerk erlauben.</p></div>
-    <div class="card"><h3>Sehen und hören</h3><p>Leertaste startet und stoppt. Kanäle, Lautstärke und Ausgabegerät in der Leiste.</p></div>
+    <div class="card"><h3>Mac verbinden</h3><p>Den 10-GbE-Adapter mit dem Switch oder direkt mit dem Converter verbinden.</p></div>
+    <div class="card"><h3>Quelle wählen</h3><p>Blackmagic-Eingänge erscheinen unter „Im Netzwerk gefunden“. Wenn macOS nach dem lokalen Netzwerk fragt, bitte erlauben.</p></div>
+    <div class="card"><h3>Sehen und hören</h3><p>Die Leertaste startet und stoppt. Kanäle, Lautstärke und Ausgabegerät stellt man in der Leiste unter dem Bild ein.</p></div>
   </div>
 </div></section>
 
 <section id="hardware"><div class="wrap">
   <h2>Hardware</h2>
-  <p class="sub">Der 3x3G hat 10GBASE-T (RJ-45) und spricht 10/100/1000/10G – keine 2,5G oder 5G. Direkt angeschlossen braucht der Mac deshalb echtes 10-GbE.</p>
+  <p class="sub">Der 3x3G hat 10GBASE-T (RJ-45) und unterstützt 10/100/1000 Mbit/s sowie 10 Gbit/s, aber nicht 2,5 oder 5 Gbit/s. Für eine direkte Verbindung braucht der Mac deshalb einen 10-GbE-Anschluss.</p>
   <table>
     <thead><tr><th>Adapter</th><th>Anschluss</th><th>Richtpreis</th></tr></thead>
     <tbody>
@@ -180,17 +180,17 @@ footer p{margin:4px 0}
 
 <section id="open-source"><div class="wrap">
   <h2>Open Source</h2>
-  <p class="sub">Der Code von 2110 Viewer steht unter der MIT-Lizenz. Die App bettet GStreamer 1.28.8 und dessen Bibliotheken unverändert ein (LGPL-2.1, BSD, MIT, zlib); keine GPL-Bestandteile, keine Codecs, keine Herstellerdateien. Jedes DMG wird automatisch auf Lizenzen geprüft, der Quellcode der eingebetteten Bibliotheken liegt jeder Veröffentlichung bei.</p>
+  <p class="sub">Der Code von 2110 Viewer steht unter der MIT-Lizenz. Die App bettet GStreamer 1.28.8 und dessen Bibliotheken unverändert ein (LGPL-2.1, BSD, MIT, zlib). GPL-Bestandteile, Codecs oder Herstellerdateien sind nicht enthalten. Jedes DMG wird automatisch auf Lizenzen geprüft, und jeder Veröffentlichung liegt der Quellcode der eingebetteten Bibliotheken bei.</p>
   <div class="grid3">
-    <div class="card"><h3>Lizenzen</h3><p><a href="https://github.com/BenjaminJMueller/2110/blob/main/LICENSE">LICENSE</a> · <a href="https://github.com/BenjaminJMueller/2110/blob/main/THIRD_PARTY_NOTICES.md">THIRD_PARTY_NOTICES</a> · <a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/LGPL-Quellen.md">LGPL-Quellen</a></p></div>
-    <div class="card"><h3>Dokumentation</h3><p><a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/01-Machbarkeit.md">Machbarkeit</a> · <a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/03-Synchronisation.md">Synchronisation</a> · <a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/08-Analyse.md">Analyse</a> · <a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/09-Senden.md">Senden</a></p></div>
-    <div class="card"><h3>Mitmachen</h3><p>Testergebnisse mit eigener Hardware helfen am meisten: Diagnosebericht kopieren und als <a href="https://github.com/BenjaminJMueller/2110/issues">Issue</a> einstellen.</p></div>
+    <div class="card"><h3>Lizenzen</h3><p><a href="https://github.com/BenjaminJMueller/2110/blob/main/LICENSE">LICENSE</a>, <a href="https://github.com/BenjaminJMueller/2110/blob/main/THIRD_PARTY_NOTICES.md">THIRD_PARTY_NOTICES</a>, <a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/LGPL-Quellen.md">LGPL-Quellen</a></p></div>
+    <div class="card"><h3>Dokumentation</h3><p><a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/01-Machbarkeit.md">Machbarkeit</a>, <a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/03-Synchronisation.md">Synchronisation</a>, <a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/08-Analyse.md">Analyse</a>, <a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/09-Senden.md">Senden</a></p></div>
+    <div class="card"><h3>Mitmachen</h3><p>Am meisten helfen Testergebnisse mit echter Hardware. Dazu in der App den Diagnosebericht kopieren und als <a href="https://github.com/BenjaminJMueller/2110/issues">Issue</a> einstellen.</p></div>
   </div>
 </div></section>
 </main>
 
 <footer><div class="wrap">
-  <p>2110 Viewer · MIT-Lizenz · <a href="https://github.com/BenjaminJMueller/2110">Quellcode auf GitHub</a></p>
+  <p>2110 Viewer ist freie Software unter der MIT-Lizenz. Der <a href="https://github.com/BenjaminJMueller/2110">Quellcode</a> liegt auf GitHub.</p>
 </div></footer>
 <script>
 // Bildschirmfotos nur zeigen, wenn sie vorhanden sind (sie entstehen im macOS-CI)

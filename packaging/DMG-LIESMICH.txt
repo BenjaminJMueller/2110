@@ -2,11 +2,11 @@
 ==============================
 
 1. „2110 Viewer“ auf den Ordner „Programme“ (Applications) ziehen.
-2. Das Fenster schließen und die Disk image auswerfen.
+2. Das Fenster schließen und das Disk-Image auswerfen.
 3. Im Ordner „Programme“ „2110 Viewer“ öffnen.
 
-Nichts weiter zu installieren: GStreamer und alle Bestandteile sind in der App
-enthalten. Kein Terminal, kein Homebrew, keine Hintergrunddienste.
+Mehr ist nicht zu tun. GStreamer und alle übrigen Bestandteile sind in der App
+enthalten.
 
 Falls macOS beim ersten Öffnen meldet, die App könne nicht überprüft werden
 ---------------------------------------------------------------------------
@@ -26,9 +26,9 @@ Das ist nur beim ersten Start nötig.
 
 Beim ersten Start fragt macOS gegebenenfalls
 --------------------------------------------
-• „Geräte im lokalen Netzwerk finden und mit ihnen verbinden?“ → Erlauben.
-  Nötig für Geräteerkennung (NMOS) und Empfang der Ströme.
-• Bei aktiver Firewall: „Eingehende Netzwerkverbindungen akzeptieren?“ → Erlauben
-  (für die App und das Hilfsprogramm „gst-ptp-helper“).
+- „Geräte im lokalen Netzwerk finden und mit ihnen verbinden?“ bitte erlauben.
+  Ohne diese Erlaubnis findet die App keine Geräte und empfängt keine Ströme.
+- Ist die Firewall aktiv, fragt macOS nach eingehenden Verbindungen. Auch das
+  bitte erlauben, für die App und für das Hilfsprogramm „gst-ptp-helper“.
 
-Weitere Hilfe: Menü „Hilfe › Kurzanleitung und Berechtigungen“.
+Weitere Hilfe steht in der App im Menü „Hilfe“ unter „Erste Schritte und Berechtigungen“.

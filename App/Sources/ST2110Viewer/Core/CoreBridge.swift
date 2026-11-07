@@ -76,10 +76,10 @@ struct SDPMedia {
         switch kind {
         case .video:
             let f = fps == fps.rounded() ? String(Int(fps)) : String(format: "%.2f", fps)
-            return "\(width)×\(height)\(interlaced ? "i" : "p")\(f) · \(sampling) · \(depth) Bit"
+            return "\(width)×\(height)\(interlaced ? "i" : "p")\(f), \(sampling), \(depth) Bit"
         case .audio:
-            let pt = ptimeMs > 0 ? String(format: " · %@ ms", ptimeMs < 1 ? "0,125" : String(format: "%.0f", ptimeMs)) : ""
-            return "\(channels) Kanäle · \(encoding) · \(clockRate / 1000) kHz\(pt)"
+            let pt = ptimeMs > 0 ? String(format: ", %@ ms", ptimeMs < 1 ? "0,125" : String(format: "%.0f", ptimeMs)) : ""
+            return "\(channels) Kanäle, \(encoding), \(clockRate / 1000) kHz\(pt)"
         default:
             return encoding
         }

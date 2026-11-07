@@ -164,7 +164,7 @@ struct AnalysisSidebar: View {
                 ForEach(a.entries) { e in
                     VStack(alignment: .leading, spacing: 2) {
                         Text(e.url.lastPathComponent).lineLimit(1)
-                        Text(e.report.map { "\($0.streams.count) Ströme · \(String(format: "%.1f", locale: .current, $0.capture.duration_s)) s" } ?? (e.error ?? ""))
+                        Text(e.report.map { "\($0.streams.count) Ströme, \(String(format: "%.1f", locale: .current, $0.capture.duration_s)) s" } ?? (e.error ?? ""))
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     .tag(e.id)

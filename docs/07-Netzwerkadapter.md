@@ -6,7 +6,7 @@ Stand der Recherche: 7. November 2026. Preise sind Richtwerte (Geizhals bzw. Her
 
 | Anforderung | Warum |
 |---|---|
-| **10GBASE-T (RJ-45) mit 10 Gbit/s** | Der Blackmagic 2110 IP Converter 3x3G hat eine RJ-45-Buchse für **10/100/1000/10G BASE-T** – laut technischen Daten ohne 2,5G/5G (NBASE-T). Ein 2,5G- oder 5G-Adapter fällt direkt am Converter auf **1 Gbit/s** zurück; das reicht für unkomprimiertes HD nicht (1080p25 ≈ 1,1 Gbit/s, 1080p50 ≈ 2,2 Gbit/s). |
+| **10GBASE-T (RJ-45) mit 10 Gbit/s** | Der Blackmagic 2110 IP Converter 3x3G hat eine RJ-45-Buchse für **10/100/1000/10G BASE-T**. 2,5G und 5G (NBASE-T) unterstützt er laut technischen Daten nicht. Ein 2,5G- oder 5G-Adapter fällt direkt am Converter auf **1 Gbit/s** zurück; das reicht für unkomprimiertes HD nicht (1080p25 ≈ 1,1 Gbit/s, 1080p50 ≈ 2,2 Gbit/s). |
 | **Thunderbolt 3/4/5 oder USB4** | 10 Gbit/s plus Protokollaufwand passen nicht durch USB 3.x. |
 | **Treiber in macOS enthalten** | Ohne Installation, ohne Kernel-Erweiterung. Adapter mit Marvell/Aquantia-AQtion-Chip (AQC107/AQC113) laufen unter macOS ohne zusätzlichen Treiber. |
 | **MTU 1500 genügt** | 2110 Viewer und der 3x3G nutzen Standardpakete; Jumbo-Frames sind nicht nötig. |

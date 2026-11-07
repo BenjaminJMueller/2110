@@ -168,7 +168,7 @@ private struct ValidationLine: View {
             return (.unsupported, kind == .video ? "Kein Videostrom in dieser SDP." : "Kein Audiostrom in dieser SDP.")
         }
         let (s, msg) = m.check
-        let base = "\(m.summary) · \(m.destination):\(m.port)"
-        return (s, msg.isEmpty ? "Unterstützt: \(base)" : "\(base) – \(msg)")
+        let base = "\(m.summary), \(m.destination):\(m.port)"
+        return (s, msg.isEmpty ? "Unterstützt: \(base)" : "\(base). \(msg)")
     }
 }

@@ -98,9 +98,9 @@ private struct StatusPill: View {
         case ST_STATE_RECEIVING:
             guard let s = p.stats else { return (.green, "Empfang") }
             switch s.sync_active {
-            case ST_SYNC_PTP: return (.green, "Empfang · PTP-synchronisiert")
-            case ST_SYNC_RTP_ALIGNED: return (.green, "Empfang · zeitlich abgestimmt (ohne PTP)")
-            default: return (.yellow, "Empfang · Vorschau, nicht lippensynchron")
+            case ST_SYNC_PTP: return (.green, "Empfang, mit PTP synchronisiert")
+            case ST_SYNC_RTP_ALIGNED: return (.green, "Empfang, zeitlich abgestimmt (ohne PTP)")
+            default: return (.yellow, "Vorschau, nicht lippensynchron")
             }
         default: return (.gray, "–")
         }

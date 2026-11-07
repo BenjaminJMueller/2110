@@ -158,7 +158,7 @@ struct ExternalOutputMenu: View {
                 ForEach(out.displays) { d in
                     Toggle(isOn: Binding(get: { out.activeDisplay == d.id },
                                          set: { $0 ? out.show(on: d.id) : out.hide() })) {
-                        Text(d.isMain ? d.title + " – Hauptfenster" : d.title)
+                        Text(d.isMain ? d.title + " (Hauptfenster)" : d.title)
                     }
                 }
             }

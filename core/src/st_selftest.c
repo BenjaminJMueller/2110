@@ -230,7 +230,7 @@ int st_selftest(int seconds, int strict_licenses, char *out, size_t len)
     /* 4. PTP-Hilfsprogramm */
     {
         if (gst_ptp_is_initialized() || gst_ptp_init(GST_PTP_CLOCK_ID_NONE, NULL)) {
-            say(out, len, "OK    PTP-Hilfsprogramm gestartet (ohne Grandmaster kein Lock – erwartet)\n");
+            say(out, len, "OK    PTP-Hilfsprogramm gestartet (ohne Grandmaster erwartungsgemäß nicht synchron)\n");
         } else {
             say(out, len, "WARN  PTP-Hilfsprogramm konnte nicht starten (Ports 319/320 belegt oder nicht erlaubt)\n");
         }

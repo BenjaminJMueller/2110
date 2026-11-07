@@ -6,15 +6,15 @@ Für alle, die Bild und Ton von Blackmagic-ST-2110-Geräten am Mac sehen und hö
 
 1. `2110-Viewer-….dmg` doppelklicken.
 2. **2110 Viewer** auf **Programme** ziehen.
-3. App aus „Programme“ öffnen. Meldet macOS, die App könne nicht überprüft werden: **Systemeinstellungen › Datenschutz & Sicherheit › „Dennoch öffnen“** (nur beim ersten Mal).
-4. Fragt macOS nach dem **lokalen Netzwerk**: **Erlauben**. Ohne diese Erlaubnis findet die App keine Geräte und empfängt nichts.
+3. Die App aus „Programme“ öffnen. Meldet macOS, die App könne nicht überprüft werden, unter **Systemeinstellungen › Datenschutz & Sicherheit** auf **„Dennoch öffnen“** klicken. Das ist nur beim ersten Mal nötig.
+4. Fragt macOS nach dem **lokalen Netzwerk**, bitte erlauben. Ohne diese Erlaubnis findet die App keine Geräte und empfängt nichts.
 
 ## Bild sehen und Ton hören
 
-1. **Mac verbinden:** 10-GbE-Adapter (z. B. Thunderbolt) per Netzwerkkabel mit dem ST-2110-Switch verbinden, oder direkt mit der Buchse „10G Ethernet“ am 2110 IP Converter 3x3G.
-2. **App öffnen.**
-3. **Quelle wählen:** Links unter **„Im Netzwerk gefunden“** erscheinen die Blackmagic-Eingänge, z. B. „Studio Converter – SDI 1“. Ein Klick genügt.
-4. **Bild sehen, Ton hören.** Unten in der Leiste zeigt ein grüner Punkt „Empfang · PTP-synchronisiert“ oder „… zeitlich abgestimmt“.
+1. Den Mac über einen 10-GbE-Adapter (zum Beispiel für Thunderbolt) per Netzwerkkabel mit dem ST-2110-Switch verbinden oder direkt mit der Buchse „10G Ethernet“ am 2110 IP Converter 3x3G.
+2. Die App öffnen.
+3. Links unter **„Im Netzwerk gefunden“** erscheinen die Blackmagic-Eingänge, zum Beispiel „Studio Converter – SDI 1“. Einen davon anklicken.
+4. Bild und Ton laufen jetzt. Unten in der Leiste zeigt ein grüner Punkt „Empfang, mit PTP synchronisiert“ oder „Empfang, zeitlich abgestimmt“.
 
 | Bedienelement | Funktion | Tastatur |
 |---|---|---|

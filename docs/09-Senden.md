@@ -1,6 +1,6 @@
 # 9 Senden
 
-2110 Viewer sendet ST 2110-20 (YCbCr 4:2:2, 10 Bit) und ST 2110-30 (L24, 1–16 Kanäle) – an Blackmagic-Geräte, aber ebenso an jedes andere ST-2110-Gerät.
+2110 Viewer sendet ST 2110-20 (YCbCr 4:2:2, 10 Bit) und ST 2110-30 (L24, 1–16 Kanäle). Empfänger können Blackmagic-Geräte sein, aber auch jedes andere ST-2110-Gerät.
 
 ## Quellen
 
@@ -40,4 +40,4 @@ Gesendet wird nur über kabelgebundene Ethernet-Schnittstellen sinnvoll; bei WLA
 
 ## Geprüft
 
-Synthetisch: 2110-Viewer-Sender → 2110-Viewer-Empfänger (Format, Bildrate inkl. 29,97, 125 µs/1 ms, Lippensynchronität < 1 ms), Mitschnitt-Analyse des eigenen Stroms. NMOS-Ressourcen werden in Unit-Tests vom eigenen IS-04-Client gelesen. Mit Blackmagic-Hardware: **ausstehend** (Testplan T9–T12).
+Synthetisch: Sender und Empfänger von 2110 Viewer gegeneinander (Format, Bildrate inkl. 29,97, 125 µs/1 ms, Lippensynchronität < 1 ms), Mitschnitt-Analyse des eigenen Stroms. NMOS-Ressourcen werden in Unit-Tests vom eigenen IS-04-Client gelesen. Mit Blackmagic-Hardware: **ausstehend** (Testplan T9–T12).

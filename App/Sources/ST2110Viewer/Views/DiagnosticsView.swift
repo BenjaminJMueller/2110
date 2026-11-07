@@ -25,7 +25,7 @@ struct DiagnosticsView: View {
                     }
                     .labelStyle(.iconOnly)
                     .iconButtonStyle()
-                    .help("Diagnosebericht kopieren – zum Einfügen in eine Rückmeldung")
+                    .help("Diagnosebericht kopieren, etwa für eine Rückmeldung")
                     Button { saveReport() } label: {
                         Label("Bericht speichern …", systemImage: "square.and.arrow.down")
                     }
@@ -43,7 +43,7 @@ struct DiagnosticsView: View {
                                         .foregroundStyle(h.severity == .error ? .red : h.severity == .warning ? .orange : .secondary)
                                         .accessibilityHidden(true)
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text(h.title + (h.certainty == .suspected ? " – vermutet" : " – gemessen"))
+                                        Text(h.title + (h.certainty == .suspected ? " (vermutet)" : " (gemessen)"))
                                             .font(.callout.weight(.semibold))
                                         Text(h.detail).font(.callout).foregroundStyle(.secondary)
                                             .fixedSize(horizontal: false, vertical: true)
@@ -83,16 +83,16 @@ struct DiagnosticsView: View {
                 }
 
                 if let v = p.video {
-                    section("Video – laut SDP") {
+                    section("Video laut SDP") {
                         row("Format", v.summary)
                         row("Farbraum / Kennlinie", "\(v.colorimetry.isEmpty ? "–" : v.colorimetry) / \(v.tcs.isEmpty ? "–" : v.tcs)\(v.range.isEmpty ? "" : " / " + v.range)")
-                        row("Ziel", "\(v.destination):\(v.port) · PT \(v.payloadType)")
+                        row("Ziel", "\(v.destination):\(v.port), PT \(v.payloadType)")
                         row("Quelle (SSM)", v.sourceAddress.isEmpty ? "–" : v.sourceAddress)
                         row("Zeitbezug", v.refclk.isEmpty ? "nicht angegeben" : v.refclk)
                     }
                 }
                 if let s = p.stats, p.video != nil || p.isDemo {
-                    section("Video – gemessen") {
+                    section("Video gemessen") {
                         if p.isDemo {
                             Text("Demo: Das Testbild entsteht im Mac, es gibt keine Netzwerkpakete. Datenrate, Bildrate und Verluste werden erst beim Empfang gemessen.")
                                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -108,15 +108,15 @@ struct DiagnosticsView: View {
                     }
                 }
                 if let a = p.audio {
-                    section("Audio – laut SDP") {
+                    section("Audio laut SDP") {
                         row("Format", a.summary)
-                        row("Ziel", "\(a.destination):\(a.port) · PT \(a.payloadType)")
+                        row("Ziel", "\(a.destination):\(a.port), PT \(a.payloadType)")
                         row("Quelle (SSM)", a.sourceAddress.isEmpty ? "–" : a.sourceAddress)
                         row("Zeitbezug", a.refclk.isEmpty ? "nicht angegeben" : a.refclk)
                     }
                 }
                 if let s = p.stats, p.audio != nil {
-                    section("Audio – gemessen") {
+                    section("Audio gemessen") {
                         row("Paketzeit", s.a_ptime_measured_ms > 0 ? String(format: "%.3f ms (%d Byte Nutzlast)", locale: .current, s.a_ptime_measured_ms, s.a_payload_bytes) : "–")
                         row("Pakete / verloren", "\(s.a_packets) / \(s.a_lost)\(lossPct(s.a_lost, s.a_packets))")
                         row("Blöcke ausgegeben / verworfen", "\(s.a_buffers_rendered) / \(s.a_buffers_dropped)")
@@ -203,7 +203,7 @@ struct DiagnosticsView: View {
         case ST_SYNC_RTP_ALIGNED:
             return "Video und Audio werden über ihre RTP-Zeitstempel (gemeinsamer Zeitbezug des Senders) zueinander ausgerichtet und mit der Uhr des Macs ausgegeben. Lippensynchron, solange der Sender beide Ströme aus derselben Uhr stempelt."
         default:
-            return "Jeder Strom wird bei Ankunft wiedergegeben. Unterschiedliche Laufzeiten von Video und Audio werden nicht ausgeglichen – kein Nachweis für Lippensynchronität."
+            return "Jeder Strom wird bei Ankunft wiedergegeben. Unterschiedliche Laufzeiten von Video und Audio werden nicht ausgeglichen. Lippensynchronität ist damit nicht gesichert."
         }
     }
 
@@ -253,7 +253,7 @@ private struct SenderControlSection: View {
         GroupedBox("Sender (NMOS IS-05)") {
             VStack(alignment: .leading, spacing: 6) {
                 if let a = p.nmosActive {
-                    Text("Aktiv: \(a.master_enable == true ? "ja" : "nein") · Ziel \(a.transport_params?.first?.destination_ip ?? "–"):\(a.transport_params?.first?.destination_port?.intValue.map(String.init) ?? "–")")
+                    Text("Aktiv: \(a.master_enable == true ? "ja" : "nein"), Ziel \(a.transport_params?.first?.destination_ip ?? "–"):\(a.transport_params?.first?.destination_port?.intValue.map(String.init) ?? "–")")
                         .font(.callout)
                 } else {
                     Text("Status nicht verfügbar (Gerät meldet keine Connection API).").font(.callout).foregroundStyle(.secondary)

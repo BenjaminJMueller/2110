@@ -75,7 +75,7 @@ struct AnalysisReport: Decodable {
                 let f = (v.fps ?? 0).rounded() == (v.fps ?? 0) ? String(Int(v.fps ?? 0)) : String(format: "%.2f", v.fps ?? 0)
                 return "\(v.width)×\(v.height)\(v.interlaced ? "i" : "p")\(f)"
             }
-            if let a = audio { return "\(a.channels) Kanäle · \(String(format: "%g", a.ptime_ms ?? 0)) ms" }
+            if let a = audio { return "\(a.channels) Kanäle, \(String(format: "%g", a.ptime_ms ?? 0)) ms" }
             return kindTitle
         }
         var worstLevel: Int { findings.map(\.level).max() ?? 0 }

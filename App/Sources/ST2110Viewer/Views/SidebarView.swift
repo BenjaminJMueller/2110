@@ -48,7 +48,7 @@ struct SidebarView: View {
                 Label {
                     VStack(alignment: .leading) {
                         Text("Demo: Testbild und Testton")
-                        Text("Ohne Netzwerk – zum Prüfen von Bild, Ton und Bedienung")
+                        Text("Ohne Netzwerk, zum Prüfen von Bild, Ton und Bedienung")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -106,7 +106,7 @@ private struct DiscoveredRow: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(source.title)
                 Text([source.deviceLabel, source.formatSummary, source.audio.isEmpty ? nil : "\(source.audio.count) Audio"]
-                        .compactMap { $0 }.joined(separator: " · "))
+                        .compactMap { $0 }.joined(separator: ", "))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -114,7 +114,7 @@ private struct DiscoveredRow: View {
             if source.videoFlow?.isInterlaced == true {
                 Image(systemName: "exclamationmark.triangle")
                     .foregroundStyle(.orange)
-                    .help("Zeilensprungformat – wird nicht unterstützt. Am SDI-Quellgerät ein progressives Format einstellen.")
+                    .help("Zeilensprungformat wird nicht unterstützt. Am SDI-Quellgerät ein progressives Format einstellen.")
                     .accessibilityLabel("Format nicht unterstützt")
             }
         }
@@ -171,6 +171,6 @@ private struct SavedRow: View {
         if let v = source.videoSDP, let m = SDPMedia.parse(v).media.first(where: { $0.kind == .video }) { parts.append(m.summary) }
         if let a = source.audioSDP, let m = SDPMedia.parse(a).media.first(where: { $0.kind == .audio }) { parts.append("\(m.channels) ch") }
         if source.origin == .nmos { parts.append("NMOS") }
-        return parts.joined(separator: " · ")
+        return parts.joined(separator: ", ")
     }
 }

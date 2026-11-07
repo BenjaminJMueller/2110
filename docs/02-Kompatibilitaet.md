@@ -1,6 +1,6 @@
 # 2 Kompatibilität: Modelle, Firmware, Formate
 
-**Legende:** **D** = nur dokumentiert (Herstellerangabe bzw. Norm) · **S** = synthetisch getestet (eigener Testsender, Linux bzw. macOS-CI) · **H** = mit Blackmagic-Hardware geprüft
+**Legende:** **D** = nur dokumentiert (Herstellerangabe bzw. Norm); **S** = synthetisch getestet (eigener Testsender, Linux bzw. macOS-CI); **H** = mit Blackmagic-Hardware geprüft
 
 > Stand dieser Version: **Es wurde noch nichts mit Blackmagic-Hardware geprüft.** Die Spalte H füllt sich mit Ihren Testergebnissen (siehe [06-Testplan](06-Testplan.md)).
 
@@ -8,7 +8,7 @@
 
 | Modell | Firmware | Status |
 |---|---|---|
-| Blackmagic 2110 IP Converter 3x3G | noch zu erfassen (Blackmagic Converters Setup › Setup › Software) | D (Handbuch 09/2026, Techspecs) · H ausstehend |
+| Blackmagic 2110 IP Converter 3x3G | noch zu erfassen (Blackmagic Converters Setup › Setup › Software) | D (Handbuch 09/2026, Techspecs), H ausstehend |
 | andere Blackmagic-2110-Geräte (Mini BiDirect, SDI to HDMI 12G …) | – | nicht Gegenstand dieser Version. Bei 2160p59.94/60 senden die 12G-Modelle **IP10**, das wird nicht unterstützt. |
 
 ## 2.2 Videoformate (ST 2110-20, unkomprimiert)
@@ -39,24 +39,24 @@
 
 | Funktion | Status |
 |---|---|
-| NMOS IS-04 Peer-to-Peer (mDNS `_nmos-node._tcp`) | D (Blackmagic-Angabe) · Client S (Unit-Tests mit nachgebildeten IS-04-Antworten) · H ausstehend |
-| NMOS-Registry (Query API) | D · S (gleicher Code wie Node API) |
-| Gruppierung Video/Audio (BCP-002-01) | D · S |
+| NMOS IS-04 Peer-to-Peer (mDNS `_nmos-node._tcp`) | D (Blackmagic-Angabe), Client S (Unit-Tests mit nachgebildeten IS-04-Antworten), H ausstehend |
+| NMOS-Registry (Query API) | D, S (gleicher Code wie Node API) |
+| Gruppierung Video/Audio (BCP-002-01) | D, S |
 | SDP über `manifest_href` bzw. IS-05 `transportfile` | S |
-| IS-05 Sender aktivieren/Ziel setzen | D, implementiert, nur nach Freischaltung · H ausstehend |
-| Geräteadresse manuell / Adressbereichssuche | S (Parser) · H ausstehend |
+| IS-05 Sender aktivieren/Ziel setzen | D, implementiert, nur nach Freischaltung, H ausstehend |
+| Geräteadresse manuell / Adressbereichssuche | S (Parser), H ausstehend |
 | SDP-Datei, Drag-and-drop, Texteingabe, getrennte Video-/Audio-SDP | S |
 
 ## 2.5 Netzwerk und Zeit
 
 | Funktion | Status |
 |---|---|
-| Multicast-Beitritt ASM und SSM auf gewählter Schnittstelle | S (Linux) · macOS-Pfad (IP_BOUND_IF) H ausstehend |
-| PTP passiver Slave, Domain aus SDP/einstellbar | S (Software-Grandmaster linuxptp, Linux) · H ausstehend |
+| Multicast-Beitritt ASM und SSM auf gewählter Schnittstelle | S (Linux), macOS-Pfad (IP_BOUND_IF) H ausstehend |
+| PTP passiver Slave, Domain aus SDP/einstellbar | S (Software-Grandmaster linuxptp, Linux), H ausstehend |
 | Rückfall, wenn der Sender nicht zum Grandmaster passt | S |
 | RTP-abgestimmte Lippensynchronität | S: Versatz < 0,2 ms an den Ausgabezeitstempeln |
 | Senderneustart, Unterbrechung, Formatwechsel, Paketverlust | S |
-| Bildausgabe auf zweitem Bildschirm (randloses Fenster, eigener Renderer) | D – implementiert, auf echtem Mac mit zweitem Bildschirm zu prüfen |
+| Bildausgabe auf zweitem Bildschirm (randloses Fenster, eigener Renderer) | D, implementiert, auf echtem Mac mit zweitem Bildschirm zu prüfen |
 
 ## 2.6 Senden und Analyse
 
@@ -64,9 +64,9 @@
 |---|---|
 | Senden ST 2110-20 1080p25/50/29,97/59,94, 720p50/59,94 (10 Bit) | S (eigener Empfänger, Linux und macOS-CI) |
 | Senden ST 2110-30 L24, 1–16 Kanäle, 1 ms/125 µs | S |
-| Quellen Datei (AVFoundation) und Kamera | D – implementiert, auf echtem Mac zu prüfen (T13) |
+| Quellen Datei (AVFoundation) und Kamera | D, implementiert, auf echtem Mac zu prüfen (T13) |
 | NMOS-Knoten (IS-04 Node API, mDNS) und IS-05 für Sender | S (Unit-Tests: eigener Client liest die Ressourcen) |
-| IS-05: Empfänger am 3x3G verbinden | D – implementiert, **H ausstehend** (T11) |
+| IS-05: Empfänger am 3x3G verbinden | D, implementiert, **H ausstehend** (T11) |
 | Analyse pcap/pcapng: Formate, Verluste, Cinst/VRX, TS-DF, PTP, IGMP | S |
 
 ## 2.7 Empfohlene Geräteeinstellungen (3x3G)

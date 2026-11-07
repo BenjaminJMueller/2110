@@ -110,14 +110,14 @@ private struct Bullet: View {
 private struct EssencesPage: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            PageText(title: "Ein Signal, drei Essenzen",
+            PageText(title: "Was ST 2110 macht",
                      lead: "SDI trägt Bild, Ton und Zusatzdaten in einem Kabel. ST 2110 trennt sie in eigene Netzwerkströme, die Essenzen. Jede Essenz hat eine eigene Multicast-Adresse.")
             FlowDiagram(nodes: [
                 .init(id: "sdi", title: "Kamera", subtitle: "SDI 1080p50", icon: "video", x: 0.08, y: 0.5),
                 .init(id: "conv", title: "2110 IP Converter", subtitle: "wandelt SDI in IP", icon: "arrow.left.arrow.right.square", x: 0.38, y: 0.5),
-                .init(id: "v", title: "Video", subtitle: "ST 2110-20 · ≈ 2,2 Gbit/s", icon: "film", x: 0.84, y: 0.16),
-                .init(id: "a", title: "Audio", subtitle: "ST 2110-30 · 16 Kanäle", icon: "waveform", x: 0.84, y: 0.5),
-                .init(id: "d", title: "Daten", subtitle: "ST 2110-40 · Timecode", icon: "text.alignleft", x: 0.84, y: 0.84),
+                .init(id: "v", title: "Video", subtitle: "ST 2110-20, etwa 2,2 Gbit/s", icon: "film", x: 0.84, y: 0.16),
+                .init(id: "a", title: "Audio", subtitle: "ST 2110-30, 16 Kanäle", icon: "waveform", x: 0.84, y: 0.5),
+                .init(id: "d", title: "Daten", subtitle: "ST 2110-40, Timecode", icon: "text.alignleft", x: 0.84, y: 0.84),
             ], links: [
                 .init(from: "sdi", to: "conv", style: .cable, density: 0),
                 .init(from: "conv", to: "v", style: .accent, density: 12),
@@ -126,8 +126,8 @@ private struct EssencesPage: View {
             ])
             .frame(height: 260)
             VStack(alignment: .leading, spacing: 8) {
-                Bullet(icon: "film", text: "Video ist unkomprimiert. Darum braucht ein HD-Strom 1–2,6 Gbit/s und einen 10-GbE-Anschluss.")
-                Bullet(icon: "point.3.connected.trianglepath.dotted", text: "Weil die Essenzen getrennt sind, lassen sich Bild und Ton unabhängig verteilen – und müssen beim Empfänger wieder zusammenfinden.")
+                Bullet(icon: "film", text: "Das Video ist unkomprimiert. Ein HD-Strom braucht deshalb 1 bis 2,6 Gbit/s und einen 10-GbE-Anschluss.")
+                Bullet(icon: "point.3.connected.trianglepath.dotted", text: "Weil die Essenzen getrennt sind, lassen sich Bild und Ton unabhängig verteilen. Der Empfänger muss sie danach wieder zusammenführen.")
             }
         }
     }
@@ -136,7 +136,7 @@ private struct EssencesPage: View {
 private struct MulticastPage: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            PageText(title: "Multicast: einmal senden, gezielt empfangen",
+            PageText(title: "Multicast",
                      lead: "Ein Sender schickt jeden Strom nur einmal ins Netz. Der Switch leitet ihn nur an Geräte weiter, die ihn mit IGMP angefordert haben.")
             FlowDiagram(nodes: [
                 .init(id: "s", title: "Sender", subtitle: "239.21.1.1", icon: "dot.radiowaves.up.forward", x: 0.08, y: 0.5),
@@ -163,7 +163,7 @@ private struct PTPPage: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            PageText(title: "Eine Uhr für alle: PTP",
+            PageText(title: "Die gemeinsame Uhr (PTP)",
                      lead: "Ein Grandmaster verteilt die Uhrzeit per PTP. Jedes Paket trägt einen Zeitstempel dieser Uhr. So weiß der Empfänger, welcher Ton zu welchem Bild gehört.")
             FlowDiagram(nodes: [
                 .init(id: "gm", title: "Grandmaster", subtitle: "Domain 127", icon: "clock", x: 0.5, y: 0.12),
@@ -179,7 +179,7 @@ private struct PTPPage: View {
             TimestampStrip()
                 .frame(height: 96)
                 .accessibilityLabel("Zeitachse: Videobilder alle 20 Millisekunden und Audiopakete jede Millisekunde tragen Zeitstempel derselben Uhr")
-            Bullet(icon: "speaker.wave.2", text: "2110 Viewer richtet Bild und Ton an diesen Zeitstempeln aus. Ohne Grandmaster geht das auch, dann mit der Uhr des Macs. Die Diagnose misst den Versatz mit einem Blitz/Piep-Testsignal.")
+            Bullet(icon: "speaker.wave.2", text: "2110 Viewer richtet Bild und Ton an diesen Zeitstempeln aus. Ohne Grandmaster geht das auch, dann mit der Uhr des Macs. Den verbleibenden Versatz misst die Diagnose mit einem Testsignal aus Lichtblitz und Piepton.")
         }
     }
 }
@@ -187,7 +187,7 @@ private struct PTPPage: View {
 private struct NMOSPage: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            PageText(title: "Finden und verbinden: NMOS",
+            PageText(title: "Geräte finden mit NMOS",
                      lead: "Geräte kündigen ihre Ströme im Netz an (IS-04). 2110 Viewer findet sie ohne Konfiguration und kann Verbindungen herstellen (IS-05).")
             FlowDiagram(nodes: [
                 .init(id: "c", title: "2110 IP Converter", subtitle: "„SDI 1 Video, Audio“", icon: "arrow.left.arrow.right.square", x: 0.14, y: 0.5),
@@ -198,7 +198,7 @@ private struct NMOSPage: View {
             .frame(height: 170)
             VStack(alignment: .leading, spacing: 8) {
                 Bullet(icon: "magnifyingglass", text: "Der 3x3G meldet sich laut Blackmagic per mDNS, eine Registry ist nicht nötig. Findet 2110 Viewer nichts, hilft „Gerät per Adresse hinzufügen“.")
-                Bullet(icon: "doc.text", text: "Die Beschreibung eines Stroms steht in einer SDP-Datei: Adresse, Format, Zeitbezug. 2110 Viewer liest sie automatisch oder per Drag-and-drop.")
+                Bullet(icon: "doc.text", text: "Adresse, Format und Zeitbezug eines Stroms stehen in einer SDP-Datei. 2110 Viewer holt sie automatisch, oder Sie ziehen die Datei ins Fenster.")
                 Bullet(icon: "dot.radiowaves.up.forward", text: "Beim Senden kündigt sich 2110 Viewer selbst so an. Der Converter kann den 2110-Viewer-Strom dann am SDI-Ausgang ausgeben.")
             }
         }
@@ -212,14 +212,14 @@ private struct StartPage: View {
                      lead: "Oben in der Symbolleiste wechseln Sie zwischen Empfangen, Senden und Analysieren.")
             HStack(alignment: .top, spacing: 16) {
                 ModeCard(icon: "play.rectangle", title: "Empfangen", text: "Quelle links wählen, Bild sehen, Kanäle abhören. Die Diagnose zeigt Verluste und Synchronisation.")
-                ModeCard(icon: "dot.radiowaves.up.forward", title: "Senden", text: "Testbild, Videodatei oder Kamera als ST 2110 ins Netz geben – z. B. an einen SDI-Ausgang des Converters.")
-                ModeCard(icon: "waveform.path.ecg.rectangle", title: "Analysieren", text: "Paketmitschnitte prüfen: Zeitverhalten nach ST 2110-21, Audio-Laufzeit, PTP, IGMP.")
+                ModeCard(icon: "dot.radiowaves.up.forward", title: "Senden", text: "Testbild, Videodatei oder Kamera als ST 2110 ins Netz schicken, zum Beispiel an einen SDI-Ausgang des Converters.")
+                ModeCard(icon: "waveform.path.ecg.rectangle", title: "Analysieren", text: "Paketmitschnitte auf Zeitverhalten nach ST 2110-21, Audio-Laufzeit, PTP und IGMP prüfen.")
             }
             VStack(alignment: .leading, spacing: 8) {
                 Text("Was macOS fragen kann").font(.headline)
-                Bullet(icon: "network", text: "Lokales Netzwerk: nötig für Geräteerkennung und Empfang. Bitte erlauben.")
-                Bullet(icon: "shield.lefthalf.filled", text: "Eingehende Verbindungen (bei aktiver Firewall): für 2110 Viewer und das Hilfsprogramm gst-ptp-helper erlauben.")
-                Bullet(icon: "camera", text: "Kamera und Mikrofon: nur, wenn Sie beim Senden eine Kamera wählen.")
+                Bullet(icon: "network", text: "Den Zugriff auf das lokale Netzwerk bitte erlauben. Ohne ihn findet die App keine Geräte und empfängt nichts.")
+                Bullet(icon: "shield.lefthalf.filled", text: "Ist die Firewall aktiv, eingehende Verbindungen für 2110 Viewer und das Hilfsprogramm gst-ptp-helper erlauben.")
+                Bullet(icon: "camera", text: "Nach Kamera und Mikrofon fragt macOS nur, wenn Sie beim Senden eine Kamera wählen.")
             }
             Text("Ohne Netzwerk ausprobieren: „Demo: Testbild und Testton“ unten in der Seitenleiste.")
                 .font(.callout).foregroundStyle(.secondary)
@@ -379,7 +379,7 @@ private struct TimestampStrip: View {
             line.move(to: CGPoint(x: mx, y: -2))
             line.addLine(to: CGPoint(x: mx, y: 2 * rowH + 6))
             ctx.stroke(line, with: .color(.primary.opacity(0.5)), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
-            ctx.draw(Text("gleiche Zeit → gemeinsam wiedergeben").font(.caption).foregroundStyle(.secondary),
+            ctx.draw(Text("gleicher Zeitstempel, gemeinsame Wiedergabe").font(.caption).foregroundStyle(.secondary),
                      at: CGPoint(x: mx + 6, y: 2 * rowH + 20), anchor: .leading)
         }
     }

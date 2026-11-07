@@ -41,7 +41,7 @@ struct SendView: View {
                     }
                     card("Format") {
                         Picker("Video", selection: $s.format) {
-                            ForEach(SenderController.Format.allCases) { f in Text("\(f.rawValue) · YCbCr 4:2:2 10 Bit").tag(f) }
+                            ForEach(SenderController.Format.allCases) { f in Text("\(f.rawValue), YCbCr 4:2:2, 10 Bit").tag(f) }
                         }
                         Stepper(channelsLabel, value: $s.audioChannels, in: 0...16)
                         Toggle("Paketzeit 0,125 ms (nötig ab 9 Kanälen)", isOn: ptimeBinding)
@@ -172,7 +172,7 @@ struct SendView: View {
         if d.video != nil { parts.append("Video") }
         if !d.audio.isEmpty { parts.append("Audio") }
         let kinds: String = parts.joined(separator: " + ")
-        return d.pairingCertain ? kinds : kinds + " · Zuordnung vermutet"
+        return d.pairingCertain ? kinds : kinds + " (Zuordnung vermutet)"
     }
 
     private var channelsLabel: String {
@@ -195,8 +195,8 @@ struct SendView: View {
     private var rateText: String {
         let g = model.sender.format.gbps
         var t = String(format: "Datenrate ca. %.1f Gbit/s", locale: .current, g)
-        if let i = chosenInterface { t += " · \(i.displayName)\(i.speedText.map { " (\($0))" } ?? "")" }
-        if rateWarning { t += " – Verbindung zu langsam" }
+        if let i = chosenInterface { t += " über \(i.displayName)\(i.speedText.map { " (\($0))" } ?? "")" }
+        if rateWarning { t += ". Die Verbindung ist dafür zu langsam." }
         return t
     }
 

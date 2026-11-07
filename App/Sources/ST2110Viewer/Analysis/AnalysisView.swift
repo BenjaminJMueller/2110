@@ -192,7 +192,7 @@ private struct StreamReport: View {
                 if let v = s.video {
                     StatTile(label: "Bildrate", value: String(format: "%.3f", locale: .current, v.fps ?? 0), note: "\(v.frames.formatted()) Bilder")
                     StatTile(label: "ST 2110-21", value: senderClass(v.st2110_21_class),
-                             note: String(format: "Cmax %.0f · VRX %.0f", locale: .current, v.cinst.max, v.vrx.max))
+                             note: String(format: "Cmax %.0f, VRX %.0f", locale: .current, v.cinst.max, v.vrx.max))
                 } else if let au = s.audio {
                     StatTile(label: "Paketzeit", value: String(format: "%g ms", locale: .current, au.ptime_ms ?? 0), note: String(au.channels) + (au.channels_from_sdp ? " Kanäle" : " Kanäle (geschätzt)"))
                     StatTile(label: "TS-DF max.", value: String(format: "%.0f µs", locale: .current, au.tsdf_us.max), note: "1-s-Fenster")
@@ -374,15 +374,15 @@ private struct NetworkReport: View {
 }
 
 private func captureLine(_ c: AnalysisReport.Capture) -> String {
-    var t: String = c.format + " · " + c.packets.formatted() + " Pakete · " + String(format: "%.1f", locale: .current, c.duration_s) + " s"
-    t += " · Zeitauflösung " + String(c.timestamp_resolution_ns) + " ns"
-    if c.software_capture { t += " · Software-Mitschnitt" }
+    var t: String = c.format + ", " + c.packets.formatted() + " Pakete, " + String(format: "%.1f", locale: .current, c.duration_s) + " s"
+    t += ", Zeitauflösung " + String(c.timestamp_resolution_ns) + " ns"
+    if c.software_capture { t += ", Software-Mitschnitt" }
     return t
 }
 
 private func streamLine(_ s: AnalysisReport.Stream) -> String {
-    var t: String = s.source + " → " + s.destination + " · SSRC " + String(format: "%08X", locale: .current, s.ssrc) + " · PT " + String(s.payload_type)
-    if s.sdp_matched { t += " · SDP zugeordnet" }
+    var t: String = s.source + " nach " + s.destination + ", SSRC " + String(format: "%08X", locale: .current, s.ssrc) + ", PT " + String(s.payload_type)
+    if s.sdp_matched { t += ", SDP zugeordnet" }
     return t
 }
 

@@ -97,7 +97,7 @@ private struct VideoOverlay: View {
             if p.isDemo {
                 VStack {
                     HStack {
-                        Text("DEMO · Testbild und Testton · kein Netzwerkempfang")
+                        Text("Demo: Testbild und Testton ohne Netzwerk")
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
@@ -138,7 +138,7 @@ private struct VideoOverlay: View {
         case ST_STATE_STARTING: return p.effectiveSync == .automatic ? "Verbinde … (suche PTP-Grandmaster)" : "Verbinde …"
         case ST_STATE_WAITING: return "Warte auf Signal …"
         case ST_STATE_STALLED: return "Signal unterbrochen"
-        case ST_STATE_ERROR: return "Fehler – neuer Versuch folgt"
+        case ST_STATE_ERROR: return "Fehler, neuer Versuch folgt"
         default: return "Kein Bild"
         }
     }

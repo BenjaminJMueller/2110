@@ -4,7 +4,7 @@
 
 **ST 2110 am Mac empfangen, senden und analysieren.** Entstanden für die Lehre.
 
-**[⬇ DMG laden](https://github.com/BenjaminJMueller/2110/releases/latest/download/2110-Viewer.dmg)** · macOS 14 oder neuer, Apple Silicon
+**[DMG laden](https://github.com/BenjaminJMueller/2110/releases/latest/download/2110-Viewer.dmg)** (macOS 14 oder neuer, Apple Silicon)
 
 | Empfangen | Senden | Analysieren |
 |---|---|---|
@@ -17,7 +17,7 @@ Projektseite: `site/` (GitHub Pages, Einrichtung siehe unten).
 
 ## Installation
 
-DMG öffnen, **2110 Viewer** in **Programme** ziehen, starten. GStreamer ist eingebettet: kein Terminal, kein Homebrew, keine Dienste. Solange die App nicht notarisiert ist (es fehlt ein Apple-Developer-Konto), beim ersten Start einmal *Systemeinstellungen › Datenschutz & Sicherheit › Dennoch öffnen*. Details: [Nutzeranleitung](docs/05-Nutzeranleitung.md).
+DMG öffnen, **2110 Viewer** in **Programme** ziehen, starten. GStreamer und alle Bibliotheken sind in der App enthalten, Terminal oder Homebrew braucht es nicht. Solange die App nicht notarisiert ist (es fehlt ein Apple-Developer-Konto), beim ersten Start einmal *Systemeinstellungen › Datenschutz & Sicherheit › Dennoch öffnen*. Details: [Nutzeranleitung](docs/05-Nutzeranleitung.md).
 
 Die DMG liegt unter [Releases](https://github.com/BenjaminJMueller/2110/releases), zusammen mit dem Quellpaket der eingebetteten Bibliotheken und den Lizenzprüfberichten. Zwischenstände gibt es als Artefakt jedes CI-Laufs (Actions › „Build und Tests“ › *2110-Viewer-dmg*).
 
@@ -54,7 +54,7 @@ site/              Projektseite (GitHub Pages)
 ## Bauen
 
 ```bash
-./scripts/build-app.sh          # macOS, Xcode 26 – ergibt dist/2110 Viewer.app und dist/2110-Viewer-<Version>.dmg
+./scripts/build-app.sh          # macOS mit Xcode 26, ergibt dist/2110 Viewer.app und dist/2110-Viewer-<Version>.dmg
 make -C core && make -C core test   # Kern und Tests (Linux oder macOS mit pkg-config)
 ```
 
@@ -62,4 +62,4 @@ GitHub Pages: in den Repository-Einstellungen *Pages › Source: GitHub Actions*
 
 ## Lizenz
 
-Code: [MIT](LICENSE). Die App enthält GStreamer und weitere Bibliotheken unter LGPL-2.1, BSD, MIT und zlib – siehe [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.md). Keine Herstellerdateien im Repository.
+Code: [MIT](LICENSE). Die App enthält GStreamer und weitere Bibliotheken unter LGPL-2.1, BSD, MIT und zlib, Einzelheiten stehen in [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.md). Das Repository enthält keine Herstellerdateien.

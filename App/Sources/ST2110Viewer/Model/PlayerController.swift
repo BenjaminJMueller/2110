@@ -346,7 +346,7 @@ final class PlayerController {
             let nowIP = list.first(where: { $0.name == name })?.ipv4
             if nowIP != lastInterfaceIP {
                 lastInterfaceIP = nowIP
-                if nowIP != nil { restart(reason: "Netzwerkadresse von \(name) hat sich geändert – verbinde neu …"); return }
+                if nowIP != nil { restart(reason: "Netzwerkadresse von \(name) hat sich geändert. Verbinde neu …"); return }
             }
         }
         // NMOS: Senderänderungen (neue SDP) übernehmen

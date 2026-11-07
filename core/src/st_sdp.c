@@ -359,7 +359,7 @@ st_support st_check_media(const st_sdp_media *m, char *msg, size_t len)
     if (m->kind == ST_MEDIA_VIDEO) {
         if (strcasecmp(m->encoding, "raw") != 0) {
             if (strcasecmp(m->encoding, "jxsv") == 0)
-                SAY(ST_SUPPORT_NO, "JPEG XS (ST 2110-22) wird nicht unterstützt. Der Blackmagic 2110 IP Converter 3x3G sendet unkomprimiertes ST 2110-20 – bitte den unkomprimierten Videostrom wählen.");
+                SAY(ST_SUPPORT_NO, "JPEG XS (ST 2110-22) wird nicht unterstützt. Der Blackmagic 2110 IP Converter 3x3G sendet unkomprimiertes ST 2110-20. Bitte den unkomprimierten Videostrom wählen.");
             else
                 SAY(ST_SUPPORT_NO, "Videokodierung „%s“ wird nicht unterstützt. Unterstützt wird unkomprimiertes ST 2110-20 („raw“). Blackmagic IP10 wird ausdrücklich nicht unterstützt; der 2110 IP Converter 3x3G verwendet IP10 laut Hersteller nicht.", m->encoding[0] ? m->encoding : "(leer)");
             return res;

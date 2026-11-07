@@ -73,7 +73,7 @@ final class NMOSDiscovery {
                 switch state {
                 case .ready: self?.browserState = "aktiv"
                 case .failed(let e): self?.browserState = "Fehler: \(e.localizedDescription)"
-                case .waiting(let e): self?.browserState = "wartet: \(e.localizedDescription) – evtl. Zugriff auf „Lokales Netzwerk“ nicht erlaubt"
+                case .waiting(let e): self?.browserState = "wartet: \(e.localizedDescription) . Möglicherweise ist der Zugriff auf das lokale Netzwerk nicht erlaubt."
                 default: break
                 }
             }
