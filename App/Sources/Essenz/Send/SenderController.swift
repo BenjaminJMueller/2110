@@ -170,7 +170,13 @@ final class SenderController {
         isSending = true
         videoSDP = s.sdp(video: true)
         audioSDP = c.has_audio != 0 ? s.sdp(video: false) : nil
-        addLog("Sende \(format.rawValue) an \(videoAddress):\(port)\(c.has_audio != 0 ? " und \(audioChannels) Kanäle an \(audioAddress):\(audioPort ?? port)" : "") über \(iface?.displayName ?? "Standardschnittstelle").")
+        var line: String = "Sende " + format.rawValue + " an " + videoAddress + ":" + String(port)
+        if c.has_audio != 0 {
+            let ap: Int = Int(audioPort ?? port)
+            line += " und " + String(audioChannels) + " Kanäle an " + audioAddress + ":" + String(ap)
+        }
+        let ifName: String = iface?.displayName ?? "Standardschnittstelle"
+        addLog(line + " über " + ifName + ".")
 
         // Quelle
         switch source {

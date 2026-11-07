@@ -130,7 +130,7 @@ private struct CaptureHeader: View {
                 Spacer()
                 Button("Als JSON exportieren …") { model.analysis.exportJSON(entry) }.controlSize(.small)
             }
-            Text("\(c.format) · \(c.packets.formatted()) Pakete · \(String(format: "%.1f", c.duration_s)) s · Zeitauflösung \(c.timestamp_resolution_ns) ns\(c.software_capture ? " · Software-Mitschnitt" : "")")
+            Text(captureLine(c))
                 .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
             ForEach(c.findings ?? [], id: \.self) { f in FindingRow(finding: f) }
         }
@@ -182,7 +182,7 @@ private struct StreamReport: View {
         VStack(alignment: .leading, spacing: 20) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(s.kindTitle).font(.title3.weight(.medium))
-                Text("\(s.source) → \(s.destination) · SSRC \(String(format: "%08X", s.ssrc)) · PT \(s.payload_type)\(s.sdp_matched ? " · SDP zugeordnet" : "")")
+                Text(streamLine(s))
                     .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
             }
             HStack(spacing: 12) {
@@ -190,10 +190,10 @@ private struct StreamReport: View {
                 StatTile(label: "Verluste", value: s.lost.formatted(), note: lossNote)
                 if let v = s.video {
                     StatTile(label: "Bildrate", value: String(format: "%.3f", v.fps ?? 0), note: "\(v.frames.formatted()) Bilder")
-                    StatTile(label: "ST 2110-21", value: v.st2110_21_class == "N" ? "Narrow" : v.st2110_21_class == "W" ? "Wide" : v.st2110_21_class == "nicht konform" ? "außerhalb" : "–",
+                    StatTile(label: "ST 2110-21", value: senderClass(v.st2110_21_class),
                              note: String(format: "Cmax %.0f · VRX %.0f", v.cinst.max, v.vrx.max))
                 } else if let au = s.audio {
-                    StatTile(label: "Paketzeit", value: String(format: "%g ms", au.ptime_ms ?? 0), note: "\(au.channels) Kanäle\(au.channels_from_sdp ? "" : " (geschätzt)")")
+                    StatTile(label: "Paketzeit", value: String(format: "%g ms", au.ptime_ms ?? 0), note: String(au.channels) + (au.channels_from_sdp ? " Kanäle" : " Kanäle (geschätzt)"))
                     StatTile(label: "TS-DF max.", value: String(format: "%.0f µs", au.tsdf_us.max), note: "1-s-Fenster")
                 }
             }
@@ -366,5 +366,27 @@ private struct NetworkReport: View {
                 Text("\(g.group): \(g.joins) Beitritte, \(g.leaves) Austritte").font(.callout.monospacedDigit())
             }
         }
+    }
+}
+
+private func captureLine(_ c: AnalysisReport.Capture) -> String {
+    var t: String = c.format + " · " + c.packets.formatted() + " Pakete · " + String(format: "%.1f", c.duration_s) + " s"
+    t += " · Zeitauflösung " + String(c.timestamp_resolution_ns) + " ns"
+    if c.software_capture { t += " · Software-Mitschnitt" }
+    return t
+}
+
+private func streamLine(_ s: AnalysisReport.Stream) -> String {
+    var t: String = s.source + " → " + s.destination + " · SSRC " + String(format: "%08X", s.ssrc) + " · PT " + String(s.payload_type)
+    if s.sdp_matched { t += " · SDP zugeordnet" }
+    return t
+}
+
+private func senderClass(_ c: String) -> String {
+    switch c {
+    case "N": return "Narrow"
+    case "W": return "Wide"
+    case "nicht konform": return "außerhalb"
+    default: return "–"
     }
 }

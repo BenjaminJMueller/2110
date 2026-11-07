@@ -113,7 +113,7 @@ struct SendView: View {
                     card("Status") {
                         if let st = s.stats, s.isSending {
                             Grid(alignment: .leading, horizontalSpacing: 20, verticalSpacing: 6) {
-                                GridRow { Text("Bilder").foregroundStyle(.secondary); Text("\(st.frames_sent) (\(st.frames_from_source > 0 ? "aus Quelle" : "Testbild"))") }
+                                GridRow { Text("Bilder").foregroundStyle(.secondary); Text(String(st.frames_sent) + (st.frames_from_source > 0 ? " (aus Quelle)" : " (Testbild)")) }
                                 GridRow { Text("Datenrate Video").foregroundStyle(.secondary); Text(String(format: "%.0f Mbit/s", st.video_mbps)) }
                                 GridRow { Text("Pakete Video / Audio").foregroundStyle(.secondary); Text("\(st.video_packets) / \(st.audio_packets)") }
                                 GridRow { Text("Verspätet gesendet").foregroundStyle(.secondary); Text(String(format: "%llu (max. %.0f µs)", st.late_packets, st.max_late_us)) }
