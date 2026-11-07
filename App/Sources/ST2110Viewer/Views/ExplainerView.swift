@@ -44,7 +44,7 @@ struct ExplainerView: View {
                             .fill(i == page ? Color.accentColor : Color.primary.opacity(0.15))
                             .frame(width: i == page ? 20 : 8, height: 8)
                             .onTapGesture { go(i) }
-                            .accessibilityLabel("Seite \(i + 1) von \(Self.pageCount)")
+                            .accessibilityLabel(tr("Seite \(i + 1) von \(Self.pageCount)"))
                             .accessibilityAddTraits(i == page ? .isSelected : [])
                     }
                 }
@@ -87,8 +87,8 @@ private struct PageText: View {
     let lead: String
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.system(size: 28, weight: .semibold))
-            Text(lead).font(.title3).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            Text(tr(title)).font(.system(size: 28, weight: .semibold))
+            Text(tr(lead)).font(.title3).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: 680, alignment: .leading)
         }
         .accessibilityElement(children: .combine)
@@ -101,7 +101,7 @@ private struct Bullet: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Image(systemName: icon).foregroundStyle(.secondary).frame(width: 18).accessibilityHidden(true)
-            Text(text).fixedSize(horizontal: false, vertical: true)
+            Text(tr(text)).fixedSize(horizontal: false, vertical: true)
         }
         .font(.callout)
     }
@@ -234,8 +234,8 @@ private struct ModeCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Image(systemName: icon).font(.title2).foregroundStyle(Color.accentColor).accessibilityHidden(true)
-            Text(title).font(.headline)
-            Text(text).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            Text(tr(title)).font(.headline)
+            Text(tr(text)).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .padding(16)
@@ -300,7 +300,7 @@ struct FlowDiagram: View {
                 }
                 ForEach(links.filter { $0.label != nil }) { l in
                     if let a = pos(l.from, size), let b = pos(l.to, size) {
-                        Text(l.label!).font(.callout).foregroundStyle(.secondary)
+                        Text(tr(l.label!)).font(.callout).foregroundStyle(.secondary)
                             .padding(.horizontal, 8).padding(.vertical, 4)
                             .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                             .position(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - 22)
@@ -312,7 +312,7 @@ struct FlowDiagram: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityText)
+        .accessibilityLabel(tr(accessibilityText))
     }
 
     private var accessibilityText: String {
@@ -341,8 +341,8 @@ private struct NodeView: View {
         HStack(spacing: 10) {
             Image(systemName: node.icon).font(.title3).foregroundStyle(.secondary).frame(width: 24)
             VStack(alignment: .leading, spacing: 2) {
-                Text(node.title).font(.callout.weight(.medium))
-                if !node.subtitle.isEmpty { Text(node.subtitle).font(.caption).foregroundStyle(.secondary) }
+                Text(tr(node.title)).font(.callout.weight(.medium))
+                if !node.subtitle.isEmpty { Text(tr(node.subtitle)).font(.caption).foregroundStyle(.secondary) }
             }
         }
         .padding(.horizontal, 12)

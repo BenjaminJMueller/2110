@@ -19,13 +19,13 @@ struct ControlBar: View {
                     Button {
                         model.togglePlay()
                     } label: {
-                        Label(p.isActive ? "Stopp" : "Start", systemImage: p.isActive ? "stop.fill" : "play.fill")
+                        Label(tr(p.isActive ? "Stopp" : "Start"), systemImage: p.isActive ? "stop.fill" : "play.fill")
                             .contentTransition(.symbolEffect(.replace))
                             .frame(minWidth: 76)
                     }
                     .controlButtonStyle(prominent: !p.isActive)
                     .disabled(p.current == nil && model.selection == nil)
-                    .help(p.isActive ? "Wiedergabe stoppen (Leertaste)" : "Wiedergabe starten (Leertaste)")
+                    .help(tr(p.isActive ? "Wiedergabe stoppen (Leertaste)" : "Wiedergabe starten (Leertaste)"))
 
                     StatusPill()
 
@@ -42,7 +42,7 @@ struct ControlBar: View {
                             .frame(width: 18, height: 18)
                     }
                     .iconButtonStyle()
-                    .accessibilityLabel(model.settings.muted ? "Stummschaltung aufheben" : "Stummschalten")
+                    .accessibilityLabel(tr(model.settings.muted ? "Stummschaltung aufheben" : "Stummschalten"))
                     .help("Stummschalten (M)")
 
                     Slider(value: Binding(get: { model.settings.volume }, set: {
@@ -51,7 +51,7 @@ struct ControlBar: View {
                     }), in: 0...1.5)
                     .frame(width: 120)
                     .accessibilityLabel("Lautstärke")
-                    .accessibilityValue("\(Int(model.settings.volume * 100)) Prozent")
+                    .accessibilityValue(tr("\(Int(model.settings.volume * 100)) Prozent"))
 
                     OutputPicker()
 
@@ -62,7 +62,7 @@ struct ControlBar: View {
                             .frame(width: 18, height: 18)
                     }
                     .iconButtonStyle()
-                    .accessibilityLabel(model.isFullScreen ? "Vollbild beenden" : "Vollbild")
+                    .accessibilityLabel(tr(model.isFullScreen ? "Vollbild beenden" : "Vollbild"))
                     .help("Vollbild (⌃⌘F)")
                 }
             }
@@ -80,10 +80,10 @@ private struct StatusPill: View {
         let (color, text) = status
         HStack(spacing: 6) {
             Circle().fill(color).frame(width: 9, height: 9).accessibilityHidden(true)
-            Text(text).font(.callout).lineLimit(1)
+            Text(tr(text)).font(.callout).lineLimit(1)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Status: \(text)")
+        .accessibilityLabel(tr("Status: \(text)"))
     }
 
     private var status: (Color, String) {
@@ -119,33 +119,33 @@ private struct MonitorPicker: View {
             if n >= 2 {
                 Section("Stereopaar") {
                     ForEach(Array(stride(from: 0, to: n, by: 2)), id: \.self) { i in
-                        Button(i + 1 < n ? "Kanäle \(i + 1) + \(i + 2)" : "Kanal \(i + 1)") { p.selectPair(i) }
+                        Button(tr(i + 1 < n ? "Kanäle \(i + 1) + \(i + 2)" : "Kanal \(i + 1)")) { p.selectPair(i) }
                     }
                 }
             }
             Section("Einzelkanal (auf beiden Seiten)") {
                 ForEach(0..<n, id: \.self) { i in
-                    Button("Kanal \(i + 1)") { p.monitorLeft = i; p.monitorRight = -1 }
+                    Button(tr("Kanal \(i + 1)")) { p.monitorLeft = i; p.monitorRight = -1 }
                 }
             }
             if n >= 2 {
                 Section("Frei wählbares Paar") {
                     Menu("Links") {
-                        ForEach(0..<n, id: \.self) { i in Button("Kanal \(i + 1)") { p.monitorLeft = i } }
+                        ForEach(0..<n, id: \.self) { i in Button(tr("Kanal \(i + 1)")) { p.monitorLeft = i } }
                     }
                     Menu("Rechts") {
-                        ForEach(0..<n, id: \.self) { i in Button("Kanal \(i + 1)") { p.monitorRight = i } }
+                        ForEach(0..<n, id: \.self) { i in Button(tr("Kanal \(i + 1)")) { p.monitorRight = i } }
                     }
                 }
             }
         } label: {
-            Label(label(n: n), systemImage: "headphones")
+            Label(tr(label(n: n)), systemImage: "headphones")
         }
         .controlMenuStyle()
         .fixedSize()
         .disabled(n == 0)
         .help("Abhören: Kanalpaar oder Einzelkanal wählen (⌘[ / ⌘])")
-        .accessibilityLabel("Abhörauswahl: \(label(n: n))")
+        .accessibilityLabel(tr("Abhörauswahl: \(label(n: n))"))
     }
 
     private func label(n: Int) -> String {
@@ -171,7 +171,7 @@ private struct OutputPicker: View {
                 Button {
                     choose(d.uid)
                 } label: {
-                    if model.settings.audioDeviceUID == d.uid { Label(d.name, systemImage: "checkmark") } else { Text(d.name) }
+                    if model.settings.audioDeviceUID == d.uid { Label(tr(d.name), systemImage: "checkmark") } else { Text(tr(d.name)) }
                 }
             }
         } label: {
@@ -179,8 +179,8 @@ private struct OutputPicker: View {
         }
         .controlMenuStyle(indicator: false)
         .fixedSize()
-        .help("Audioausgabegerät: \(currentName)")
-        .accessibilityLabel("Audioausgabegerät: \(currentName)")
+        .help(tr("Audioausgabegerät: \(currentName)"))
+        .accessibilityLabel(tr("Audioausgabegerät: \(currentName)"))
     }
 
     private var currentName: String {
@@ -213,13 +213,13 @@ struct LevelMeters: View {
                     VStack(spacing: 1) {
                         MeterBar(db: db, highlighted: i == left || i == right)
                         if n <= 32 {
-                            Text("\(i + 1)").font(.system(size: 9, weight: .medium).monospacedDigit()).foregroundStyle(.tertiary)
+                            Text(tr("\(i + 1)")).font(.system(size: 9, weight: .medium).monospacedDigit()).foregroundStyle(.tertiary)
                         }
                     }
                     .frame(width: w)
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("Pegel Kanal \(i + 1)\(i == left || i == right ? ", wird abgehört" : "")")
-                    .accessibilityValue(db <= -119 ? "kein Signal" : String(format: "%.0f dBFS", db))
+                    .accessibilityLabel(tr("Pegel Kanal \(i + 1)\(i == left || i == right ? ", wird abgehört" : "")"))
+                    .accessibilityValue(tr(db <= -119 ? "kein Signal" : String(format: "%.0f dBFS", db)))
                 }
             }
         }

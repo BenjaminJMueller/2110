@@ -43,9 +43,9 @@ struct DiagnosticsView: View {
                                         .foregroundStyle(h.severity == .error ? .red : h.severity == .warning ? .orange : .secondary)
                                         .accessibilityHidden(true)
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text(h.title + (h.certainty == .suspected ? " (vermutet)" : " (gemessen)"))
+                                        Text(tr(h.title + (h.certainty == .suspected ? " (vermutet)" : " (gemessen)")))
                                             .font(.callout.weight(.semibold))
-                                        Text(h.detail).font(.callout).foregroundStyle(.secondary)
+                                        Text(tr(h.detail)).font(.callout).foregroundStyle(.secondary)
                                             .fixedSize(horizontal: false, vertical: true)
                                     }
                                 }
@@ -60,7 +60,7 @@ struct DiagnosticsView: View {
                     GroupedBox("Mitschnitt") {
                         VStack(alignment: .leading, spacing: 6) {
                             if p.isRecording, let s = p.stats {
-                                Text(String(format: "Zeichnet auf: %.0f s, %llu Pakete", locale: .current, s.rec_seconds, s.rec_packets)).font(.callout.monospacedDigit())
+                                Text(tr(String(format: "Zeichnet auf: %.0f s, %llu Pakete", locale: .current, s.rec_seconds, s.rec_packets))).font(.callout.monospacedDigit())
                             } else {
                                 HStack {
                                     Button("10 s aufzeichnen und analysieren") { model.recordAndAnalyze(seconds: 10) }
@@ -127,7 +127,7 @@ struct DiagnosticsView: View {
                     section("Synchronisation") {
                         row("Gewünscht", p.effectiveSync.title)
                         row("Wirksam", String(cString: st_sync_mode_name(s.sync_active)))
-                        Text(syncExplanation(s.sync_active))
+                        Text(tr(syncExplanation(s.sync_active)))
                             .font(.caption).foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                         row("Wiedergabepuffer", String(format: "%.0f ms%@", locale: .current, s.latency_ms, s.latency_auto_raised > 0 ? " (automatisch erhöht)" : ""))
@@ -160,7 +160,7 @@ struct DiagnosticsView: View {
                             row("Status", "nicht verwendet")
                         }
                         if let m = p.ptpMessage {
-                            Text(m).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                            Text(tr(m)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         }
                     }
                 }
@@ -171,7 +171,7 @@ struct DiagnosticsView: View {
                     ForEach(p.log.suffix(40).reversed()) { e in
                         HStack(alignment: .top) {
                             Text(e.date, style: .time).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                            Text(e.text).font(.caption).fixedSize(horizontal: false, vertical: true)
+                            Text(tr(e.text)).font(.caption).fixedSize(horizontal: false, vertical: true)
                         }
                     }
                 }
@@ -217,9 +217,9 @@ struct DiagnosticsView: View {
 
     private func row(_ k: String, _ v: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text(k)
+            Text(tr(k))
             Spacer(minLength: 8)
-            Text(v).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
+            Text(tr(v)).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
                 .fixedSize(horizontal: false, vertical: true)
                 .textSelection(.enabled)
         }
@@ -253,7 +253,7 @@ private struct SenderControlSection: View {
         GroupedBox("Sender (NMOS IS-05)") {
             VStack(alignment: .leading, spacing: 6) {
                 if let a = p.nmosActive {
-                    Text("Aktiv: \(a.master_enable == true ? "ja" : "nein"), Ziel \(a.transport_params?.first?.destination_ip ?? "–"):\(a.transport_params?.first?.destination_port?.intValue.map(String.init) ?? "–")")
+                    Text(tr("Aktiv: \(a.master_enable == true ? "ja" : "nein"), Ziel \(a.transport_params?.first?.destination_ip ?? "–"):\(a.transport_params?.first?.destination_port?.intValue.map(String.init) ?? "–")"))
                         .font(.callout)
                 } else {
                     Text("Status nicht verfügbar (Gerät meldet keine Connection API).").font(.callout).foregroundStyle(.secondary)
@@ -269,7 +269,7 @@ private struct SenderControlSection: View {
                     Text("Änderungen am Sender sind unter „Erweitert › NMOS & Adressen“ freizuschalten.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
-                if let m = message { Text(m).font(.caption).foregroundStyle(.secondary) }
+                if let m = message { Text(tr(m)).font(.caption).foregroundStyle(.secondary) }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

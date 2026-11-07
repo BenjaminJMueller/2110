@@ -51,7 +51,7 @@ struct ManualEntryView: View {
                             Text("1280 × 720").tag("1280x720")
                         }
                         Picker("Bildrate (progressiv)", selection: $fps) {
-                            ForEach(["23.98", "24", "25", "29.97", "30", "50", "59.94", "60"], id: \.self) { Text($0).tag($0) }
+                            ForEach(["23.98", "24", "25", "29.97", "30", "50", "59.94", "60"], id: \.self) { Text(tr($0)).tag($0) }
                         }
                         Picker("Bittiefe (YCbCr 4:2:2)", selection: $depth) {
                             Text("10 Bit").tag(10)
@@ -71,7 +71,7 @@ struct ManualEntryView: View {
                         TextField("Multicast-Adresse", text: $aAddr)
                         TextField("Port", text: $aPort)
                         TextField("Sender-IP (optional, für SSM)", text: $aSource)
-                        Stepper("Kanäle: \(channels)", value: $channels, in: 1...64)
+                        Stepper(tr("Kanäle: \(channels)"), value: $channels, in: 1...64)
                         Picker("Paketzeit", selection: $ptime) {
                             Text("1 ms").tag(1.0)
                             Text("0,125 ms").tag(0.125)
@@ -90,7 +90,7 @@ struct ManualEntryView: View {
                 }
             }
             if let problem {
-                Label(problem, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange).font(.callout)
+                Label(tr(problem), systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange).font(.callout)
             }
             HStack {
                 Spacer()
@@ -194,7 +194,7 @@ struct AddNodeView: View {
             TextField("Adresse", text: $address).textFieldStyle(.roundedBorder)
                 .onSubmit { Task { await add() } }
             Toggle("Adresse ist eine NMOS-Registry (Query API)", isOn: $registry)
-            if let message { Text(message).font(.callout).foregroundStyle(.secondary) }
+            if let message { Text(tr(message)).font(.callout).foregroundStyle(.secondary) }
             HStack {
                 if busy { ProgressView().controlSize(.small) }
                 Spacer()

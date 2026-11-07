@@ -74,6 +74,9 @@ mkdir -p "$APP/Contents/Resources/Licenses"
 cp packaging/licenses/* "$APP/Contents/Resources/Licenses/"
 cp LICENSE THIRD_PARTY_NOTICES.md "$APP/Contents/Resources/Licenses/"
 
+echo "== Sprachen (Deutsch, Englisch)"
+python3 scripts/gen-l10n.py "$APP/Contents/Resources"
+
 echo "== Signieren ($SIGN_IDENTITY)"
 SIGN_ARGS=(--force --sign "$SIGN_IDENTITY")
 if [ "$SIGN_IDENTITY" != "-" ]; then

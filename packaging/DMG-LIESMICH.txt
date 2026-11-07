@@ -1,7 +1,7 @@
 2110 Viewer – Installation
 ==============================
 
-1. „2110 Viewer“ auf den Ordner „Programme“ (Applications) ziehen.
+1. „2110 Viewer“ auf die Verknüpfung „Applications“ (Programme) ziehen.
 2. Das Fenster schließen und das Disk-Image auswerfen.
 3. Im Ordner „Programme“ „2110 Viewer“ öffnen.
 

@@ -76,13 +76,13 @@ struct AppCommands: Commands {
             Divider()
         }
         CommandMenu("Wiedergabe") {
-            Button(model.player.isActive ? "Stopp" : "Start") { model.togglePlay() }
+            Button(tr(model.player.isActive ? "Stopp" : "Start")) { model.togglePlay() }
                 .keyboardShortcut(.return, modifiers: [.command])
             Button("Demo: Testbild und Testton") {
                 if model.selection == .demo { model.activate(.demo) } else { model.selection = .demo }
             }
             Divider()
-            Button(model.settings.muted ? "Ton einschalten" : "Stummschalten") {
+            Button(tr(model.settings.muted ? "Ton einschalten" : "Stummschalten")) {
                 model.settings.muted.toggle()
                 model.player.setMute(model.settings.muted)
             }
@@ -102,11 +102,11 @@ struct AppCommands: Commands {
             Button("Vorheriges Kanalpaar") { model.player.nextPair(-1) }
                 .keyboardShortcut("[", modifiers: [.command])
             Divider()
-            Button(model.inspectorShown ? "Diagnose ausblenden" : "Diagnose einblenden") { model.inspectorShown.toggle() }
+            Button(tr(model.inspectorShown ? "Diagnose ausblenden" : "Diagnose einblenden")) { model.inspectorShown.toggle() }
                 .keyboardShortcut("i", modifiers: [.command])
             Button("Vollbild") { NSApp.keyWindow?.toggleFullScreen(nil) }
                 .keyboardShortcut("f", modifiers: [.command, .control])
-            Button(model.output.isActive ? "Ausgabe auf zweitem Bildschirm beenden" : "Ausgabe auf zweitem Bildschirm") { model.output.toggle() }
+            Button(tr(model.output.isActive ? "Ausgabe auf zweitem Bildschirm beenden" : "Ausgabe auf zweitem Bildschirm")) { model.output.toggle() }
                 .keyboardShortcut("b", modifiers: [.command, .shift])
         }
         CommandGroup(replacing: .help) {

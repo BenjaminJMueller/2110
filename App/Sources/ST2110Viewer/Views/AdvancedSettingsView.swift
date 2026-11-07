@@ -45,7 +45,7 @@ private struct NetworkTab: View {
             Picker("Netzwerkschnittstelle", selection: $model.settings.interfaceName) {
                 Text("Automatisch (empfohlen)").tag("")
                 ForEach(model.interfaces.interfaces, id: \.name) { i in
-                    Text(i.menuTitle).tag(i.name)
+                    Text(tr(i.menuTitle)).tag(i.name)
                 }
             }
             Text("„Automatisch“ wählt die Schnittstelle im Netz des Senders, sonst die schnellste kabelgebundene. Änderungen gelten beim nächsten Start einer Quelle.")
@@ -70,7 +70,7 @@ private struct SyncTab: View {
         @Bindable var model = model
         Form {
             Picker("Wiedergabe", selection: $model.settings.sync) {
-                ForEach(AppSettings.SyncChoice.allCases) { Text($0.title).tag($0) }
+                ForEach(AppSettings.SyncChoice.allCases) { Text(tr($0.title)).tag($0) }
             }
             .pickerStyle(.radioGroup)
             Text("Automatisch: Der Mac lauscht als passiver PTP-Follower (nur Slave, wird nie Master) und richtet Bild und Ton an der PTP-Zeit aus. Ohne Grandmaster werden Bild und Ton über ihre RTP-Zeitstempel zueinander ausgerichtet. „Einfache Vorschau“ gibt jeden Strom bei Ankunft wieder und ist nicht lippensynchron.")
@@ -78,11 +78,11 @@ private struct SyncTab: View {
                 .fixedSize(horizontal: false, vertical: true)
             Picker("PTP-Domain", selection: $model.settings.ptpDomain) {
                 Text("Aus SDP (sonst 127)").tag(-1)
-                ForEach([0, 1, 127], id: \.self) { Text("\($0)").tag($0) }
+                ForEach([0, 1, 127], id: \.self) { Text(tr("\($0)")).tag($0) }
             }
-            Stepper("Wartezeit auf PTP: \(model.settings.ptpTimeoutSeconds) s", value: $model.settings.ptpTimeoutSeconds, in: 1...20)
+            Stepper(tr("Wartezeit auf PTP: \(model.settings.ptpTimeoutSeconds) s"), value: $model.settings.ptpTimeoutSeconds, in: 1...20)
             HStack {
-                Text("Wiedergabepuffer: \(model.settings.latencyMs) ms")
+                Text(tr("Wiedergabepuffer: \(model.settings.latencyMs) ms"))
                 Slider(value: Binding(get: { Double(model.settings.latencyMs) }, set: { model.settings.latencyMs = Int($0) }), in: 40...1000, step: 10)
             }
             Toggle("Puffer bei verspäteten Daten automatisch erhöhen", isOn: $model.settings.autoLatency)
@@ -99,10 +99,10 @@ private struct AudioTab: View {
         Form {
             Picker("Ausgabegerät", selection: $model.settings.audioDeviceUID) {
                 Text("Systemausgang").tag("")
-                ForEach(model.audioDevices.devices) { Text($0.name).tag($0.uid) }
+                ForEach(model.audioDevices.devices) { Text(tr($0.name)).tag($0.uid) }
             }
             HStack {
-                Text("Manueller Tonversatz: \(model.settings.audioDelayMs) ms")
+                Text(tr("Manueller Tonversatz: \(model.settings.audioDelayMs) ms"))
                 Slider(value: Binding(get: { Double(model.settings.audioDelayMs) }, set: {
                     model.settings.audioDelayMs = Int($0)
                     model.player.setAudioDelay(Int($0))
@@ -135,7 +135,7 @@ private struct NMOSTab: View {
             Section("Geräteadressen") {
                 ForEach(model.settings.manualNodes, id: \.self) { n in
                     HStack {
-                        Text(n)
+                        Text(tr(n))
                         Spacer()
                         Button("Entfernen") { model.settings.manualNodes.removeAll { $0 == n } }.controlSize(.small)
                     }
@@ -158,7 +158,7 @@ private struct NMOSTab: View {
                     }
                     .disabled(model.discovery.isScanning || model.settings.scanRanges.isEmpty)
                     if model.discovery.isScanning { ProgressView(value: model.discovery.scanProgress).frame(width: 160) }
-                    if let scanResult { Text(scanResult).font(.caption) }
+                    if let scanResult { Text(tr(scanResult)).font(.caption) }
                 }
             }
             Section("Multicast") {
@@ -170,9 +170,9 @@ private struct NMOSTab: View {
                     .font(.caption).foregroundStyle(.orange)
             }
             Section("Status") {
-                Text("mDNS: \(model.discovery.browserState)").font(.caption)
+                Text(tr("mDNS: \(model.discovery.browserState)")).font(.caption)
                 ForEach(model.discovery.endpoints, id: \.base) { e in
-                    Text("\(e.origin.rawValue): \(e.base.absoluteString)\(model.discovery.errors[e.base].map { " – \($0)" } ?? "")")
+                    Text(tr("\(e.origin.rawValue): \(e.base.absoluteString)\(model.discovery.errors[e.base].map { " – \($0)" } ?? "")"))
                         .font(.caption)
                 }
             }

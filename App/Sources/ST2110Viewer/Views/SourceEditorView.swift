@@ -13,7 +13,7 @@ struct SourceEditorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(request.isNew ? "Neue Quelle" : "Quelle bearbeiten").font(.title2.weight(.semibold))
+            Text(tr(request.isNew ? "Neue Quelle" : "Quelle bearbeiten")).font(.title2.weight(.semibold))
             TextField("Name", text: $request.source.name)
                 .textFieldStyle(.roundedBorder)
                 .accessibilityLabel("Name der Quelle")
@@ -24,7 +24,7 @@ struct SourceEditorView: View {
             if audioCount > 1 {
                 Picker("Audiostrom", selection: Binding(get: { request.source.audioMediaIndex ?? 0 },
                                                          set: { request.source.audioMediaIndex = $0 })) {
-                    ForEach(0..<audioCount, id: \.self) { i in Text("Audiostrom \(i + 1)").tag(i) }
+                    ForEach(0..<audioCount, id: \.self) { i in Text(tr("Audiostrom \(i + 1)")).tag(i) }
                 }
                 .frame(width: 260)
             }
@@ -89,7 +89,7 @@ private struct SDPSlot: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(title).font(.headline)
+                Text(tr(title)).font(.headline)
                 Spacer()
                 Button("Datei …") { importing = true }.controlSize(.small)
                 Button("Einfügen") {
@@ -117,7 +117,7 @@ private struct SDPSlot: View {
                     }
                     return true
                 } isTargeted: { targeted = $0 }
-                .accessibilityLabel(title)
+                .accessibilityLabel(tr(title))
             ValidationLine(text: text, kind: kind)
         }
         .frame(maxWidth: .infinity)
@@ -150,7 +150,7 @@ private struct ValidationLine: View {
         let r = result
         if let r {
             Label {
-                Text(r.1).font(.caption).fixedSize(horizontal: false, vertical: true)
+                Text(tr(r.1)).font(.caption).fixedSize(horizontal: false, vertical: true)
             } icon: {
                 Image(systemName: r.0 == .ok ? "checkmark.circle.fill" : r.0 == .warning ? "exclamationmark.triangle.fill" : "xmark.octagon.fill")
                     .foregroundStyle(r.0 == .ok ? .green : r.0 == .warning ? .orange : .red)

@@ -24,7 +24,7 @@ struct SendView: View {
                                 Text("Testbild mit 1-kHz-Ton").tag("bars")
                                 Text("Lippensynchron-Test").tag("sync")
                                 Text("Videodatei …").tag("file")
-                                ForEach(CaptureFeeder.cameras, id: \.uniqueID) { c in Text(c.localizedName).tag("cam:" + c.uniqueID) }
+                                ForEach(CaptureFeeder.cameras, id: \.uniqueID) { c in Text(tr(c.localizedName)).tag("cam:" + c.uniqueID) }
                             }
                             .labelsHidden().fixedSize()
                         }
@@ -32,7 +32,7 @@ struct SendView: View {
                             Divider()
                             LabeledContent("Datei") {
                                 HStack {
-                                    Text(u.lastPathComponent).lineLimit(1).truncationMode(.middle).foregroundStyle(.secondary)
+                                    Text(tr(u.lastPathComponent)).lineLimit(1).truncationMode(.middle).foregroundStyle(.secondary)
                                     Button("Ändern …") { importing = true }.controlSize(.small)
                                 }
                             }
@@ -44,7 +44,7 @@ struct SendView: View {
                             LabeledContent("Mikrofon") {
                                 Picker("Mikrofon", selection: $s.microphoneID) {
                                     Text("Standard").tag(String?.none)
-                                    ForEach(CaptureFeeder.microphones, id: \.uniqueID) { m in Text(m.localizedName).tag(Optional(m.uniqueID)) }
+                                    ForEach(CaptureFeeder.microphones, id: \.uniqueID) { m in Text(tr(m.localizedName)).tag(Optional(m.uniqueID)) }
                                 }
                                 .labelsHidden().fixedSize()
                             }
@@ -53,14 +53,14 @@ struct SendView: View {
                     card("Format") {
                         LabeledContent("Video") {
                             Picker("Video", selection: $s.format) {
-                                ForEach(SenderController.Format.allCases) { f in Text(f.rawValue).tag(f) }
+                                ForEach(SenderController.Format.allCases) { f in Text(tr(f.rawValue)).tag(f) }
                             }
                             .labelsHidden().fixedSize()
                         }
                         Divider()
                         LabeledContent("Audiokanäle") {
                             Stepper(value: $s.audioChannels, in: 0...16) {
-                                Text(s.audioChannels == 0 ? "aus" : String(s.audioChannels)).monospacedDigit().foregroundStyle(.secondary)
+                                Text(tr(s.audioChannels == 0 ? "aus" : String(s.audioChannels))).monospacedDigit().foregroundStyle(.secondary)
                             }
                         }
                         Divider()
@@ -68,7 +68,7 @@ struct SendView: View {
                             .toggleStyle(.switch)
                             .disabled(s.audioChannels > 8 || s.audioChannels == 0)
                             .help("Ab 9 Kanälen vorgeschrieben")
-                        Text(rateText).font(.caption).foregroundStyle(rateWarning ? .orange : .secondary)
+                        Text(tr(rateText)).font(.caption).foregroundStyle(rateWarning ? .orange : .secondary)
                     }
                     card("Netzwerk") {
                         LabeledContent("Video an") {
@@ -102,7 +102,7 @@ struct SendView: View {
                     .disabled(s.isSending)
 
                     if let m = s.message {
-                        Label(m, systemImage: "exclamationmark.triangle.fill").font(.callout)
+                        Label(tr(m), systemImage: "exclamationmark.triangle.fill").font(.callout)
                             .symbolRenderingMode(.multicolor)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -118,8 +118,8 @@ struct SendView: View {
                         ForEach(model.discovery.destinations) { d in
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("\(d.deviceLabel) – \(d.title)").font(.callout)
-                                    Text(destinationDetail(d))
+                                    Text(tr("\(d.deviceLabel) – \(d.title)")).font(.callout)
+                                    Text(tr(destinationDetail(d)))
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()
@@ -129,19 +129,19 @@ struct SendView: View {
                             }
                         }
                         if let c = s.connectedDestination {
-                            Label("Verbunden mit \(c)", systemImage: "link").font(.callout)
+                            Label(tr("Verbunden mit \(c)"), systemImage: "link").font(.callout)
                         }
                     }
                     card("Status") {
                         if let st = s.stats, s.isSending {
                             Grid(alignment: .leading, horizontalSpacing: 20, verticalSpacing: 6) {
-                                GridRow { Text("Bilder").foregroundStyle(.secondary); Text(String(st.frames_sent) + (st.frames_from_source > 0 ? " (aus Quelle)" : " (Testbild)")) }
-                                GridRow { Text("Datenrate Video").foregroundStyle(.secondary); Text(String(format: "%.0f Mbit/s", locale: .current, st.video_mbps)) }
-                                GridRow { Text("Pakete Video / Audio").foregroundStyle(.secondary); Text("\(st.video_packets) / \(st.audio_packets)") }
-                                GridRow { Text("Verspätet gesendet").foregroundStyle(.secondary); Text(String(format: "%llu (max. %.0f µs)", locale: .current, st.late_packets, st.max_late_us)) }
-                                GridRow { Text("Zeitbezug").foregroundStyle(.secondary); Text(st.ptp_locked != 0 ? "PTP, Grandmaster \(cString(st.ptp_grandmaster))" : "Systemzeit (kein PTP)") }
-                                GridRow { Text("Audiopuffer").foregroundStyle(.secondary); Text(String(format: "%.0f ms, %llu Aussetzer", locale: .current, st.audio_fill_ms, st.audio_underruns)) }
-                                if let p = s.nmosPort { GridRow { Text("NMOS-Knoten").foregroundStyle(.secondary); Text("Port " + String(p) + ", per mDNS angekündigt") } }
+                                GridRow { Text("Bilder").foregroundStyle(.secondary); Text(tr(String(st.frames_sent) + (st.frames_from_source > 0 ? " (aus Quelle)" : " (Testbild)"))) }
+                                GridRow { Text("Datenrate Video").foregroundStyle(.secondary); Text(tr(String(format: "%.0f Mbit/s", locale: .current, st.video_mbps))) }
+                                GridRow { Text("Pakete Video / Audio").foregroundStyle(.secondary); Text(tr("\(st.video_packets) / \(st.audio_packets)")) }
+                                GridRow { Text("Verspätet gesendet").foregroundStyle(.secondary); Text(tr(String(format: "%llu (max. %.0f µs)", locale: .current, st.late_packets, st.max_late_us))) }
+                                GridRow { Text("Zeitbezug").foregroundStyle(.secondary); Text(tr(st.ptp_locked != 0 ? "PTP, Grandmaster \(cString(st.ptp_grandmaster))" : "Systemzeit (kein PTP)")) }
+                                GridRow { Text("Audiopuffer").foregroundStyle(.secondary); Text(tr(String(format: "%.0f ms, %llu Aussetzer", locale: .current, st.audio_fill_ms, st.audio_underruns))) }
+                                if let p = s.nmosPort { GridRow { Text("NMOS-Knoten").foregroundStyle(.secondary); Text(tr("Port " + String(p) + ", per mDNS angekündigt")) } }
                             }
                             .font(.callout.monospacedDigit())
                         } else {
@@ -150,7 +150,7 @@ struct SendView: View {
                     }
                     card("SDP") {
                         if let v = s.videoSDP {
-                            Text(([v] + (s.audioSDP.map { [$0] } ?? [])).joined(separator: "\n"))
+                            Text(tr(([v] + (s.audioSDP.map { [$0] } ?? [])).joined(separator: "\n")))
                                 .font(.system(.caption, design: .monospaced))
                                 .textSelection(.enabled)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -164,7 +164,7 @@ struct SendView: View {
                     }
                     if !s.log.isEmpty {
                         card("Ereignisse") {
-                            ForEach(s.log.suffix(8).reversed(), id: \.self) { Text($0).font(.caption.monospacedDigit()) }
+                            ForEach(s.log.suffix(8).reversed(), id: \.self) { Text(tr($0)).font(.caption.monospacedDigit()) }
                         }
                     }
                 }
@@ -182,7 +182,7 @@ struct SendView: View {
         .confirmationDialog("Gerät mit 2110 Viewer verbinden?", isPresented: Binding(get: { confirmTarget != nil }, set: { if !$0 { confirmTarget = nil } }), presenting: confirmTarget) { d in
             Button("Verbinden") { Task { await s.connect(d, client: model.discovery.client) } }
         } message: { d in
-            Text("„\(d.deviceLabel) – \(d.title)“ gibt danach den 2110-Viewer-Strom aus. Das ändert das Routing des Geräts für alle (IS-05).")
+            Text(tr("„\(d.deviceLabel) – \(d.title)“ gibt danach den 2110-Viewer-Strom aus. Das ändert das Routing des Geräts für alle (IS-05)."))
         }
         .onAppear {
             if s.videoAddress.isEmpty { s.suggestAddresses(range: model.settings.multicastRange, interface: chosenInterface) }
@@ -252,8 +252,8 @@ struct SendView: View {
                 .symbolEffect(.variableColor.iterative, options: .repeating, isActive: s.isSending)
                 .frame(width: 44)
             VStack(alignment: .leading, spacing: 2) {
-                Text(s.isSending ? "Sendet" : "Bereit zum Senden").font(.title2.weight(.semibold))
-                Text(s.isSending ? s.format.rawValue + " an " + s.videoAddress : "Quelle, Format und Netzwerk wählen, dann starten.")
+                Text(tr(s.isSending ? "Sendet" : "Bereit zum Senden")).font(.title2.weight(.semibold))
+                Text(tr(s.isSending ? s.format.rawValue + " an " + s.videoAddress : "Quelle, Format und Netzwerk wählen, dann starten."))
                     .font(.callout).foregroundStyle(.secondary)
             }
             Spacer()
@@ -261,7 +261,7 @@ struct SendView: View {
             Button {
                 if s.isSending { s.stop() } else { Task { await s.start() } }
             } label: {
-                Label(s.isSending ? "Beenden" : "Senden", systemImage: s.isSending ? "stop.fill" : "play.fill")
+                Label(tr(s.isSending ? "Beenden" : "Senden"), systemImage: s.isSending ? "stop.fill" : "play.fill")
                     .contentTransition(.symbolEffect(.replace))
                     .frame(minWidth: 100)
             }
@@ -269,7 +269,7 @@ struct SendView: View {
             .controlSize(.extraLarge)
             .disabled(s.isStarting)
             .keyboardShortcut(.return, modifiers: [.command])
-            .help(s.isSending ? "Senden beenden (⌘↩)" : "Senden starten (⌘↩)")
+            .help(tr(s.isSending ? "Senden beenden (⌘↩)" : "Senden starten (⌘↩)"))
         }
         .padding(16)
         .cardBackground(cornerRadius: 16)

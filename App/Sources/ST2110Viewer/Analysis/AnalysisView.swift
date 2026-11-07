@@ -13,7 +13,7 @@ struct AnalysisView: View {
         Group {
             if let busy = a.busyFile {
                 VStack(spacing: 12) {
-                    ProgressView(value: a.progress ?? 0) { Text("Analysiere \(busy)") }
+                    ProgressView(value: a.progress ?? 0) { Text(tr("Analysiere \(busy)")) }
                         .frame(width: 360)
                     Text("Große Mitschnitte brauchen etwas Zeit; die App bleibt bedienbar.")
                         .font(.callout).foregroundStyle(.secondary)
@@ -23,7 +23,7 @@ struct AnalysisView: View {
                 if let r = e.report {
                     ReportView(entry: e, report: r)
                 } else {
-                    ContentUnavailableView("Analyse nicht möglich", systemImage: "exclamationmark.triangle", description: Text(e.error ?? ""))
+                    ContentUnavailableView("Analyse nicht möglich", systemImage: "exclamationmark.triangle", description: Text(tr(e.error ?? "")))
                 }
             } else {
                 AnalysisEmptyView(importing: $importing)
@@ -90,12 +90,12 @@ private struct ReportView: View {
                         HStack(spacing: 8) {
                             Circle().fill(levelColor(s.worstLevel)).frame(width: 8, height: 8).accessibilityHidden(true)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(s.summary).font(.callout.weight(.medium))
-                                Text(s.destination).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                                Text(tr(s.summary)).font(.callout.weight(.medium))
+                                Text(tr(s.destination)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                             }
                         }
                         .tag(s.index)
-                        .accessibilityLabel("\(s.kindTitle), \(s.summary), \(s.destination)")
+                        .accessibilityLabel(tr("\(s.kindTitle), \(s.summary), \(s.destination)"))
                     }
                 }
                 Section("Netz") {
@@ -132,11 +132,11 @@ private struct CaptureHeader: View {
         let c = report.capture
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {
-                Text(entry.url.lastPathComponent).font(.title2.weight(.medium))
+                Text(tr(entry.url.lastPathComponent)).font(.title2.weight(.medium))
                 Spacer()
                 Button("Als JSON exportieren …") { model.analysis.exportJSON(entry) }.controlSize(.small)
             }
-            Text(captureLine(c))
+            Text(tr(captureLine(c)))
                 .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
             ForEach(c.findings ?? [], id: \.self) { f in FindingRow(finding: f) }
         }
@@ -152,10 +152,10 @@ private struct FindingRow: View {
                 .foregroundStyle(levelColor(finding.level))
                 .frame(width: 18)
                 .accessibilityHidden(true)
-            Text(finding.text).font(.callout).fixedSize(horizontal: false, vertical: true)
+            Text(tr(finding.text)).font(.callout).fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel((finding.level >= 2 ? "Fehler: " : finding.level == 1 ? "Hinweis: " : "In Ordnung: ") + finding.text)
+        .accessibilityLabel(tr((finding.level >= 2 ? "Fehler: " : finding.level == 1 ? "Hinweis: " : "In Ordnung: ") + finding.text))
     }
 }
 
@@ -166,10 +166,10 @@ private struct StatTile: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(label).font(.caption).foregroundStyle(.secondary)
-            Text(value).font(.system(size: 26, weight: .semibold, design: .rounded).monospacedDigit())
+            Text(tr(label)).font(.caption).foregroundStyle(.secondary)
+            Text(tr(value)).font(.system(size: 26, weight: .semibold, design: .rounded).monospacedDigit())
                 .contentTransition(.numericText())
-            if let note { Text(note).font(.caption).foregroundStyle(.secondary) }
+            if let note { Text(tr(note)).font(.caption).foregroundStyle(.secondary) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
@@ -188,8 +188,8 @@ private struct StreamReport: View {
         let s = stream
         VStack(alignment: .leading, spacing: 20) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(s.kindTitle).font(.title3.weight(.medium))
-                Text(streamLine(s))
+                Text(tr(s.kindTitle)).font(.title3.weight(.medium))
+                Text(tr(streamLine(s)))
                     .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
             }
             HStack(spacing: 12) {
@@ -208,7 +208,7 @@ private struct StreamReport: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Picker("Diagramm", selection: $chart) {
-                            ForEach(chartChoices, id: \.0) { Text($0.1).tag($0.0) }
+                            ForEach(chartChoices, id: \.0) { Text(tr($0.1)).tag($0.0) }
                         }
                         .pickerStyle(.segmented)
                         .labelsHidden()
@@ -217,7 +217,7 @@ private struct StreamReport: View {
                     }
                     MainChart(series: series, limits: limits, unit: unit)
                         .frame(height: 300)
-                    Text(explanation).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Text(tr(explanation)).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }
                 .onAppear { if !chartChoices.contains(where: { $0.0 == chart }) { chart = chartChoices.first?.0 ?? "iat_us" } }
                 .onChange(of: stream.index) { _, _ in chart = chartChoices.first?.0 ?? "iat_us" }
@@ -227,7 +227,7 @@ private struct StreamReport: View {
                     Text("Befunde").font(.headline)
                     ForEach(s.findings, id: \.self) { FindingRow(finding: $0) }
                     if let anc = s.anc, !anc.did_sdid.isEmpty {
-                        Text("DID/SDID: " + anc.did_sdid.map { String(format: "%02X/%02X (%d)", locale: .current, $0.did, $0.sdid, $0.count) }.joined(separator: ", "))
+                        Text(tr("DID/SDID: " + anc.did_sdid.map { String(format: "%02X/%02X (%d)", locale: .current, $0.did, $0.sdid, $0.count) }.joined(separator: ", ")))
                             .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
                     }
                 }
@@ -314,7 +314,7 @@ private struct MainChart: View {
                         .foregroundStyle(Color.secondary)
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
                         .annotation(position: .top, alignment: align) {
-                            Text(label).font(.caption).foregroundStyle(.secondary)
+                            Text(tr(label)).font(.caption).foregroundStyle(.secondary)
                         }
                 }
             }
@@ -322,7 +322,7 @@ private struct MainChart: View {
             .chartYAxisLabel(unit)
             .chartXAxis { AxisMarks { _ in AxisGridLine().foregroundStyle(Color.primary.opacity(0.08)); AxisValueLabel().font(.caption.monospacedDigit()) } }
             .chartYAxis { AxisMarks { _ in AxisGridLine().foregroundStyle(Color.primary.opacity(0.08)); AxisValueLabel().font(.caption.monospacedDigit()) } }
-            .accessibilityLabel("Diagramm \(unit) über die Zeit")
+            .accessibilityLabel(tr("Diagramm \(unit) über die Zeit"))
         } else {
             Text("Keine Messwerte für diese Darstellung.").foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -357,39 +357,41 @@ private struct NetworkReport: View {
             }
             ForEach(report.ptp) { p in
                 Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 6) {
-                    GridRow { Text("Domain").foregroundStyle(.secondary); Text("\(p.domain)") }
-                    GridRow { Text("Grandmaster").foregroundStyle(.secondary); Text(p.grandmaster.isEmpty ? "–" : p.grandmaster).monospacedDigit() }
-                    GridRow { Text("Sendende Master").foregroundStyle(.secondary); Text("\(p.masters)").foregroundStyle(p.masters > 1 ? .red : .primary) }
-                    GridRow { Text("Priorität 1 / 2, Klasse").foregroundStyle(.secondary); Text("\(p.priority1) / \(p.priority2), Clock Class \(p.clock_class)") }
-                    GridRow { Text("Sync / Announce je s").foregroundStyle(.secondary); Text(String(format: "%.2f / %.2f%@", locale: .current, p.sync_rate ?? 0, p.announce_rate ?? 0, p.two_step ? " (Two-Step)" : "")).monospacedDigit() }
-                    GridRow { Text("Delay-Req / -Resp").foregroundStyle(.secondary); Text("\(p.delay_req) / \(p.delay_resp)").monospacedDigit() }
-                    GridRow { Text("UTC-Versatz").foregroundStyle(.secondary); Text("\(p.utc_offset) s") }
+                    GridRow { Text("Domain").foregroundStyle(.secondary); Text(tr("\(p.domain)")) }
+                    GridRow { Text("Grandmaster").foregroundStyle(.secondary); Text(tr(p.grandmaster.isEmpty ? "–" : p.grandmaster)).monospacedDigit() }
+                    GridRow { Text("Sendende Master").foregroundStyle(.secondary); Text(tr("\(p.masters)")).foregroundStyle(p.masters > 1 ? .red : .primary) }
+                    GridRow { Text("Priorität 1 / 2, Klasse").foregroundStyle(.secondary); Text(tr("\(p.priority1) / \(p.priority2), Clock Class \(p.clock_class)")) }
+                    GridRow { Text("Sync / Announce je s").foregroundStyle(.secondary); Text(tr(String(format: "%.2f / %.2f%@", locale: .current, p.sync_rate ?? 0, p.announce_rate ?? 0, p.two_step ? " (Two-Step)" : ""))).monospacedDigit() }
+                    GridRow { Text("Delay-Req / -Resp").foregroundStyle(.secondary); Text(tr("\(p.delay_req) / \(p.delay_resp)")).monospacedDigit() }
+                    GridRow { Text("UTC-Versatz").foregroundStyle(.secondary); Text(tr("\(p.utc_offset) s")) }
                 }
                 .font(.callout)
                 .padding(16)
                 .cardBackground()
             }
             Text("IGMP").font(.title3.weight(.medium))
-            Text(report.igmp.queries > 0 ? "Querier: \(report.igmp.querier) (\(report.igmp.queries) Abfragen, davon \(report.igmp.v3_queries) IGMPv3)" : "Keine IGMP-Abfragen gesehen. Ohne Querier kann der Switch Multicast nach einiger Zeit abschalten.")
+            Text(tr(report.igmp.queries > 0 ? "Querier: \(report.igmp.querier) (\(report.igmp.queries) Abfragen, davon \(report.igmp.v3_queries) IGMPv3)" : "Keine IGMP-Abfragen gesehen. Ohne Querier kann der Switch Multicast nach einiger Zeit abschalten."))
                 .font(.callout).foregroundStyle(report.igmp.queries > 0 ? .primary : .secondary)
             ForEach(report.igmp.groups, id: \.self) { g in
-                Text("\(g.group): \(g.joins) Beitritte, \(g.leaves) Austritte").font(.callout.monospacedDigit())
+                Text(tr("\(g.group): \(g.joins) Beitritte, \(g.leaves) Austritte")).font(.callout.monospacedDigit())
             }
         }
     }
 }
 
 private func captureLine(_ c: AnalysisReport.Capture) -> String {
-    var t: String = c.format + ", " + c.packets.formatted() + " Pakete, " + String(format: "%.1f", locale: .current, c.duration_s) + " s"
-    t += ", Zeitauflösung " + String(c.timestamp_resolution_ns) + " ns"
-    if c.software_capture { t += ", Software-Mitschnitt" }
-    return t
+    var parts: [String] = [c.format, tr(c.packets.formatted() + " Pakete"),
+                           String(format: "%.1f", locale: .current, c.duration_s) + " s",
+                           tr("Zeitauflösung " + String(c.timestamp_resolution_ns) + " ns")]
+    if c.software_capture { parts.append(tr("Software-Mitschnitt")) }
+    return parts.joined(separator: ", ")
 }
 
 private func streamLine(_ s: AnalysisReport.Stream) -> String {
-    var t: String = s.source + " nach " + s.destination + ", SSRC " + String(format: "%08X", locale: .current, s.ssrc) + ", PT " + String(s.payload_type)
-    if s.sdp_matched { t += ", SDP zugeordnet" }
-    return t
+    var parts: [String] = [tr(s.source + " nach " + s.destination),
+                           "SSRC " + String(format: "%08X", s.ssrc), "PT " + String(s.payload_type)]
+    if s.sdp_matched { parts.append(tr("SDP zugeordnet")) }
+    return parts.joined(separator: ", ")
 }
 
 private func senderClass(_ c: String) -> String {

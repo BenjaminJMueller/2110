@@ -64,9 +64,11 @@ jobs:
         run: |
           mkdir -p dist/screenshots
           # Zeitbegrenzung 5 min (macOS hat kein „timeout“)
-          perl -e 'alarm 300; exec @ARGV' "dist/2110 Viewer.app/Contents/MacOS/ST2110Viewer" --render-screenshots "$PWD/dist/screenshots" || echo "Bildschirmfotos nicht vollständig"
+          perl -e 'alarm 300; exec @ARGV' "dist/2110 Viewer.app/Contents/MacOS/ST2110Viewer" --render-screenshots "$PWD/dist/screenshots" -AppleLanguages "(de)" || echo "Bildschirmfotos nicht vollständig"
           cat dist/screenshots/bericht.txt || true
-          ls -la dist/screenshots || true
+          mkdir -p dist/screenshots/en
+          perl -e 'alarm 300; exec @ARGV' "dist/2110 Viewer.app/Contents/MacOS/ST2110Viewer" --render-screenshots "$PWD/dist/screenshots/en" -AppleLanguages "(en)" || echo "Englische Bildschirmfotos nicht vollständig"
+          ls -la dist/screenshots dist/screenshots/en || true
       - name: Quellcode der Drittanbieter-Bibliotheken (LGPL)
         run: ./scripts/fetch-third-party-sources.sh
       - name: Bundle prüfen

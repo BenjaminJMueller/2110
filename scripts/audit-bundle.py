@@ -48,6 +48,8 @@ ALLOW = [
     (r"^Resources/AppIcon\.icns$", "2110 Viewer (eigenes Symbol)", "MIT (2110 Viewer)"),
     (r"^Resources/gstreamer-files\.txt$", "2110 Viewer", "MIT (2110 Viewer)"),
     (r"^Resources/Licenses/[^/]+$", "Lizenztexte", None),
+    (r"^Resources/(de|en)\.lproj/(Localizable|InfoPlist)\.strings$", "2110 Viewer (Sprachdatei)", "MIT (2110 Viewer)"),
+    (r"^Resources/Translations-en\.json$", "2110 Viewer (Übersetzung)", "MIT (2110 Viewer)"),
 ]
 
 DENY = re.compile(r"(x264|x265|libav|avdec|avcodec|ffmpeg|faad|a52|mpeg2dec|dvdread|dvdsub|lame|mpg123|"
@@ -90,7 +92,7 @@ def main():
                 continue
             if os.path.islink(p) and os.readlink(p) == "/Applications":
                 continue
-            if name in ("Bitte zuerst lesen.txt", "LICENSE.txt", "THIRD_PARTY_NOTICES.md"):
+            if name in ("Bitte zuerst lesen.txt", "Read me first.txt", "LICENSE.txt", "THIRD_PARTY_NOTICES.md"):
                 continue
             errors.append(f"Unbekannte Datei auf dem DMG: {name}")
 

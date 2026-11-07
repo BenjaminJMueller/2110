@@ -89,11 +89,11 @@ private struct DiscoveryEmptyRow: View {
                 } else {
                     ProgressView().controlSize(.small)
                 }
-                Text(model.discovery.endpoints.isEmpty ? "Suche nach Geräten …" : "Geräte gefunden, aber keine Sender")
+                Text(tr(model.discovery.endpoints.isEmpty ? "Suche nach Geräten …" : "Geräte gefunden, aber keine Sender"))
                     .foregroundStyle(.secondary)
             }
             if problem || state.hasPrefix("aus") {
-                Text(state).font(.caption).foregroundStyle(.secondary)
+                Text(tr(state)).font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Button("Per Adresse hinzufügen …") { model.showAddNode = true }
@@ -115,9 +115,9 @@ private struct DiscoveredRow: View {
                 .frame(width: 18)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 1) {
-                Text(source.title)
-                Text([source.deviceLabel, source.formatSummary, source.audio.isEmpty ? nil : "\(source.audio.count) Audio"]
-                        .compactMap { $0 }.joined(separator: ", "))
+                Text(tr(source.title))
+                Text(tr([source.deviceLabel, source.formatSummary, source.audio.isEmpty ? nil : "\(source.audio.count) Audio"]
+                        .compactMap { $0 }.joined(separator: ", ")))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -133,7 +133,7 @@ private struct DiscoveredRow: View {
             if source.audio.count > 1 || !otherAudio.isEmpty {
                 Menu("Mit Audio von …") {
                     ForEach(source.audio + otherAudio, id: \.id) { a in
-                        Button(a.label ?? a.id) {
+                        Button(tr(a.label ?? a.id)) {
                             Task { await model.playDiscovered(source, audioSenderID: a.id) }
                         }
                     }
@@ -162,8 +162,8 @@ private struct SavedRow: View {
                 .frame(width: 18)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 1) {
-                Text(source.name)
-                Text(subtitle)
+                Text(tr(source.name))
+                Text(tr(subtitle))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

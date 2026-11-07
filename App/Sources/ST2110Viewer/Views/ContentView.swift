@@ -32,13 +32,13 @@ struct ContentView: View {
                 }
             }
         }
-        .navigationTitle(title)
-        .navigationSubtitle(subtitle)
+        .navigationTitle(tr(title))
+        .navigationSubtitle(tr(subtitle))
         .onChange(of: model.inspectorShown) { _, shown in fitInspector(shown) }
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Picker("Modus", selection: $model.mode) {
-                    ForEach(AppMode.allCases) { m in Label(m.rawValue, systemImage: m.icon).tag(m) }
+                    ForEach(AppMode.allCases) { m in Label(tr(m.rawValue), systemImage: m.icon).tag(m) }
                 }
                 .pickerStyle(.segmented)
                 .labelStyle(.titleAndIcon)
@@ -91,7 +91,7 @@ struct ContentView: View {
         .alert("Hinweis", isPresented: Binding(get: { model.alert != nil }, set: { if !$0 { model.alert = nil } })) {
             Button("OK", role: .cancel) { model.alert = nil }
         } message: {
-            Text(model.alert ?? "")
+            Text(tr(model.alert ?? ""))
         }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.willEnterFullScreenNotification)) { _ in
             model.isFullScreen = true
@@ -135,8 +135,8 @@ struct SendSidebar: View {
                 }
                 ForEach(model.discovery.destinations) { d in
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(d.title)
-                        Text(d.deviceLabel).font(.caption).foregroundStyle(.secondary)
+                        Text(tr(d.title))
+                        Text(tr(d.deviceLabel)).font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -163,8 +163,8 @@ struct AnalysisSidebar: View {
                 }
                 ForEach(a.entries) { e in
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(e.url.lastPathComponent).lineLimit(1)
-                        Text(e.report.map { "\($0.streams.count) Ströme, \(String(format: "%.1f", locale: .current, $0.capture.duration_s)) s" } ?? (e.error ?? ""))
+                        Text(tr(e.url.lastPathComponent)).lineLimit(1)
+                        Text(tr(e.report.map { "\($0.streams.count) Ströme, \(String(format: "%.1f", locale: .current, $0.capture.duration_s)) s" } ?? (e.error ?? "")))
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     .tag(e.id)

@@ -85,9 +85,9 @@ private struct VideoOverlay: View {
                         .symbolRenderingMode(.hierarchical)
                         .symbolEffect(.pulse, options: .repeating, isActive: waiting)
                         .foregroundStyle(.white.opacity(0.7))
-                    Text(title).font(.title2.weight(.semibold)).foregroundStyle(.white)
+                    Text(tr(title)).font(.title2.weight(.semibold)).foregroundStyle(.white)
                     if let d = detail {
-                        Text(d)
+                        Text(tr(d))
                             .font(.callout)
                             .foregroundStyle(.white.opacity(0.65))
                             .multilineTextAlignment(.center)
@@ -197,8 +197,8 @@ private struct HintBanner: View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: icon).foregroundStyle(color).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.callout.weight(.semibold))
-                Text(text).font(.callout).foregroundStyle(.secondary).lineLimit(3)
+                Text(tr(title)).font(.callout.weight(.semibold))
+                Text(tr(text)).font(.callout).foregroundStyle(.secondary).lineLimit(3)
             }
             Spacer()
             Button("Diagnose") { model.inspectorShown = true }
@@ -237,14 +237,14 @@ private struct OutputStatus: View {
         let out = model.output
         if let m = out.message {
             HStack(spacing: 8) {
-                Label(m, systemImage: "rectangle.on.rectangle").font(.callout)
+                Label(tr(m), systemImage: "rectangle.on.rectangle").font(.callout)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 Button("OK") { out.dismissMessage() }.controlSize(.small)
             }
         } else if let name = out.activeName {
             HStack(spacing: 8) {
-                Label("Ausgabe auf " + name, systemImage: "rectangle.on.rectangle.fill").font(.callout).foregroundStyle(.secondary)
+                Label(tr("Ausgabe auf " + name), systemImage: "rectangle.on.rectangle.fill").font(.callout).foregroundStyle(.secondary)
                 Spacer()
                 Button("Beenden") { out.hide() }.controlSize(.small)
             }
