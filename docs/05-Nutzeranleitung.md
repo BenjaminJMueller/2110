@@ -23,10 +23,24 @@ Für alle, die im Medienlabor Bild und Ton von Blackmagic-ST-2110-Geräten am Ma
 | Lautsprecher-Symbol, Regler | Stumm, Lautstärke | M, ⌘↑ / ⌘↓ |
 | HiFi-Symbol | Audioausgabegerät (Standard: Systemausgang) | |
 | Pfeile | Vollbild (Esc beendet) | ⌃⌘F |
-| Diagnose (Symbolleiste) | Formate, Paketverluste, Synchronisation, PTP | ⌘I |
+| Diagnose (Symbolleiste) | Formate, Paketverluste, Synchronisation, PTP, Aufzeichnen | ⌘I |
+| Modus | Empfangen, Senden, Analysieren | ⌘1, ⌘2, ⌘3 |
+| „?“ (Symbolleiste) | Erklärung „So funktioniert ST 2110“ | |
 | Erweitert (Symbolleiste) | Netzwerk, Synchronisation, NMOS, Adressbereiche | ⌘, |
 
 Die Pegelanzeige zeigt alle Kanäle; abgehörte Kanäle sind umrandet.
+
+## Senden
+
+Oben in der Symbolleiste **Senden** wählen (⌘2). Quelle wählen (Testbild, Lippensynchron-Test, Videodatei oder Kamera), Format und Audiokanäle einstellen, **Senden starten**. Unter „An ein Gerät senden“ lässt sich ein Blackmagic-Ausgang direkt verbinden; ansonsten den Essenz-Strom am Gerät auswählen. Details: [09-Senden](09-Senden.md).
+
+## Analysieren
+
+**Analysieren** (⌘3) öffnet pcap- oder pcapng-Mitschnitte (z. B. aus Wireshark). Beim Empfang erstellt **Diagnose › 10 s aufzeichnen und analysieren** einen Mitschnitt und öffnet ihn sofort. Links stehen die gefundenen Ströme, rechts Kennzahlen, ein Diagramm und verständliche Befunde. Details: [08-Analyse](08-Analyse.md).
+
+## Darstellung
+
+Hell, Dunkel oder wie das System: Einstellungen (⌘,) › Allgemein. Das Videobild bleibt unverändert.
 
 ## Wenn keine Quelle erscheint
 

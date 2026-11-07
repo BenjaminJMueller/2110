@@ -3,7 +3,7 @@
 ## 4.1 Für Endanwender
 
 Endanwender laden nur das **DMG**, ziehen die App in „Programme“ und starten sie.
-GStreamer und alle Bibliotheken stecken in der App (`Contents/Frameworks/GStreamer`).
+GStreamer und alle Bibliotheken stecken in der App (`Contents/Frameworks`, `Contents/PlugIns`, `Contents/Helpers`).
 Es gibt kein Terminal, kein Homebrew, keine separat zu startenden Dienste und keine Installation in Systemordnern.
 
 Systemvoraussetzungen: Mac mit Apple Silicon (M1 oder neuer, Ziel M4), **macOS 14 Sonoma oder neuer**.
@@ -37,7 +37,9 @@ Was das Skript macht:
 |---|---|
 | GStreamer 1.28.8 laden, Prüfsummen prüfen, ohne Installation nach `vendor/gstreamer` entpacken (`pkgutil --expand-full`) | `scripts/fetch-gstreamer.sh` |
 | Kompilieren (Swift Package, Release, arm64) | `swift build` |
-| Bundle, Info.plist, Symbol | `scripts/build-app.sh`, `scripts/make-icon.swift` |
+| Bundle, Info.plist, Symbol (`packaging/icon/AppIcon.svg` → PNG → icns) | `scripts/build-app.sh` |
+| Lizenzprüfung von App und DMG | `scripts/audit-bundle.py` |
+| Quellcode der eingebetteten Bibliotheken | `scripts/fetch-third-party-sources.sh` |
 | benötigte Plugins und deren Abhängigkeiten kopieren (Liste in `bundle_gstreamer.py`), auf arm64 ausdünnen | `scripts/bundle_gstreamer.py` |
 | Lizenztexte beilegen | `packaging/licenses`, `packaging/THIRD_PARTY.md` |
 | Signieren (von innen nach außen) und prüfen | `codesign` |
@@ -81,6 +83,7 @@ Das Skript signiert dann mit Hardened Runtime und Zeitstempel, reicht das DMG zu
 
 | Berechtigung | Wofür | Wie |
 |---|---|---|
+| Kamera, Mikrofon | nur beim Senden von einer Kamera | Systemabfrage, Begründungstext in der Info.plist |
 | Lokales Netzwerk (macOS 15+) | NMOS-Erkennung (mDNS), HTTP zu den Geräten, Multicast-Empfang | Systemabfrage beim ersten Zugriff, Begründungstext in der Info.plist |
 | Eingehende Verbindungen | nur bei eingeschalteter Firewall, für App und `gst-ptp-helper` | Systemabfrage |
 | keine Sandbox | Multicast auf frei wählbarer Schnittstelle und PTP-Ports 319/320 sind in der App-Sandbox nicht möglich | nur für Developer-ID-Verteilung relevant (nicht App Store) |

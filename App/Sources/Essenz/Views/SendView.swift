@@ -97,7 +97,7 @@ struct SendView: View {
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("\(d.deviceLabel) – \(d.title)").font(.callout)
-                                    Text([d.video != nil ? "Video" : nil, d.audio.isEmpty ? nil : "Audio"].compactMap { $0 }.joined(separator: " + ") + (d.pairingCertain ? "" : " · Zuordnung vermutet"))
+                                    Text(destinationDetail(d))
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()
@@ -164,6 +164,14 @@ struct SendView: View {
         .onAppear {
             if s.videoAddress.isEmpty { s.suggestAddresses(range: model.settings.multicastRange, interface: chosenInterface) }
         }
+    }
+
+    private func destinationDetail(_ d: DiscoveredDestination) -> String {
+        var parts: [String] = []
+        if d.video != nil { parts.append("Video") }
+        if !d.audio.isEmpty { parts.append("Audio") }
+        let kinds: String = parts.joined(separator: " + ")
+        return d.pairingCertain ? kinds : kinds + " · Zuordnung vermutet"
     }
 
     private var chosenInterface: InterfaceSnapshot? {

@@ -120,8 +120,9 @@ final class FileFeeder: MediaFeeder {
     private func run(sender: CoreSender, asset: AVAsset) {
         while !stopFlag {
             // 10 Bit bevorzugt, sonst 8 Bit
-            guard let (reader, vo, ao) = (try? makeReader(asset, sender: sender, pixel: kCVPixelFormatType_422YpCbCr10BiPlanarVideoRange))
+            guard let made = (try? makeReader(asset, sender: sender, pixel: kCVPixelFormatType_422YpCbCr10BiPlanarVideoRange))
                     ?? (try? makeReader(asset, sender: sender, pixel: kCVPixelFormatType_422YpCbCr8)) else { return }
+            let (reader, vo, ao) = made
             let start = CACurrentMediaTime()
             var firstPTS: Double?
             var audioAhead = 0.0

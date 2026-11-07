@@ -98,6 +98,14 @@ struct AnalysisReport: Decodable {
     let igmp: IGMP
 }
 
+struct AnalysisError: LocalizedError { let errorDescription: String? }
+
+private final class ProgressBox: @unchecked Sendable {
+    let fn: (Double) -> Void
+    var last = -1.0
+    init(_ f: @escaping (Double) -> Void) { fn = f }
+}
+
 @MainActor
 @Observable
 final class AnalysisModel {
@@ -147,10 +155,6 @@ final class AnalysisModel {
             }
         }
     }
-
-    struct AnalysisError: LocalizedError { let errorDescription: String? }
-
-    private final class ProgressBox { let fn: (Double) -> Void; var last = -1.0; init(_ f: @escaping (Double) -> Void) { fn = f } }
 
     nonisolated static func analyze(url: URL, sdps: [String], progress: @escaping (Double) -> Void) -> Result<(AnalysisReport, [Int: NSImage]), Error> {
         var cStrings = sdps.map { strdup($0) }

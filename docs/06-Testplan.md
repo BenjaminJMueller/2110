@@ -43,6 +43,25 @@ Ziel: Nachweis mit **echter Blackmagic-Hardware**. Bitte jede Zeile mit Ergebnis
 | T7 | SDP-Datei: aus NMOS-URL (z. B. Browser: `http://<3x3G>/x-nmos/…`) oder Converters Setup speichern, ins Fenster ziehen; getrennte Video- und Audio-SDP zuordnen | Quelle spielbar, nach Neustart der App wieder vorhanden |
 | T8 | Manuelle Eingabe (Experte) mit Adressen aus Converters Setup › 2110 | spielbar |
 
+## 2b Senden an das Blackmagic-Gerät
+
+| # | Schritt | Erwartung |
+|---|---|---|
+| T9 | Modus Senden, Testbild 1080p25, 2 Kanäle, PTP an, „Als NMOS-Quelle anbieten“ an, starten | Status „PTP, Grandmaster …“, Datenrate ca. 1,1 Gbit/s |
+| T10 | Am 3x3G im LCD-Menü *Outputs* bzw. Converters Setup › 2110 › Receiver suchen | Essenz-Strom erscheint in der Liste; nach Auswahl Farbbalken und 1 kHz am SDI-Ausgang |
+| T11 | Alternativ in Essenz „An ein Gerät senden › Verbinden“ (IS-05) | SDI-Ausgang zeigt Farbbalken; Ergebnis und ggf. Fehlermeldung notieren |
+| T12 | Lippensynchron-Test senden, SDI-Ausgang auf Monitor mit Lautsprecher, Zeitlupe filmen | Blitz und Piep gleichzeitig (± 1 Bild) |
+| T13 | Videodatei (H.264 MP4) und Kamera senden | flüssige Wiedergabe am SDI-Ausgang; „Verspätet gesendet“ und „Audiopuffer“ notieren |
+| T14 | 1080p50 senden, mit Essenz (zweiter Mac) oder Analysator mitschneiden | ST-2110-21-Klasse, Cmax, Verluste notieren |
+
+## 2c Analyse
+
+| # | Schritt | Erwartung |
+|---|---|---|
+| A1 | Empfang 3x3G › Diagnose › „10 s aufzeichnen und analysieren“ | Analyse zeigt Video- und Audiostrom, Format ohne SDP korrekt, Vorschaubild richtig |
+| A2 | Wireshark-Mitschnitt am Spiegelport (falls vorhanden) öffnen | PTP-Domain, Grandmaster, IGMP-Querier sichtbar; Ergebnis notieren |
+| A3 | ST-2110-21-Klasse des 3x3G-Senders (laut Hersteller „Narrow“) mit Hardware-Mitschnitt | Klasse „Narrow“; bei Software-Mitschnitt nur Richtwert |
+
 ## 3 Synchronisation
 
 | # | Schritt | Erwartung |

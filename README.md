@@ -1,51 +1,79 @@
+<p align="center"><img src="packaging/icon/AppIcon-1024.png" width="128" alt="Essenz-Symbol"></p>
+
 # Essenz
 
-Native macOS-App (Apple Silicon, SwiftUI) zum **Empfangen, Ansehen und Abhören von SMPTE-ST-2110-Video und -Audio** von Blackmagic-2110-IP-Geräten über Ethernet, für Tests und Lehre im Medienlabor.
+**ST 2110 am Mac empfangen, senden und analysieren.** Native macOS-App (Apple Silicon, SwiftUI, Liquid Glass ab macOS 26) für Video und Audio von Blackmagic-2110-IP-Geräten über Ethernet – entstanden für Lehre und Tests im Medienlabor, frei unter der MIT-Lizenz.
 
-* unkomprimiertes **ST 2110-20** (YCbCr 4:2:2, 10/8 Bit, progressiv), Zielformate 1080p25 und 1080p50
-* **ST 2110-30** Audio (L24/L16, 1–64 Kanäle, 1 ms/125 µs), Abhören von Einzelkanal oder frei wählbarem Stereopaar, Ausgabegerät wählbar
-* **NMOS IS-04** Peer-to-Peer (mDNS, ohne Registry) bzw. mit Registry, Geräteadresse oder Adressbereich; **IS-05** Status und, nach Freischaltung, Steuerung
-* SDP per Drag-and-drop, Datei, Einfügen oder Experteneingabe; getrennte Video- und Audio-SDP pro Quelle; Quellen werden gespeichert
-* **Lippensynchrone** Wiedergabe über RTP-Zeitstempel, optional als passiver **PTP**-Slave; einfache Vorschau zum Vergleich
-* Diagnose mit Paketverlusten, erkannten Parametern, PTP-Status und objektiver **Lippensynchron-Messung** (Blitz/Ton-Einsatz)
-* Liquid Glass ab macOS 26, native Materialien ab macOS 14; Hell/Dunkel, Tastatur, VoiceOver
-* **Ein DMG**: App in „Programme“ ziehen, fertig. GStreamer ist eingebettet; kein Homebrew, kein Terminal, keine Dienste.
+ST 2110 zerlegt ein SDI-Signal in einzelne *Essenzen* (Video, Audio, Daten) mit je eigener Multicast-Adresse. Daher der Name.
+
+| Empfangen | Senden | Analysieren |
+|---|---|---|
+| ST 2110-20 (YCbCr 4:2:2, 10/8 Bit) und ST 2110-30 (bis 64 Kanäle) | Testbild, Lippensynchron-Test, Videodatei oder Kamera als ST 2110-20/-30 | pcap/pcapng mit ST-2110-Verkehr, angelehnt an EBU LIST |
+| Quellen per NMOS IS-04 automatisch, oder SDP per Drag-and-drop | Kündigt sich als NMOS-Quelle an, verbindet Empfänger per IS-05 | Verluste, Paketabstände, Format ohne SDP, Cinst/VRX nach ST 2110-21 |
+| Lippensynchron über RTP-Zeitstempel bzw. als passiver PTP-Slave | Zeitstempel vom PTP-Grandmaster, Pakete gleichmäßig verteilt | Audio-TS-DF, PTP-Domains und Grandmaster, IGMP-Querier, Vorschaubild |
+| Einzelkanal oder freies Stereopaar abhören, Ausgabegerät wählbar | Dateien dekodiert macOS selbst (H.264, HEVC, ProRes, AAC) | Mitschnitt direkt aus dem Empfang aufzeichnen |
+
+Projektseite: `site/` (GitHub Pages, Einrichtung siehe unten).
+
+## Installation
+
+DMG öffnen, **Essenz** in **Programme** ziehen, starten. GStreamer ist eingebettet: kein Terminal, kein Homebrew, keine Dienste. Solange die App nicht notarisiert ist (es fehlt ein Apple-Developer-Konto), beim ersten Start einmal *Systemeinstellungen › Datenschutz & Sicherheit › Dennoch öffnen*. Details: [Nutzeranleitung](docs/05-Nutzeranleitung.md).
+
+DMG-Builds liegen als Artefakt jedes CI-Laufs vor (Actions › „Build und Tests“ › *Essenz-dmg*), zusammen mit dem Quellpaket der eingebetteten Bibliotheken und den Lizenzprüfberichten.
+
+## Prüfstand
+
+**D** dokumentiert · **S** synthetisch getestet · **H** mit Blackmagic-Hardware geprüft
+
+| Bereich | Stand |
+|---|---|
+| Fähigkeiten des Blackmagic 2110 IP Converter 3x3G (Handbuch 09/2026, technische Daten) | D |
+| SDP-Parser, Formatprüfung mit Abhilfe (u. a. 1080i, RGB, IP10) | S – 75 Unit-Prüfungen |
+| Empfang, Verlust, Senderneustart, Formatwechsel, Dauerbetrieb | S – Loopback-Suite (Linux und GitHub Actions) |
+| Lippensynchronität RTP / PTP (linuxptp im Netz-Namespace) | S – Versatz < 0,2 ms |
+| Sender → eigener Empfänger, Mitschnitt-Analyse, PTP-/IGMP-Dekodierung | S |
+| App-Build, Bundle-Selbsttest, Lizenzprüfung von App und DMG auf macOS 26 | S – GitHub Actions |
+| Empfang und Senden mit dem 3x3G, Installation auf Labor-Macs | **H ausstehend** – [Testplan](docs/06-Testplan.md) |
 
 ## Dokumentation
 
-| Dokument | Inhalt |
+| | |
 |---|---|
-| [docs/01-Machbarkeit.md](docs/01-Machbarkeit.md) | Gerätebestand, Herstellerangaben zum 2110 IP Converter 3x3G, GStreamer-Prüfung, Ergebnis |
-| [docs/02-Kompatibilitaet.md](docs/02-Kompatibilitaet.md) | unterstützte Modelle, Firmware, Formate mit Prüfstatus (dokumentiert/synthetisch/Hardware) |
-| [docs/03-Synchronisation.md](docs/03-Synchronisation.md) | Vorschau vs. RTP-abgestimmt vs. PTP, Rolle im PTP-Netz, Messung |
-| [docs/04-Build-und-Verteilung.md](docs/04-Build-und-Verteilung.md) | reproduzierbarer Build, DMG, Signierung, Notarisierung, Berechtigungen |
-| [docs/05-Nutzeranleitung.md](docs/05-Nutzeranleitung.md) | Kurzanleitung für Anwender ohne Vorkenntnisse |
-| [docs/06-Testplan.md](docs/06-Testplan.md) | Abnahmetests mit dem Equipment des Labors und Rückmeldevorlage |
-
-## Prüfstatus dieser Version
-
-| Bereich | dokumentiert | synthetisch getestet | mit Blackmagic-Hardware |
-|---|---|---|---|
-| Formate und Fähigkeiten des 3x3G | ✔ (Handbuch 09/2026, Techspecs) | – | **ausstehend** |
-| SDP-Parser, Formatprüfung | ✔ | ✔ 75 Unit-Prüfungen | ausstehend |
-| Empfang Video+Audio, Verlust, Neustart, Formatwechsel | | ✔ Loopback-Suite (Linux, CI) | ausstehend |
-| Lippensynchronität RTP / PTP | ✔ ST 2059 | ✔ < 0,2 ms; PTP mit Software-Grandmaster | ausstehend |
-| NMOS-Client, Gruppierung | ✔ IS-04/05 | ✔ Unit-Tests mit nachgebildeten Antworten | ausstehend |
-| App-Build, Bundle, Selbsttest auf macOS | | ✔ GitHub Actions (macOS 26, Apple Silicon) | |
-| Installation auf Mac ohne Entwicklerwerkzeuge | | | ausstehend (Testplan I1–I5) |
+| [01 Machbarkeit](docs/01-Machbarkeit.md) | Gerätebestand, Herstellerangaben, GStreamer-Prüfung |
+| [02 Kompatibilität](docs/02-Kompatibilitaet.md) | Modelle, Firmware, Formate mit Prüfstatus |
+| [03 Synchronisation](docs/03-Synchronisation.md) | Vorschau, RTP-abgestimmt, PTP; Rolle im PTP-Netz |
+| [04 Build und Verteilung](docs/04-Build-und-Verteilung.md) | reproduzierbarer Build, DMG, Signierung, Notarisierung |
+| [05 Nutzeranleitung](docs/05-Nutzeranleitung.md) | für Anwender ohne Vorkenntnisse |
+| [06 Testplan](docs/06-Testplan.md) | Abnahme mit dem Equipment, Rückmeldevorlage |
+| [07 Netzwerkadapter](docs/07-Netzwerkadapter.md) | kompatible 10-GbE-Adapter in Deutschland mit Richtpreisen |
+| [08 Analyse](docs/08-Analyse.md) | Messgrößen, Formeln, Grenzen |
+| [09 Senden](docs/09-Senden.md) | Quellen, Zeitbezug, NMOS/IS-05, Datenraten |
+| [LGPL-Quellen](docs/LGPL-Quellen.md) | Bereitstellung des Quellcodes der eingebetteten Bibliotheken |
 
 ## Aufbau
 
 ```
-core/            C-Empfangskern auf GStreamer-Basis (plattformneutral, Linux-Tests)
-  src/           SDP, Multicast-Socket, Medienuhr, Empfangspipeline, Selbsttest
-  tools/         st2110-probe (Kommandozeilen-Empfänger), st2110-testsender (synthetisch)
-  tests/         Unit-, Loopback- und PTP-Tests
+core/              C-Kern (GStreamer), plattformneutral, unter Linux getestet
+  src/             SDP, Multicast-Socket, Medienuhr, Empfänger, Sender, Analyse, Selbsttest
+  tools/           st2110-probe, st2110-send, st2110-analyze, st2110-testsender
+  tests/           Unit-, Loopback-, Sender-, Analyse- und PTP-Tests
 App/Sources/
-  ST2110Kit/     NMOS-Client, Gruppierung, Adressbereiche, Diagnose, Quellen (testbar)
-  Essenz/ SwiftUI-App, Metal-Renderer, CoreAudio, Netzwerkschnittstellen
-scripts/         GStreamer laden, App bauen, einbetten, signieren, DMG, notarisieren
-packaging/       Info.plist, Entitlements, Lizenztexte, DMG-Hinweise
+  ST2110Kit/       NMOS-Client und -Knoten, Gruppierung, Adressbereiche, Diagnose (testbar)
+  Essenz/          SwiftUI-App, Metal-Renderer, AVFoundation, CoreAudio
+scripts/           GStreamer laden, App bauen, einbetten, prüfen, DMG, notarisieren, Quellpaket
+packaging/         Info.plist, Symbol (SVG), Lizenztexte, DMG-Hinweise
+site/              Projektseite (GitHub Pages)
 ```
 
-Schnellstart Build: `./scripts/build-app.sh` auf einem Mac mit Xcode 26 oder das DMG-Artefakt aus GitHub Actions verwenden.
+## Bauen
+
+```bash
+./scripts/build-app.sh          # macOS, Xcode 26 – ergibt dist/Essenz.app und dist/Essenz-<Version>.dmg
+make -C core && make -C core test   # Kern und Tests (Linux oder macOS mit pkg-config)
+```
+
+GitHub Pages: in den Repository-Einstellungen *Pages › Source: GitHub Actions* wählen; der Workflow `Webseite` veröffentlicht `site/` bei Änderungen auf `main`.
+
+## Lizenz
+
+Code: [MIT](LICENSE). Die App enthält GStreamer und weitere Bibliotheken unter LGPL-2.1, BSD, MIT und zlib – siehe [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.md). Keine Herstellerdateien im Repository. Essenz ist ein unabhängiges Projekt und nicht mit Blackmagic Design oder Apple verbunden. Gestaltung nach den Regeln von [unslop](https://github.com/heydamir/unslop) (Damir Sokolovsky, CC BY 4.0).
