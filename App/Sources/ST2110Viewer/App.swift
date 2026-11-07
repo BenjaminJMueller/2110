@@ -22,16 +22,16 @@ enum Entry {
         if let i = CommandLine.arguments.firstIndex(of: "--render-screenshots"), i + 1 < CommandLine.arguments.count {
             SnapshotRunner.outputDir = URL(fileURLWithPath: CommandLine.arguments[i + 1])
         }
-        EssenzApp.main()
+        ViewerApp.main()
     }
 }
 
-struct EssenzApp: App {
+struct ViewerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @State private var model = AppModel()
 
     var body: some Scene {
-        Window("Essenz", id: "main") {
+        Window("2110 Viewer", id: "main") {
             ContentView()
                 .environment(model)
                 .frame(minWidth: 960, minHeight: 600)

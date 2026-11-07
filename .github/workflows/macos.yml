@@ -56,14 +56,14 @@ jobs:
         run: |
           mkdir -p dist/screenshots
           # Zeitbegrenzung 5 min (macOS hat kein „timeout“)
-          perl -e 'alarm 300; exec @ARGV' "dist/Essenz.app/Contents/MacOS/Essenz" --render-screenshots "$PWD/dist/screenshots" || echo "Bildschirmfotos nicht vollständig"
+          perl -e 'alarm 300; exec @ARGV' "dist/2110 Viewer.app/Contents/MacOS/ST2110Viewer" --render-screenshots "$PWD/dist/screenshots" || echo "Bildschirmfotos nicht vollständig"
           cat dist/screenshots/bericht.txt || true
           ls -la dist/screenshots || true
       - name: Quellcode der Drittanbieter-Bibliotheken (LGPL)
         run: ./scripts/fetch-third-party-sources.sh
       - name: Bundle prüfen
         run: |
-          APP="dist/Essenz.app"
+          APP="dist/2110 Viewer.app"
           codesign -dv --verbose=2 "$APP" 2>&1 | head -12
           du -sh "$APP" dist/*.dmg
           ! find "$APP" -type f \( -name "*.dylib" -o -perm -u+x \) -exec otool -L {} \; | grep -E "/(opt|usr/local|Library/Frameworks)/"
@@ -71,7 +71,7 @@ jobs:
       - name: Artefakte hochladen
         uses: actions/upload-artifact@v4
         with:
-          name: Essenz-dmg
+          name: 2110-Viewer-dmg
           path: |
             dist/*.dmg
             dist/*third-party-sources.tar.gz
@@ -80,6 +80,6 @@ jobs:
       - name: Bildschirmfotos hochladen
         uses: actions/upload-artifact@v4
         with:
-          name: Essenz-screenshots
+          name: 2110-Viewer-screenshots
           path: dist/screenshots
           if-no-files-found: ignore

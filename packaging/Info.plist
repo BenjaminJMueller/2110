@@ -5,11 +5,11 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>de</string>
 	<key>CFBundleDisplayName</key>
-	<string>Essenz</string>
+	<string>2110 Viewer</string>
 	<key>CFBundleName</key>
-	<string>Essenz</string>
+	<string>2110 Viewer</string>
 	<key>CFBundleExecutable</key>
-	<string>Essenz</string>
+	<string>ST2110Viewer</string>
 	<key>CFBundleIdentifier</key>
 	<string>@BUNDLE_ID@</string>
 	<key>CFBundlePackageType</key>
@@ -33,13 +33,13 @@
 	<key>NSSupportsAutomaticGraphicsSwitching</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Für Lehre und Tests im Medienlabor. Enthält GStreamer (LGPL).</string>
+	<string>Entstanden für die Lehre. Enthält GStreamer (LGPL).</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Der Essenz sucht Blackmagic-Geräte im lokalen Netzwerk (NMOS) und empfängt deren Video- und Audioströme (Multicast). Ohne diese Erlaubnis sind weder Geräteerkennung noch Empfang möglich.</string>
+	<string>2110 Viewer sucht Blackmagic-Geräte im lokalen Netzwerk (NMOS) und empfängt deren Video- und Audioströme (Multicast). Ohne diese Erlaubnis sind weder Geräteerkennung noch Empfang möglich.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Essenz sendet das Kamerabild als ST-2110-Videostrom ins Netz, wenn Sie beim Senden eine Kamera als Quelle wählen.</string>
+	<string>2110 Viewer sendet das Kamerabild als ST-2110-Videostrom ins Netz, wenn Sie beim Senden eine Kamera als Quelle wählen.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Essenz sendet den Mikrofonton als ST-2110-Audiostrom, wenn Sie beim Senden eine Kamera mit Ton als Quelle wählen.</string>
+	<string>2110 Viewer sendet den Mikrofonton als ST-2110-Audiostrom, wenn Sie beim Senden eine Kamera mit Ton als Quelle wählen.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_nmos-node._tcp</string>

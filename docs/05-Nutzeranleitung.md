@@ -1,11 +1,11 @@
-# Essenz – Kurzanleitung
+# 2110 Viewer – Kurzanleitung
 
-Für alle, die im Medienlabor Bild und Ton von Blackmagic-ST-2110-Geräten am Mac sehen und hören möchten. Programmierkenntnisse sind nicht nötig.
+Für alle, die Bild und Ton von Blackmagic-ST-2110-Geräten am Mac sehen und hören möchten. Programmierkenntnisse sind nicht nötig.
 
 ## Installieren (einmalig)
 
-1. `Essenz-….dmg` doppelklicken.
-2. **Essenz** auf **Programme** ziehen.
+1. `2110-Viewer-….dmg` doppelklicken.
+2. **2110 Viewer** auf **Programme** ziehen.
 3. App aus „Programme“ öffnen. Meldet macOS, die App könne nicht überprüft werden: **Systemeinstellungen › Datenschutz & Sicherheit › „Dennoch öffnen“** (nur beim ersten Mal).
 4. Fragt macOS nach dem **lokalen Netzwerk**: **Erlauben**. Ohne diese Erlaubnis findet die App keine Geräte und empfängt nichts.
 
@@ -32,7 +32,7 @@ Die Pegelanzeige zeigt alle Kanäle; abgehörte Kanäle sind umrandet.
 
 ## Senden
 
-Oben in der Symbolleiste **Senden** wählen (⌘2). Quelle wählen (Testbild, Lippensynchron-Test, Videodatei oder Kamera), Format und Audiokanäle einstellen, **Senden starten**. Unter „An ein Gerät senden“ lässt sich ein Blackmagic-Ausgang direkt verbinden; ansonsten den Essenz-Strom am Gerät auswählen. Details: [09-Senden](09-Senden.md).
+Oben in der Symbolleiste **Senden** wählen (⌘2). Quelle wählen (Testbild, Lippensynchron-Test, Videodatei oder Kamera), Format und Audiokanäle einstellen, **Senden starten**. Unter „An ein Gerät senden“ lässt sich ein Blackmagic-Ausgang direkt verbinden; ansonsten den 2110-Viewer-Strom am Gerät auswählen. Details: [09-Senden](09-Senden.md).
 
 ## Analysieren
 

@@ -6,7 +6,7 @@ Stand: 6. November 2026
 
 | Angabe | Stand |
 |---|---|
-| Gerät | **Blackmagic 2110 IP Converter 3x3G** (vom Medienlabor genannt) |
+| Gerät | **Blackmagic 2110 IP Converter 3x3G** |
 | Firmware | **noch offen**: bitte in „Blackmagic Converters Setup“ ablesen und im Testprotokoll eintragen |
 | Videoformate im Einsatz | **noch offen**; Zielformate laut Auftrag 1080p25 und 1080p50, YCbCr 4:2:2 10 Bit |
 | Netzwerk | Adressen und Bereiche sollen in der App einstellbar sein (umgesetzt) |
@@ -61,7 +61,7 @@ Geprüft wurden:
 | Erkennung | NMOS IS-04 Peer-to-Peer per mDNS (`_nmos-node._tcp`). **Eine Registry ist nicht nötig.** Zusätzlich: Registry (mDNS `_nmos-query._tcp` oder manuell), Geräteadresse manuell, Suche in einem einstellbaren Adressbereich. |
 | Paarung Video/Audio | über BCP-002-01-Gruppen-Tags; ersatzweise über die Nummer in der Bezeichnung (als „vermutet“ gekennzeichnet); Audio frei zuordenbar. |
 | Verbindungssteuerung | IS-05: Status lesen. Sender aktivieren bzw. Zieladresse setzen nur nach ausdrücklicher Freischaltung, weil das alle Empfänger betrifft. Für den Empfang am Mac ist kein IS-05-Receiver nötig: Der Mac tritt der Multicast-Gruppe selbst bei. |
-| PTP | Der Mac nimmt nur als **passiver Slave** teil (GStreamer-PTP-Client, wird nie Master, sendet keine Announce-Nachrichten, nur Delay_Req). Das Produktionstiming bleibt unverändert. **Wichtig für das Labor:** Läuft kein Grandmaster und ist am 3x3G „PTP follower only“ nicht gesetzt, wird der 3x3G selbst Master [H]. |
+| PTP | Der Mac nimmt nur als **passiver Slave** teil (GStreamer-PTP-Client, wird nie Master, sendet keine Announce-Nachrichten, nur Delay_Req). Das Produktionstiming bleibt unverändert. **Wichtig:** Läuft kein Grandmaster und ist am 3x3G „PTP follower only“ nicht gesetzt, wird der 3x3G selbst Master [H]. |
 | Schnittstelle | 10GBASE-T am 3x3G passt direkt zu Thunderbolt-10-GbE-Adaptern (RJ-45), auch punkt-zu-punkt ohne Switch. |
 
 ## 1.5 GStreamer unter macOS / Apple Silicon (geprüft am Paket [G])

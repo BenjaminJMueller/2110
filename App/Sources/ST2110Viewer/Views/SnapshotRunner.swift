@@ -3,7 +3,7 @@ import ST2110Core
 import ST2110Kit
 import SwiftUI
 
-/// Bildschirmfoto- und Funktionsdurchlauf (`Essenz --render-screenshots DIR`):
+/// Bildschirmfoto- und Funktionsdurchlauf (`2110 Viewer --render-screenshots DIR`):
 /// spielt die wichtigsten Abläufe durch, speichert Fenster als PNG und
 /// schreibt einen Bericht. Läuft im macOS-CI; dient der Usability-Prüfung und
 /// der Webseite.
@@ -14,7 +14,7 @@ enum SnapshotRunner {
 
     static func run(model: AppModel, dir: URL) async {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        log("Essenz \(model.appVersion), macOS \(ProcessInfo.processInfo.operatingSystemVersionString)")
+        log("2110 Viewer \(model.appVersion), macOS \(ProcessInfo.processInfo.operatingSystemVersionString)")
         await wait(2)
         if let w = mainWindow { w.setContentSize(NSSize(width: 1440, height: 900)); w.center() }
 
@@ -69,7 +69,7 @@ enum SnapshotRunner {
         if let m = s.message { log("Sender-Meldung: \(m)") }
 
         // Eigenen Strom empfangen
-        var src = SavedSource(name: "Eigener Essenz-Strom (Loopback)", origin: .sdp, videoSDP: s.videoSDP, audioSDP: s.audioSDP)
+        var src = SavedSource(name: "Eigener 2110-Viewer-Strom (Loopback)", origin: .sdp, videoSDP: s.videoSDP, audioSDP: s.audioSDP)
         src.id = UUID()
         model.upsert(src)
         model.mode = .receive

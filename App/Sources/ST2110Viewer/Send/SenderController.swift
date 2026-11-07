@@ -46,7 +46,7 @@ final class SenderController {
     var audioPort: Int?           // nil = wie Video (Multicast); bei Unicast nötig
     var usePTP = true
     var announceNMOS = true
-    var label = "Essenz"
+    var label = "2110 Viewer"
     var microphoneID: String?
 
     private(set) var isSending = false
@@ -77,7 +77,7 @@ final class SenderController {
             ids = NMOSNodeResources.Identity.make()
             if let d = try? JSONEncoder().encode(ids) { UserDefaults.standard.set(d, forKey: "NMOSIdentity") }
         }
-        label = Host.current().localizedName.map { "Essenz (\($0))" } ?? "Essenz"
+        label = Host.current().localizedName.map { "2110 Viewer (\($0))" } ?? "2110 Viewer"
         node.onMasterEnable = { [weak self] en in
             Task { @MainActor in
                 guard let self else { return }
@@ -262,7 +262,7 @@ final class SenderController {
     /// Verbindet einen NMOS-Empfänger (z. B. SDI-Ausgang eines 3x3G) per IS-05.
     func connect(_ d: DiscoveredDestination, client: NMOSClient) async {
         guard let api = d.connectionAPI else {
-            message = "Das Gerät meldet keine IS-05-Schnittstelle. Bitte am Gerät (LCD-Menü bzw. Converters Setup) den Essenz-Sender als Quelle wählen."
+            message = "Das Gerät meldet keine IS-05-Schnittstelle. Bitte am Gerät (LCD-Menü bzw. Converters Setup) den 2110-Viewer-Sender als Quelle wählen."
             return
         }
         do {

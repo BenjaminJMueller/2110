@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Erklärung beim ersten Start und jederzeit über „?“: wie ST 2110 funktioniert
-/// und wie Essenz damit arbeitet. Diagramme sind selbst gezeichnet; Bewegung
+/// und wie 2110 Viewer damit arbeitet. Diagramme sind selbst gezeichnet; Bewegung
 /// zeigt den Paketfluss und entfällt bei „Bewegung reduzieren“.
 struct ExplainerView: View {
     @Environment(AppModel.self) private var model
@@ -142,7 +142,7 @@ private struct MulticastPage: View {
                 .init(id: "s", title: "Sender", subtitle: "239.21.1.1", icon: "dot.radiowaves.up.forward", x: 0.08, y: 0.5),
                 .init(id: "sw", title: "Switch", subtitle: "IGMPv3-Snooping", icon: "rectangle.connected.to.line.below", x: 0.4, y: 0.5),
                 .init(id: "r1", title: "Monitor", subtitle: "beigetreten", icon: "display", x: 0.84, y: 0.16),
-                .init(id: "r2", title: "Essenz", subtitle: "beigetreten", icon: "laptopcomputer", x: 0.84, y: 0.5),
+                .init(id: "r2", title: "2110 Viewer", subtitle: "beigetreten", icon: "laptopcomputer", x: 0.84, y: 0.5),
                 .init(id: "r3", title: "Recorder", subtitle: "nicht beigetreten", icon: "externaldrive", x: 0.84, y: 0.84),
             ], links: [
                 .init(from: "s", to: "sw", style: .accent, density: 8),
@@ -153,7 +153,7 @@ private struct MulticastPage: View {
             .frame(height: 260)
             VStack(alignment: .leading, spacing: 8) {
                 Bullet(icon: "questionmark.circle", text: "Kommt nichts an, liegt es oft am Switch: Er braucht IGMP-Snooping und einen Querier, der die Anmeldungen regelmäßig abfragt.")
-                Bullet(icon: "network", text: "Essenz tritt der Gruppe auf genau der Netzwerkschnittstelle bei, die zum Sender passt, z. B. dem 10-GbE-Adapter.")
+                Bullet(icon: "network", text: "2110 Viewer tritt der Gruppe auf genau der Netzwerkschnittstelle bei, die zum Sender passt, z. B. dem 10-GbE-Adapter.")
             }
         }
     }
@@ -169,7 +169,7 @@ private struct PTPPage: View {
                 .init(id: "gm", title: "Grandmaster", subtitle: "Domain 127", icon: "clock", x: 0.5, y: 0.12),
                 .init(id: "c", title: "Converter", subtitle: "Follower", icon: "arrow.left.arrow.right.square", x: 0.14, y: 0.82),
                 .init(id: "sw", title: "Switch", subtitle: "", icon: "rectangle.connected.to.line.below", x: 0.5, y: 0.82),
-                .init(id: "m", title: "Essenz", subtitle: "nur Follower", icon: "laptopcomputer", x: 0.86, y: 0.82),
+                .init(id: "m", title: "2110 Viewer", subtitle: "nur Follower", icon: "laptopcomputer", x: 0.86, y: 0.82),
             ], links: [
                 .init(from: "gm", to: "c", style: .clock, density: 2),
                 .init(from: "gm", to: "sw", style: .clock, density: 2),
@@ -179,7 +179,7 @@ private struct PTPPage: View {
             TimestampStrip()
                 .frame(height: 96)
                 .accessibilityLabel("Zeitachse: Videobilder alle 20 Millisekunden und Audiopakete jede Millisekunde tragen Zeitstempel derselben Uhr")
-            Bullet(icon: "speaker.wave.2", text: "Essenz richtet Bild und Ton an diesen Zeitstempeln aus. Ohne Grandmaster geht das auch, dann mit der Uhr des Macs. Die Diagnose misst den Versatz mit einem Blitz/Piep-Testsignal.")
+            Bullet(icon: "speaker.wave.2", text: "2110 Viewer richtet Bild und Ton an diesen Zeitstempeln aus. Ohne Grandmaster geht das auch, dann mit der Uhr des Macs. Die Diagnose misst den Versatz mit einem Blitz/Piep-Testsignal.")
         }
     }
 }
@@ -188,18 +188,18 @@ private struct NMOSPage: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             PageText(title: "Finden und verbinden: NMOS",
-                     lead: "Geräte kündigen ihre Ströme im Netz an (IS-04). Essenz findet sie ohne Konfiguration und kann Verbindungen herstellen (IS-05).")
+                     lead: "Geräte kündigen ihre Ströme im Netz an (IS-04). 2110 Viewer findet sie ohne Konfiguration und kann Verbindungen herstellen (IS-05).")
             FlowDiagram(nodes: [
                 .init(id: "c", title: "2110 IP Converter", subtitle: "„SDI 1 Video, Audio“", icon: "arrow.left.arrow.right.square", x: 0.14, y: 0.5),
-                .init(id: "e", title: "Essenz", subtitle: "zeigt die Quelle an", icon: "laptopcomputer", x: 0.86, y: 0.5),
+                .init(id: "e", title: "2110 Viewer", subtitle: "zeigt die Quelle an", icon: "laptopcomputer", x: 0.86, y: 0.5),
             ], links: [
                 .init(from: "c", to: "e", style: .accent, density: 3, label: "IS-04: Ich sende „SDI 1“"),
             ])
             .frame(height: 170)
             VStack(alignment: .leading, spacing: 8) {
-                Bullet(icon: "magnifyingglass", text: "Der 3x3G meldet sich laut Blackmagic per mDNS, eine Registry ist nicht nötig. Findet Essenz nichts, hilft „Gerät per Adresse hinzufügen“.")
-                Bullet(icon: "doc.text", text: "Die Beschreibung eines Stroms steht in einer SDP-Datei: Adresse, Format, Zeitbezug. Essenz liest sie automatisch oder per Drag-and-drop.")
-                Bullet(icon: "dot.radiowaves.up.forward", text: "Beim Senden kündigt sich Essenz selbst so an. Der Converter kann den Essenz-Strom dann am SDI-Ausgang ausgeben.")
+                Bullet(icon: "magnifyingglass", text: "Der 3x3G meldet sich laut Blackmagic per mDNS, eine Registry ist nicht nötig. Findet 2110 Viewer nichts, hilft „Gerät per Adresse hinzufügen“.")
+                Bullet(icon: "doc.text", text: "Die Beschreibung eines Stroms steht in einer SDP-Datei: Adresse, Format, Zeitbezug. 2110 Viewer liest sie automatisch oder per Drag-and-drop.")
+                Bullet(icon: "dot.radiowaves.up.forward", text: "Beim Senden kündigt sich 2110 Viewer selbst so an. Der Converter kann den 2110-Viewer-Strom dann am SDI-Ausgang ausgeben.")
             }
         }
     }
@@ -208,7 +208,7 @@ private struct NMOSPage: View {
 private struct StartPage: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            PageText(title: "Drei Arbeitsweisen in Essenz",
+            PageText(title: "Drei Arbeitsweisen in 2110 Viewer",
                      lead: "Oben in der Symbolleiste wechseln Sie zwischen Empfangen, Senden und Analysieren.")
             HStack(alignment: .top, spacing: 16) {
                 ModeCard(icon: "play.rectangle", title: "Empfangen", text: "Quelle links wählen, Bild sehen, Kanäle abhören. Die Diagnose zeigt Verluste und Synchronisation.")
@@ -218,7 +218,7 @@ private struct StartPage: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Was macOS fragen kann").font(.headline)
                 Bullet(icon: "network", text: "Lokales Netzwerk: nötig für Geräteerkennung und Empfang. Bitte erlauben.")
-                Bullet(icon: "shield.lefthalf.filled", text: "Eingehende Verbindungen (bei aktiver Firewall): für Essenz und das Hilfsprogramm gst-ptp-helper erlauben.")
+                Bullet(icon: "shield.lefthalf.filled", text: "Eingehende Verbindungen (bei aktiver Firewall): für 2110 Viewer und das Hilfsprogramm gst-ptp-helper erlauben.")
                 Bullet(icon: "camera", text: "Kamera und Mikrofon: nur, wenn Sie beim Senden eine Kamera wählen.")
             }
             Text("Ohne Netzwerk ausprobieren: „Demo: Testbild und Testton“ unten in der Seitenleiste.")

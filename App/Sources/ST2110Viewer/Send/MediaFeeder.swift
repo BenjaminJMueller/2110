@@ -10,7 +10,7 @@ import ST2110Core
 protocol MediaFeeder: AnyObject {
     func start(into sender: CoreSender) throws
     func stop()
-    var description: String { get }
+    var sourceName: String { get }
 }
 
 enum FeederError: LocalizedError {
@@ -71,7 +71,7 @@ final class FileFeeder: MediaFeeder {
     let url: URL
     private var thread: Thread?
     private var stopFlag = false
-    var description: String { url.lastPathComponent }
+    var sourceName: String { url.lastPathComponent }
 
     init(url: URL) { self.url = url }
 
@@ -81,7 +81,7 @@ final class FileFeeder: MediaFeeder {
         stopFlag = false
         let t = Thread { [weak self] in self?.run(sender: sender, asset: asset) }
         t.qualityOfService = .userInteractive
-        t.name = "Essenz Dateiwiedergabe"
+        t.name = "2110 Viewer Dateiwiedergabe"
         thread = t
         t.start()
     }
@@ -153,11 +153,11 @@ final class CaptureFeeder: NSObject, MediaFeeder, AVCaptureVideoDataOutputSample
     let cameraID: String?
     let microphoneID: String?
     private let session = AVCaptureSession()
-    private let queue = DispatchQueue(label: "Essenz Kamera", qos: .userInteractive)
-    private let audioQueue = DispatchQueue(label: "Essenz Mikrofon", qos: .userInteractive)
+    private let queue = DispatchQueue(label: "2110 Viewer Kamera", qos: .userInteractive)
+    private let audioQueue = DispatchQueue(label: "2110 Viewer Mikrofon", qos: .userInteractive)
     private weak var sender: CoreSender?
     private(set) var warning: String?
-    var description: String { AVCaptureDevice(uniqueID: cameraID ?? "")?.localizedName ?? "Kamera" }
+    var sourceName: String { AVCaptureDevice(uniqueID: cameraID ?? "")?.localizedName ?? "Kamera" }
 
     init(cameraID: String?, microphoneID: String?) {
         self.cameraID = cameraID

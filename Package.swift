@@ -1,6 +1,6 @@
 // swift-tools-version:5.10
 //
-// Essenz – native macOS-App (SwiftUI) mit eingebettetem GStreamer.
+// 2110 Viewer – native macOS-App (SwiftUI) mit eingebettetem GStreamer.
 //
 // GStreamer wird NICHT systemweit installiert. scripts/fetch-gstreamer.sh lädt
 // die offiziellen macOS-Pakete von gstreamer.freedesktop.org, prüft die
@@ -14,11 +14,11 @@ let root = Context.packageDirectory
 let gst = Context.environment["GSTREAMER_PREFIX"] ?? "\(root)/vendor/gstreamer"
 
 let package = Package(
-    name: "Essenz",
+    name: "ST2110Viewer",
     defaultLocalization: "de",
     platforms: [.macOS(.v14)],
     products: [
-        .executable(name: "Essenz", targets: ["Essenz"]),
+        .executable(name: "ST2110Viewer", targets: ["ST2110Viewer"]),
     ],
     targets: [
         // C-Empfangskern (auch unter Linux mit make baubar und getestet)
@@ -56,9 +56,9 @@ let package = Package(
             path: "App/Sources/ST2110Kit"
         ),
         .executableTarget(
-            name: "Essenz",
+            name: "ST2110Viewer",
             dependencies: ["ST2110Core", "ST2110Kit"],
-            path: "App/Sources/Essenz",
+            path: "App/Sources/ST2110Viewer",
             linkerSettings: [
                 .linkedFramework("Metal"),
                 .linkedFramework("MetalKit"),

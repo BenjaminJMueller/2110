@@ -1,9 +1,9 @@
 # Third-Party Notices / Drittanbieter-Hinweise
 
-Essenz selbst steht unter der **MIT-Lizenz** (`LICENSE`). Dieses Dokument listet
+2110 Viewer selbst steht unter der **MIT-Lizenz** (`LICENSE`). Dieses Dokument listet
 **alle** fremden Bestandteile: was in der ausgelieferten App (DMG) steckt, was nur
 beim Bauen oder Testen verwendet wird, und worauf sich das Projekt inhaltlich stützt.
-Es wird unverändert in die App kopiert (`Essenz.app/Contents/Resources/Licenses/`).
+Es wird unverändert in die App kopiert (`2110 Viewer.app/Contents/Resources/Licenses/`).
 
 ## 1 In der App enthalten (Binärverteilung)
 
@@ -28,12 +28,12 @@ Video und Audio aus Dateien und von der Kamera dekodiert macOS selbst (AVFoundat
 
 * Der vollständige entsprechende Quellcode (Upstream-Archive mit SHA-256 aus den
   cerbero-Rezepten **plus** cerbero 1.28.8 mit allen Patches und Build-Rezepten)
-  wird mit jeder Veröffentlichung als `Essenz-<Version>-third-party-sources.tar.gz`
+  wird mit jeder Veröffentlichung als `2110-Viewer-<Version>-third-party-sources.tar.gz`
   neben dem DMG bereitgestellt. Erzeugt wird er reproduzierbar mit
   `scripts/fetch-third-party-sources.sh`. Details: `docs/LGPL-Quellen.md`.
 * Die LGPL-Bibliotheken sind separate, dynamisch gelinkte Dateien. Sie lassen sich
   durch eigene kompatible Builds ersetzen (danach die App neu signieren, z. B.
-  `codesign --force --deep --sign - Essenz.app`). Essenz verbietet weder
+  `codesign --force --deep --sign - 2110 Viewer.app`). 2110 Viewer verbietet weder
   Reverse Engineering zur Fehlersuche an diesen Bibliotheken noch deren Austausch.
 
 ## 2 Vom Betriebssystem genutzt (nicht mitgeliefert)
@@ -74,5 +74,5 @@ verwendet.
 „Blackmagic Design“, „Blackmagic 2110 IP Converter“, „ATEM“, „HyperDeck“ sind
 Marken von Blackmagic Design Pty. Ltd.; „Mac“, „macOS“, „Apple Silicon“, „Liquid
 Glass“, „Thunderbolt“ (Intel) sind Marken ihrer Inhaber. Die Namen dienen nur der
-Beschreibung der Kompatibilität. Essenz ist ein unabhängiges Projekt und weder mit
+Beschreibung der Kompatibilität. 2110 Viewer ist ein unabhängiges Projekt und weder mit
 Blackmagic Design noch mit Apple verbunden.

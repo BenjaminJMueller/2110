@@ -1,5 +1,5 @@
 #!/bin/bash
-# Stellt den vollständigen entsprechenden Quellcode aller in Essenz.app
+# Stellt den vollständigen entsprechenden Quellcode aller in 2110 Viewer.app
 # eingebetteten LGPL-/BSD-/MIT-Bibliotheken zusammen (LGPL-2.1 §6).
 # Prüfsummen stammen aus den cerbero-Rezepten des Tags 1.28.8, mit dem die
 # offiziellen GStreamer-macOS-Pakete gebaut wurden.
@@ -7,10 +7,10 @@
 # Aufruf: scripts/fetch-third-party-sources.sh [Ausgabedatei.tar.gz]
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OUT="${1:-$ROOT/dist/Essenz-$(cat "$ROOT/VERSION")-third-party-sources.tar.gz}"
+OUT="${1:-$ROOT/dist/2110-Viewer-$(cat "$ROOT/VERSION")-third-party-sources.tar.gz}"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
-SRC="$WORK/essenz-third-party-sources"
+SRC="$WORK/2110-viewer-third-party-sources"
 mkdir -p "$SRC"
 
 sha() { if command -v sha256sum >/dev/null; then sha256sum "$1" | cut -d' ' -f1; else shasum -a 256 "$1" | cut -d' ' -f1; fi; }
@@ -35,16 +35,16 @@ get zlib-1.3.1.tar.gz                https://zlib.net/fossils/zlib-1.3.1.tar.gz 
 get cerbero-1.28.8.tar.gz            https://gitlab.freedesktop.org/gstreamer/cerbero/-/archive/1.28.8/cerbero-1.28.8.tar.gz ""
 
 cat > "$SRC/README.txt" <<'TXT'
-Quellcode der in Essenz.app eingebetteten Drittanbieter-Bibliotheken
+Quellcode der in 2110 Viewer.app eingebetteten Drittanbieter-Bibliotheken
 ====================================================================
 Die Binärdateien stammen aus den offiziellen GStreamer-1.28.8-Paketen für macOS
 (https://gstreamer.freedesktop.org/data/pkg/osx/1.28.8/). Sie wurden mit cerbero
 (Tag 1.28.8, enthalten) aus diesen Archiven gebaut; cerbero wendet die Patches aus
 cerbero-1.28.8/recipes/** an. Nachbauen: cerbero-Dokumentation, Profil
-„osx-universal“, Paket „gstreamer-1.0“. Essenz verwendet daraus die in
+„osx-universal“, Paket „gstreamer-1.0“. 2110 Viewer verwendet daraus die in
 THIRD_PARTY_NOTICES.md aufgeführten Dateien unverändert.
 TXT
 cp "$ROOT/THIRD_PARTY_NOTICES.md" "$ROOT/LICENSE" "$SRC/"
 mkdir -p "$(dirname "$OUT")"
-tar -C "$WORK" -czf "$OUT" essenz-third-party-sources
+tar -C "$WORK" -czf "$OUT" 2110-viewer-third-party-sources
 echo "Quellpaket: $OUT ($(du -h "$OUT" | cut -f1))"

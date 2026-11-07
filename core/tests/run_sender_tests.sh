@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Synthetische Tests: Essenz-Sender (st2110-send) -> Essenz-Empfänger (st2110-probe)
+# Synthetische Tests: 2110-Viewer-Sender (st2110-send) -> 2110-Viewer-Empfänger (st2110-probe)
 set -u
 cd "$(dirname "$0")/.."
 B=./build

@@ -132,12 +132,14 @@ final class AnalysisModel {
         busyFile = url.lastPathComponent
         progress = 0
         let sdps = sdpTexts
-        Task.detached(priority: .userInitiated) { [weak self] in
-            defer { if access { url.stopAccessingSecurityScopedResource() } }
-            let result = AnalysisModel.analyze(url: url, sdps: sdps) { p in
-                Task { @MainActor in self?.progress = p }
-            }
-            await MainActor.run {
+        Task { [weak self] in
+            let result = await Task.detached(priority: .userInitiated) { [weak self] in
+                defer { if access { url.stopAccessingSecurityScopedResource() } }
+                return AnalysisModel.analyze(url: url, sdps: sdps) { p in
+                    Task { @MainActor in self?.progress = p }
+                }
+            }.value
+            do {
                 guard let self else { return }
                 var e = Entry(url: url, date: Date())
                 switch result {

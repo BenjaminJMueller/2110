@@ -1,10 +1,8 @@
-<p align="center"><img src="packaging/icon/AppIcon-1024.png" width="128" alt="Essenz-Symbol"></p>
+<p align="center"><img src="packaging/icon/AppIcon-1024.png" width="128" alt="2110-Viewer-Symbol"></p>
 
-# Essenz
+# 2110 Viewer
 
-**ST 2110 am Mac empfangen, senden und analysieren.** Native macOS-App (Apple Silicon, SwiftUI, Liquid Glass ab macOS 26) für Video und Audio von Blackmagic-2110-IP-Geräten über Ethernet – entstanden für Lehre und Tests im Medienlabor, frei unter der MIT-Lizenz.
-
-ST 2110 zerlegt ein SDI-Signal in einzelne *Essenzen* (Video, Audio, Daten) mit je eigener Multicast-Adresse. Daher der Name.
+**ST 2110 am Mac empfangen, senden und analysieren.** Entstanden für die Lehre.
 
 | Empfangen | Senden | Analysieren |
 |---|---|---|
@@ -17,23 +15,9 @@ Projektseite: `site/` (GitHub Pages, Einrichtung siehe unten).
 
 ## Installation
 
-DMG öffnen, **Essenz** in **Programme** ziehen, starten. GStreamer ist eingebettet: kein Terminal, kein Homebrew, keine Dienste. Solange die App nicht notarisiert ist (es fehlt ein Apple-Developer-Konto), beim ersten Start einmal *Systemeinstellungen › Datenschutz & Sicherheit › Dennoch öffnen*. Details: [Nutzeranleitung](docs/05-Nutzeranleitung.md).
+DMG öffnen, **2110 Viewer** in **Programme** ziehen, starten. GStreamer ist eingebettet: kein Terminal, kein Homebrew, keine Dienste. Solange die App nicht notarisiert ist (es fehlt ein Apple-Developer-Konto), beim ersten Start einmal *Systemeinstellungen › Datenschutz & Sicherheit › Dennoch öffnen*. Details: [Nutzeranleitung](docs/05-Nutzeranleitung.md).
 
-DMG-Builds liegen als Artefakt jedes CI-Laufs vor (Actions › „Build und Tests“ › *Essenz-dmg*), zusammen mit dem Quellpaket der eingebetteten Bibliotheken und den Lizenzprüfberichten.
-
-## Prüfstand
-
-**D** dokumentiert · **S** synthetisch getestet · **H** mit Blackmagic-Hardware geprüft
-
-| Bereich | Stand |
-|---|---|
-| Fähigkeiten des Blackmagic 2110 IP Converter 3x3G (Handbuch 09/2026, technische Daten) | D |
-| SDP-Parser, Formatprüfung mit Abhilfe (u. a. 1080i, RGB, IP10) | S – 75 Unit-Prüfungen |
-| Empfang, Verlust, Senderneustart, Formatwechsel, Dauerbetrieb | S – Loopback-Suite (Linux und GitHub Actions) |
-| Lippensynchronität RTP / PTP (linuxptp im Netz-Namespace) | S – Versatz < 0,2 ms |
-| Sender → eigener Empfänger, Mitschnitt-Analyse, PTP-/IGMP-Dekodierung | S |
-| App-Build, Bundle-Selbsttest, Lizenzprüfung von App und DMG auf macOS 26 | S – GitHub Actions |
-| Empfang und Senden mit dem 3x3G, Installation auf Labor-Macs | **H ausstehend** – [Testplan](docs/06-Testplan.md) |
+DMG-Builds liegen als Artefakt jedes CI-Laufs vor (Actions › „Build und Tests“ › *2110-Viewer-dmg*), zusammen mit dem Quellpaket der eingebetteten Bibliotheken und den Lizenzprüfberichten.
 
 ## Dokumentation
 
@@ -59,7 +43,7 @@ core/              C-Kern (GStreamer), plattformneutral, unter Linux getestet
   tests/           Unit-, Loopback-, Sender-, Analyse- und PTP-Tests
 App/Sources/
   ST2110Kit/       NMOS-Client und -Knoten, Gruppierung, Adressbereiche, Diagnose (testbar)
-  Essenz/          SwiftUI-App, Metal-Renderer, AVFoundation, CoreAudio
+  2110 Viewer/          SwiftUI-App, Metal-Renderer, AVFoundation, CoreAudio
 scripts/           GStreamer laden, App bauen, einbetten, prüfen, DMG, notarisieren, Quellpaket
 packaging/         Info.plist, Symbol (SVG), Lizenztexte, DMG-Hinweise
 site/              Projektseite (GitHub Pages)
@@ -68,7 +52,7 @@ site/              Projektseite (GitHub Pages)
 ## Bauen
 
 ```bash
-./scripts/build-app.sh          # macOS, Xcode 26 – ergibt dist/Essenz.app und dist/Essenz-<Version>.dmg
+./scripts/build-app.sh          # macOS, Xcode 26 – ergibt dist/2110 Viewer.app und dist/2110-Viewer-<Version>.dmg
 make -C core && make -C core test   # Kern und Tests (Linux oder macOS mit pkg-config)
 ```
 
@@ -76,4 +60,4 @@ GitHub Pages: in den Repository-Einstellungen *Pages › Source: GitHub Actions*
 
 ## Lizenz
 
-Code: [MIT](LICENSE). Die App enthält GStreamer und weitere Bibliotheken unter LGPL-2.1, BSD, MIT und zlib – siehe [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.md). Keine Herstellerdateien im Repository. Essenz ist ein unabhängiges Projekt und nicht mit Blackmagic Design oder Apple verbunden. Gestaltung nach den Regeln von [unslop](https://github.com/heydamir/unslop) (Damir Sokolovsky, CC BY 4.0).
+Code: [MIT](LICENSE). Die App enthält GStreamer und weitere Bibliotheken unter LGPL-2.1, BSD, MIT und zlib – siehe [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.md). Keine Herstellerdateien im Repository.

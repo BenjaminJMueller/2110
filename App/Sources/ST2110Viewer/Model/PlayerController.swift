@@ -370,7 +370,7 @@ final class PlayerController {
     /// Zeichnet die empfangenen Pakete als pcapng auf (Software-Zeitstempel).
     func startRecording(seconds: Int) -> URL? {
         guard let r = receiver else { return nil }
-        let dir = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask)[0].appendingPathComponent("Essenz-Mitschnitte", isDirectory: true)
+        let dir = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask)[0].appendingPathComponent("2110-Viewer-Mitschnitte", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd_HH-mm-ss"
@@ -471,7 +471,7 @@ final class PlayerController {
 
     /// Textbericht für Rückmeldungen (Testplan) – kopierbar.
     func reportText(appVersion: String) -> String {
-        var t = "Essenz \(appVersion) – Diagnosebericht \(ISO8601DateFormatter().string(from: Date()))\n"
+        var t = "2110 Viewer \(appVersion) – Diagnosebericht \(ISO8601DateFormatter().string(from: Date()))\n"
         t += "macOS \(ProcessInfo.processInfo.operatingSystemVersionString), GStreamer \(GStreamerEnvironment.version)\n"
         t += "Quelle: \(current?.name ?? "-") (\(isDemo ? "Demo" : current?.origin.rawValue ?? "-"))\n"
         if let i = interface { t += "Schnittstelle: \(i.menuTitle)\n" }

@@ -16,8 +16,8 @@ Jeder Push startet den Workflow `.github/workflows/macos.yml`. Er:
 1. baut und testet den Empfangskern unter Linux (Unit-, Loopback- und Selbsttest),
 2. lädt auf einem macOS-26-Runner die offiziellen GStreamer-Pakete und prüft die SHA-256-Prüfsummen,
 3. führt die Swift-Unit-Tests aus,
-4. baut die App, bettet GStreamer ein, signiert sie ad hoc und führt den **Selbsttest der fertigen App** aus (`Essenz --selftest`: Demo, Loopback-Empfang, Lippensynchronität, PTP-Helfer),
-5. erstellt das DMG und stellt es als Artefakt „Essenz-dmg“ bereit (Actions › Lauf › Artifacts).
+4. baut die App, bettet GStreamer ein, signiert sie ad hoc und führt den **Selbsttest der fertigen App** aus (`2110 Viewer --selftest`: Demo, Loopback-Empfang, Lippensynchronität, PTP-Helfer),
+5. erstellt das DMG und stellt es als Artefakt „2110-Viewer-dmg“ bereit (Actions › Lauf › Artifacts).
 
 Hinweis: macOS-Minuten zählen bei privaten Repositories zehnfach gegen das Actions-Kontingent.
 
@@ -28,7 +28,7 @@ Voraussetzungen: Apple Silicon, macOS 15 oder neuer, **Xcode 26** (aus dem App S
 ```bash
 git clone <Repository> && cd 2110
 ./scripts/build-app.sh
-# Ergebnis: dist/Essenz.app und dist/Essenz-1.0.0.dmg
+# Ergebnis: dist/2110 Viewer.app und dist/2110-Viewer-1.0.0.dmg
 ```
 
 Was das Skript macht:

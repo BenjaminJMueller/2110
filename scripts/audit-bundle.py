@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lizenz- und Inhaltsprüfung für Essenz.app bzw. das gemountete DMG.
+"""Lizenz- und Inhaltsprüfung für 2110 Viewer.app bzw. das gemountete DMG.
 
 Prüft:
   1. Jede ausführbare Datei / Bibliothek ist einem bekannten Bestandteil mit
@@ -9,7 +9,7 @@ Prüft:
   4. Keine GPL-/Codec-/Herstellerbestandteile (Negativliste über Dateinamen).
   5. Keine Dateien mit unbekannter Herkunft (alles außerhalb der Positivliste ist ein Fehler).
 
-Aufruf: audit-bundle.py <Essenz.app | gemountetes DMG-Verzeichnis> [--report datei]
+Aufruf: audit-bundle.py <2110 Viewer.app | gemountetes DMG-Verzeichnis> [--report datei]
 Rückgabe 0 = in Ordnung.
 """
 import os
@@ -17,7 +17,7 @@ import re
 import sys
 
 LICENSE_FILES = {
-    "MIT (Essenz)": "LICENSE",
+    "MIT (2110 Viewer)": "LICENSE",
     "LGPL-2.1-or-later": "LGPL-2.1.txt",
     "LGPL-2.0-or-later": "LGPL-2.1.txt",
     "BSD (ORC)": "orc-BSD.txt",
@@ -28,7 +28,7 @@ LICENSE_FILES = {
 
 # (Regex auf Pfad relativ zu Contents/, Bestandteil, Lizenz)
 ALLOW = [
-    (r"^MacOS/Essenz$", "Essenz", "MIT (Essenz)"),
+    (r"^MacOS/ST2110Viewer$", "2110 Viewer", "MIT (2110 Viewer)"),
     (r"^Helpers/gst-(plugin-scanner|ptp-helper)$", "GStreamer core 1.28.8", "LGPL-2.1-or-later"),
     (r"^Frameworks/libgst(reamer|base|net)-1\.0\.0\.dylib$", "GStreamer core 1.28.8", "LGPL-2.1-or-later"),
     (r"^Frameworks/libgst(app|audio|video|rtp|tag|pbutils|riff)-1\.0\.0\.dylib$", "GStreamer base 1.28.8", "LGPL-2.1-or-later"),
@@ -42,11 +42,11 @@ ALLOW = [
     (r"^Frameworks/libpcre2-8\.0\.dylib$", "PCRE2 10.42", "BSD-3-Clause (PCRE2)"),
     (r"^Frameworks/libz\.1\.dylib$", "zlib 1.3.1", "Zlib"),
     # Nicht ausführbare Dateien
-    (r"^Info\.plist$", "Essenz", "MIT (Essenz)"),
-    (r"^PkgInfo$", "Essenz", "MIT (Essenz)"),
+    (r"^Info\.plist$", "2110 Viewer", "MIT (2110 Viewer)"),
+    (r"^PkgInfo$", "2110 Viewer", "MIT (2110 Viewer)"),
     (r"^_CodeSignature/CodeResources$", "Signatur", None),
-    (r"^Resources/AppIcon\.icns$", "Essenz (eigenes Symbol)", "MIT (Essenz)"),
-    (r"^Resources/gstreamer-files\.txt$", "Essenz", "MIT (Essenz)"),
+    (r"^Resources/AppIcon\.icns$", "2110 Viewer (eigenes Symbol)", "MIT (2110 Viewer)"),
+    (r"^Resources/gstreamer-files\.txt$", "2110 Viewer", "MIT (2110 Viewer)"),
     (r"^Resources/Licenses/[^/]+$", "Lizenztexte", None),
 ]
 

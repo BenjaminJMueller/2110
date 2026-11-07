@@ -342,7 +342,7 @@ static void w16(uint8_t *p, uint16_t v) { memcpy(p, &v, 2); }
 
 static void rec_write_header(FILE *f)
 {
-    static const char comment[] = "Essenz Software-Mitschnitt: Zeitstempel bei Ankunft im Programm (nicht am Netzwerkanschluss); "
+    static const char comment[] = "2110 Viewer Software-Mitschnitt: Zeitstempel bei Ankunft im Programm (nicht am Netzwerkanschluss); "
                                   "Ethernet-/IP-Köpfe rekonstruiert. Für ST-2110-21-Bewertungen Hardware-Mitschnitt verwenden.";
     uint8_t b[512];
     size_t clen = sizeof comment - 1, cpad = (clen + 3) & ~(size_t)3;

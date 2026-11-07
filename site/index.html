@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Essenz – ST 2110 am Mac</title>
-<meta name="description" content="Essenz ist eine freie Mac-App für SMPTE ST 2110: Video und Audio von Blackmagic-2110-Geräten empfangen, eigene Signale senden und Paketmitschnitte analysieren.">
+<title>2110 Viewer – ST 2110 am Mac</title>
+<meta name="description" content="2110 Viewer ist eine freie Mac-App für SMPTE ST 2110: Video und Audio von Blackmagic-2110-Geräten empfangen, eigene Signale senden und Paketmitschnitte analysieren.">
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
 <style>
 :root{
@@ -70,9 +70,9 @@ footer p{margin:4px 0}
 </head>
 <body>
 <header><div class="wrap">
-  <a class="logo" href="#"><img src="assets/icon.svg" alt="">Essenz</a>
+  <a class="logo" href="#"><img src="assets/icon.svg" alt="">2110 Viewer</a>
   <nav aria-label="Hauptnavigation">
-    <a href="#funktionen">Funktionen</a><a href="#status">Prüfstand</a><a href="#start">Erste Schritte</a><a href="#hardware">Hardware</a><a href="#open-source">Open Source</a>
+    <a href="#funktionen">Funktionen</a><a href="#start">Erste Schritte</a><a href="#hardware">Hardware</a><a href="#open-source">Open Source</a>
   </nav>
   <a class="btn" href="https://github.com/BenjaminJMueller/2110" style="height:36px">GitHub</a>
 </div></header>
@@ -81,7 +81,7 @@ footer p{margin:4px 0}
 <div class="wrap hero">
   <div>
     <h1>ST 2110 am Mac empfangen, senden und analysieren</h1>
-    <p class="lead">Essenz zeigt Bild und Ton von Blackmagic-2110-Geräten direkt über Ethernet, schickt eigene Signale ins Netz und prüft Paketmitschnitte. Für Lehre und Tests im Medienlabor, frei und quelloffen.</p>
+    <p class="lead">2110 Viewer zeigt Bild und Ton von Blackmagic-2110-Geräten direkt über Ethernet, schickt eigene Signale ins Netz und prüft Paketmitschnitte. Entstanden für die Lehre.</p>
     <div class="actions">
       <a class="btn primary" href="https://github.com/BenjaminJMueller/2110/releases">DMG laden</a>
       <a class="btn" href="https://github.com/BenjaminJMueller/2110/blob/main/docs/05-Nutzeranleitung.md">Kurzanleitung</a>
@@ -110,13 +110,13 @@ footer p{margin:4px 0}
   <rect class="n" x="500" y="260" width="128" height="60" rx="10"/><text class="t" x="514" y="286">Daten</text><text class="s" x="514" y="305">ST 2110-40</text>
 </svg>
 
-    <p style="margin:12px 0 0;font-size:13px;color:var(--muted)">ST 2110 teilt ein SDI-Signal in Essenzen. Essenz empfängt, sendet und prüft sie.</p>
+    <p style="margin:12px 0 0;font-size:13px;color:var(--muted)">ST 2110 teilt ein SDI-Signal in Essenzen. 2110 Viewer empfängt, sendet und prüft sie.</p>
   </div>
 </div>
 
 <section id="funktionen"><div class="wrap">
   <h2>Drei Arbeitsweisen</h2>
-  <p class="sub">ST 2110 zerlegt ein SDI-Signal in einzelne Essenzen – Video, Audio, Daten – mit je eigener Multicast-Adresse. Essenz arbeitet mit allen dreien.</p>
+  <p class="sub">ST 2110 zerlegt ein SDI-Signal in einzelne Essenzen – Video, Audio, Daten – mit je eigener Multicast-Adresse. 2110 Viewer arbeitet mit allen dreien.</p>
   <div class="grid3">
     <div class="card">
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z"/></svg>
@@ -150,27 +150,12 @@ footer p{margin:4px 0}
   </div>
 </div></section>
 
-<section id="status"><div class="wrap">
-  <h2>Prüfstand</h2>
-  <p class="sub">Was dokumentiert, was synthetisch getestet und was mit Blackmagic-Hardware geprüft ist. Die Hardwaretests laufen nach dem <a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/06-Testplan.md">Testplan</a>.</p>
-  <table>
-    <thead><tr><th>Bereich</th><th>Stand</th></tr></thead>
-    <tbody>
-      <tr><td>Blackmagic 2110 IP Converter 3x3G: Formate, NMOS, PTP laut Handbuch 09/2026</td><td><span class="dot doc"></span>dokumentiert</td></tr>
-      <tr><td>Empfang Video und Audio, Verluste, Senderneustart, Formatwechsel</td><td><span class="dot ok"></span>synthetisch getestet (Linux, macOS-CI)</td></tr>
-      <tr><td>Lippensynchronität RTP und PTP (Software-Grandmaster)</td><td><span class="dot ok"></span>synthetisch getestet, Versatz unter 0,2 ms</td></tr>
-      <tr><td>Senden an den eigenen Empfänger, Analyse der Mitschnitte</td><td><span class="dot ok"></span>synthetisch getestet</td></tr>
-      <tr><td>Empfang und Senden mit dem 3x3G, Installation auf Labor-Macs</td><td><span class="dot open"></span>ausstehend</td></tr>
-    </tbody>
-  </table>
-</div></section>
-
 <section id="start"><div class="wrap">
   <h2>Erste Schritte</h2>
   <p class="sub">Kein Terminal, kein Homebrew, keine Dienste. GStreamer steckt in der App.</p>
   <div class="steps">
-    <div class="card"><h3>DMG öffnen</h3><p>Essenz in den Ordner Programme ziehen. Beim ersten Start einmal „Dennoch öffnen“ in den Systemeinstellungen, solange die App nicht notarisiert ist.</p></div>
-    <div class="card"><h3>Mac verbinden</h3><p>10-GbE-Adapter an den Switch des Labors oder direkt an den Converter.</p></div>
+    <div class="card"><h3>DMG öffnen</h3><p>2110 Viewer in den Ordner Programme ziehen. Beim ersten Start einmal „Dennoch öffnen“ in den Systemeinstellungen, solange die App nicht notarisiert ist.</p></div>
+    <div class="card"><h3>Mac verbinden</h3><p>10-GbE-Adapter an den Switch oder direkt an den Converter.</p></div>
     <div class="card"><h3>Quelle wählen</h3><p>Blackmagic-Eingänge erscheinen unter „Im Netzwerk gefunden“. Lokales Netzwerk erlauben.</p></div>
     <div class="card"><h3>Sehen und hören</h3><p>Leertaste startet und stoppt. Kanäle, Lautstärke und Ausgabegerät in der Leiste.</p></div>
   </div>
@@ -193,7 +178,7 @@ footer p{margin:4px 0}
 
 <section id="open-source"><div class="wrap">
   <h2>Open Source</h2>
-  <p class="sub">Der Code von Essenz steht unter der MIT-Lizenz. Die App bettet GStreamer 1.28.8 und dessen Bibliotheken unverändert ein (LGPL-2.1, BSD, MIT, zlib); keine GPL-Bestandteile, keine Codecs, keine Herstellerdateien. Jedes DMG wird automatisch auf Lizenzen geprüft, der Quellcode der eingebetteten Bibliotheken liegt jeder Veröffentlichung bei.</p>
+  <p class="sub">Der Code von 2110 Viewer steht unter der MIT-Lizenz. Die App bettet GStreamer 1.28.8 und dessen Bibliotheken unverändert ein (LGPL-2.1, BSD, MIT, zlib); keine GPL-Bestandteile, keine Codecs, keine Herstellerdateien. Jedes DMG wird automatisch auf Lizenzen geprüft, der Quellcode der eingebetteten Bibliotheken liegt jeder Veröffentlichung bei.</p>
   <div class="grid3">
     <div class="card"><h3>Lizenzen</h3><p><a href="https://github.com/BenjaminJMueller/2110/blob/main/LICENSE">LICENSE</a> · <a href="https://github.com/BenjaminJMueller/2110/blob/main/THIRD_PARTY_NOTICES.md">THIRD_PARTY_NOTICES</a> · <a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/LGPL-Quellen.md">LGPL-Quellen</a></p></div>
     <div class="card"><h3>Dokumentation</h3><p><a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/01-Machbarkeit.md">Machbarkeit</a> · <a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/03-Synchronisation.md">Synchronisation</a> · <a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/08-Analyse.md">Analyse</a> · <a href="https://github.com/BenjaminJMueller/2110/blob/main/docs/09-Senden.md">Senden</a></p></div>
@@ -203,8 +188,7 @@ footer p{margin:4px 0}
 </main>
 
 <footer><div class="wrap">
-  <p>Essenz ist ein unabhängiges Projekt und nicht mit Blackmagic Design oder Apple verbunden. Markennamen dienen nur der Beschreibung der Kompatibilität.</p>
-  <p>Gestaltung nach den Regeln von <a href="https://github.com/heydamir/unslop">unslop</a> von Damir Sokolovsky (CC BY 4.0).</p>
+  <p>2110 Viewer · MIT-Lizenz · <a href="https://github.com/BenjaminJMueller/2110">Quellcode auf GitHub</a></p>
 </div></footer>
 <script>
 // Bildschirmfotos nur zeigen, wenn sie vorhanden sind (sie entstehen im macOS-CI)

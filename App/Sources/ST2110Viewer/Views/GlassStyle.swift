@@ -72,7 +72,7 @@ private struct FallbackSurface: ViewModifier {
 /// Farbwelt: neutrale Systemflächen, eine kühle Kobalt-Akzentfarbe für die
 /// eine wichtige Aktion bzw. Auswahl je Ansicht.
 enum Theme {
-    static let accent = Color(nsColor: NSColor(name: "EssenzAccent") { a in
+    static let accent = Color(nsColor: NSColor(name: "ViewerAccent") { a in
         a.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
             ? NSColor(srgbRed: 0.42, green: 0.62, blue: 1.0, alpha: 1)
             : NSColor(srgbRed: 0.15, green: 0.40, blue: 0.86, alpha: 1)

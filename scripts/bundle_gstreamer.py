@@ -5,7 +5,7 @@ Bestandteile; GPL-Plugins werden nicht verwendet.
 
 Aufruf:
   bundle_gstreamer.py --prefix vendor/gstreamer --dest "App.app/Contents/Frameworks/GStreamer" \
-                      --binary "App.app/Contents/MacOS/Essenz" [--otool otool]
+                      --binary "App.app/Contents/MacOS/ST2110Viewer" [--otool otool]
 """
 import argparse
 import os

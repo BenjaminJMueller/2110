@@ -1,4 +1,4 @@
-# 6 Testplan für das Equipment des Medienlabors
+# 6 Testplan mit Blackmagic-Hardware
 
 Ziel: Nachweis mit **echter Blackmagic-Hardware**. Bitte jede Zeile mit Ergebnis (✔/✘), Datum und, wo verlangt, dem **Diagnosebericht** (Diagnose › Bericht kopieren) zurückmelden. Vorlage: Abschnitt 8.
 
@@ -48,11 +48,11 @@ Ziel: Nachweis mit **echter Blackmagic-Hardware**. Bitte jede Zeile mit Ergebnis
 | # | Schritt | Erwartung |
 |---|---|---|
 | T9 | Modus Senden, Testbild 1080p25, 2 Kanäle, PTP an, „Als NMOS-Quelle anbieten“ an, starten | Status „PTP, Grandmaster …“, Datenrate ca. 1,1 Gbit/s |
-| T10 | Am 3x3G im LCD-Menü *Outputs* bzw. Converters Setup › 2110 › Receiver suchen | Essenz-Strom erscheint in der Liste; nach Auswahl Farbbalken und 1 kHz am SDI-Ausgang |
-| T11 | Alternativ in Essenz „An ein Gerät senden › Verbinden“ (IS-05) | SDI-Ausgang zeigt Farbbalken; Ergebnis und ggf. Fehlermeldung notieren |
+| T10 | Am 3x3G im LCD-Menü *Outputs* bzw. Converters Setup › 2110 › Receiver suchen | 2110-Viewer-Strom erscheint in der Liste; nach Auswahl Farbbalken und 1 kHz am SDI-Ausgang |
+| T11 | Alternativ in 2110 Viewer „An ein Gerät senden › Verbinden“ (IS-05) | SDI-Ausgang zeigt Farbbalken; Ergebnis und ggf. Fehlermeldung notieren |
 | T12 | Lippensynchron-Test senden, SDI-Ausgang auf Monitor mit Lautsprecher, Zeitlupe filmen | Blitz und Piep gleichzeitig (± 1 Bild) |
 | T13 | Videodatei (H.264 MP4) und Kamera senden | flüssige Wiedergabe am SDI-Ausgang; „Verspätet gesendet“ und „Audiopuffer“ notieren |
-| T14 | 1080p50 senden, mit Essenz (zweiter Mac) oder Analysator mitschneiden | ST-2110-21-Klasse, Cmax, Verluste notieren |
+| T14 | 1080p50 senden, mit 2110 Viewer (zweiter Mac) oder Analysator mitschneiden | ST-2110-21-Klasse, Cmax, Verluste notieren |
 
 ## 2c Analyse
 
@@ -105,7 +105,7 @@ Ziel: Nachweis mit **echter Blackmagic-Hardware**. Bitte jede Zeile mit Ergebnis
 
 ## 7 Kommandozeilen-Prüfung (optional, für Betreuung)
 
-Im Bundle liegt der Selbsttest: `"/Applications/Essenz.app/Contents/MacOS/Essenz" --selftest`.
+Im Bundle liegt der Selbsttest: `"/Applications/2110 Viewer.app/Contents/MacOS/2110 Viewer" --selftest`.
 Der Empfangskern ist auch als Werkzeug `st2110-probe` baubar (siehe 04); es zeichnet mit `--json` maschinenlesbare Ergebnisse auf.
 
 ## 8 Rückmeldevorlage

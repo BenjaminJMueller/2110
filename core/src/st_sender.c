@@ -656,7 +656,7 @@ int st_sender_sdp(st_sender *s, int video, char *out, size_t len)
                      "a=rtpmap:%d raw/90000\r\n"
                      "a=fmtp:%d sampling=YCbCr-4:2:2; width=%d; height=%d; exactframerate=%s; depth=10; TCS=SDR; colorimetry=BT709; PM=2110GPM; SSN=ST2110-20:2017; TP=2110TPNL; \r\n"
                      "a=ts-refclk:%s\r\na=mediaclk:direct=0\r\n",
-                     sess, src, c->session_name[0] ? c->session_name : "Essenz", c->video_port, c->video_pt, conn, filt,
+                     sess, src, c->session_name[0] ? c->session_name : "2110 Viewer", c->video_port, c->video_pt, conn, filt,
                      c->video_pt, c->video_pt, c->width, c->height, fps, refclk);
     } else {
         n = snprintf(out, len,
@@ -664,7 +664,7 @@ int st_sender_sdp(st_sender *s, int video, char *out, size_t len)
                      "m=audio %d RTP/AVP %d\r\n%s%s"
                      "a=rtpmap:%d L24/48000/%d\r\na=ptime:%s\r\n"
                      "a=ts-refclk:%s\r\na=mediaclk:direct=0\r\n",
-                     sess, src, c->session_name[0] ? c->session_name : "Essenz", c->audio_port, c->audio_pt, conn, filt,
+                     sess, src, c->session_name[0] ? c->session_name : "2110 Viewer", c->audio_port, c->audio_pt, conn, filt,
                      c->audio_pt, c->audio_channels, c->audio_ptime_us == 125 ? "0.125" : "1", refclk);
     }
     return (n < 0 || (size_t)n >= len) ? -1 : n;

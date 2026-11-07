@@ -1,6 +1,6 @@
 # 8 Paketmitschnitte analysieren
 
-Essenz analysiert pcap- und pcapng-Dateien mit ST-2110-Verkehr. Der Funktionsumfang orientiert sich an EBU LIST; der Code ist eigenständig. Der Schwerpunkt liegt auf der Fehlersuche, nicht auf der Wiedergabe.
+2110 Viewer analysiert pcap- und pcapng-Dateien mit ST-2110-Verkehr. Der Funktionsumfang orientiert sich an EBU LIST; der Code ist eigenständig. Der Schwerpunkt liegt auf der Fehlersuche, nicht auf der Wiedergabe.
 
 ## Woher kommt der Mitschnitt?
 
@@ -8,7 +8,7 @@ Essenz analysiert pcap- und pcapng-Dateien mit ST-2110-Verkehr. Der Funktionsumf
 |---|---|---|
 | Hardware-Mitschnitt (Capture-NIC mit PTP-Zeitstempeln, Spiegelport + Messgerät) | ns | alle Werte, auch ST 2110-21 |
 | Wireshark/tcpdump am Mac oder PC | µs, Software | Verluste, Formate, PTP, IGMP; Zeitwerte nur als Richtwert |
-| Essenz: Empfang › Diagnose › Aufzeichnen | Software, ns-Auflösung | wie oben; die Datei ist als Software-Mitschnitt gekennzeichnet |
+| 2110 Viewer: Empfang › Diagnose › Aufzeichnen | Software, ns-Auflösung | wie oben; die Datei ist als Software-Mitschnitt gekennzeichnet |
 
 Für die Bildrekonstruktion mindestens 1600 Byte je Paket mitschneiden (Snaplen).
 
@@ -32,7 +32,7 @@ SDP-Dateien lassen sich mitgeben (`st2110-analyze --sdp`); in der App werden bei
   Grenzwerte: `CMAX(N) = max(4, ⌊NPACKETS/(43200·RACTIVE·TFRAME)⌋)`, `CMAX(W) = max(16, ⌊NPACKETS/(21600·TFRAME)⌋)`.
 * VRX: Empfänger liest ab dem ersten Paket eines Bildes ein Paket je `TRS = TFRAME·RACTIVE/NPACKETS`.
   Grenzwerte: `VRX_FULL(N) = max(8, ⌊NPACKETS/(27000·TFRAME)⌋)`, `VRX_FULL(W) = max(720, ⌊NPACKETS/(300·TFRAME)⌋)`.
-  Essenz richtet das VRX-Modell am ersten Paket aus (TRO aus dem Mitschnitt), nicht an der absoluten Bildzeit, weil diese einen PTP-synchronen Mitschnitt voraussetzt.
+  2110 Viewer richtet das VRX-Modell am ersten Paket aus (TRO aus dem Mitschnitt), nicht an der absoluten Bildzeit, weil diese einen PTP-synchronen Mitschnitt voraussetzt.
 * `RACTIVE` = aktive Zeilen / Zeilen gesamt (1080/1125, 720/750).
 
 ## Kommandozeile

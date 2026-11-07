@@ -4,11 +4,11 @@ import ST2110Kit
 
 /// Minimaler NMOS-Knoten (IS-04 Node API v1.3, IS-05 Connection API v1.1 für
 /// Sender) über HTTP, angekündigt per mDNS (_nmos-node._tcp). So finden
-/// NMOS-fähige Empfänger und Controller den Essenz-Sender ohne Registry.
+/// NMOS-fähige Empfänger und Controller den 2110-Viewer-Sender ohne Registry.
 /// Optional zusätzlich Registrierung bei einer Registry (IS-04 Registration API).
 final class NMOSNodeServer: @unchecked Sendable {
     private var listener: NWListener?
-    private let queue = DispatchQueue(label: "Essenz NMOS-Knoten")
+    private let queue = DispatchQueue(label: "2110 Viewer NMOS-Knoten")
     private let lock = NSLock()
     private var resources: NMOSNodeResources?
     private var sdpVideo: String?

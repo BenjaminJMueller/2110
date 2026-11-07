@@ -1,9 +1,9 @@
-Essenz – Installation
+2110 Viewer – Installation
 ==============================
 
-1. „Essenz“ auf den Ordner „Programme“ (Applications) ziehen.
+1. „2110 Viewer“ auf den Ordner „Programme“ (Applications) ziehen.
 2. Das Fenster schließen und die Disk image auswerfen.
-3. Im Ordner „Programme“ den Essenz öffnen.
+3. Im Ordner „Programme“ „2110 Viewer“ öffnen.
 
 Nichts weiter zu installieren: GStreamer und alle Bestandteile sind in der App
 enthalten. Kein Terminal, kein Homebrew, keine Hintergrunddienste.
@@ -16,7 +16,7 @@ signiert und von Apple notarisiert ist (siehe Projektdokumentation).
   macOS 15 oder neuer:
     1. Die Meldung mit „Fertig“ schließen.
     2. Systemeinstellungen › Datenschutz & Sicherheit öffnen.
-    3. Ganz unten bei „Essenz wurde blockiert …“ auf „Dennoch öffnen“
+    3. Ganz unten bei „2110 Viewer wurde blockiert …“ auf „Dennoch öffnen“
        klicken und mit Passwort oder Touch ID bestätigen.
   macOS 14:
     Im Ordner „Programme“ mit gedrückter ctrl-Taste auf die App klicken,

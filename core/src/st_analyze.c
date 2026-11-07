@@ -15,7 +15,7 @@
  *  - IGMP: Querier, Joins/Leaves je Gruppe
  *
  * Grenzen: Die Zeitmessung ist nur so genau wie die Zeitstempel des
- * Mitschnitts. Softwaremitschnitte (tcpdump, Wireshark, Essenz) streuen um
+ * Mitschnitts. Softwaremitschnitte (tcpdump, Wireshark, 2110 Viewer) streuen um
  * Mikrosekunden bis Millisekunden; für eine belastbare Bewertung nach
  * ST 2110-21 sind Hardware-Zeitstempel (z. B. Capture-NIC, PTP-gesteuert) nötig.
  */
@@ -177,7 +177,7 @@ struct st_analysis {
     char format[32];
     int linktype;
     int ts_resolution_ns;
-    int software_capture;   /* Kommentar „Essenz Software-Mitschnitt“ */
+    int software_capture;   /* Kommentar „2110 Viewer Software-Mitschnitt“ */
     char comment[256];
 };
 
@@ -762,7 +762,7 @@ static int read_pcapng(st_analysis *a, FILE *f, long fsize, st_progress_fn prog,
                     size_t cl = ol < sizeof a->comment - 1 ? ol : sizeof a->comment - 1;
                     memcpy(a->comment, buf + o + 4, cl);
                     a->comment[cl] = 0;
-                    if (strstr(a->comment, "Essenz")) a->software_capture = 1;
+                    if (strstr(a->comment, "2110 Viewer")) a->software_capture = 1;
                 }
                 o += 4 + ((ol + 3u) & ~3u);
             }
@@ -785,7 +785,7 @@ static int read_pcapng(st_analysis *a, FILE *f, long fsize, st_progress_fn prog,
                     uint8_t r = buf[o + 4];
                     tsres[nif] = (r & 0x80) ? pow(2.0, -(double)(r & 0x7f)) : pow(10.0, -(double)r);
                 }
-                if (code == 1 && ol > 0 && strstr((const char *)buf + o + 4, "Essenz")) a->software_capture = 1;
+                if (code == 1 && ol > 0 && strstr((const char *)buf + o + 4, "2110 Viewer")) a->software_capture = 1;
                 o += 4 + ((ol + 3u) & ~3u);
             }
             if (nif == 0) {

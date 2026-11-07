@@ -155,7 +155,7 @@ enum GStreamerEnvironment {
         // vertragen sich mit der „Hardened Runtime“ notarisierter Apps.
         setenv("ORC_CODE", "backup", 0)
         let caches = fm.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Essenz", isDirectory: true)
+            .appendingPathComponent("2110 Viewer", isDirectory: true)
         try? fm.createDirectory(at: caches, withIntermediateDirectories: true)
         let version = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "dev"
         setenv("GST_REGISTRY_1_0", caches.appendingPathComponent("gst-registry-\(version).bin").path, 1)

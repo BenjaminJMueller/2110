@@ -1,6 +1,6 @@
 /*
  * st2110-send – sendet Testbild und Testton als ST 2110-20/-30 (Kommandozeile).
- * Schreibt die SDPs in Dateien, damit Empfänger (Essenz, Blackmagic per IS-05)
+ * Schreibt die SDPs in Dateien, damit Empfänger (2110 Viewer, Blackmagic per IS-05)
  * sie verwenden können.
  */
 #include "st2110send.h"
@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     c.width = 1920; c.height = 1080; c.fps_num = 25; c.fps_den = 1;
     c.audio_channels = 2; c.audio_ptime_us = 1000;
     c.ttl = 16;
-    snprintf(c.session_name, sizeof c.session_name, "Essenz Testsignal");
+    snprintf(c.session_name, sizeof c.session_name, "2110 Viewer Testsignal");
     int duration = 0;
     const char *sdp_dir = NULL;
     for (int i = 1; i < argc; i++) {

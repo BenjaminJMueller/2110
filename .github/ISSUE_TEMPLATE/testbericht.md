@@ -13,6 +13,6 @@ labels: testbericht
 
 **Beobachtung:**
 
-**Diagnosebericht** (Essenz › Diagnose › Bericht kopieren):
+**Diagnosebericht** (2110 Viewer › Diagnose › Bericht kopieren):
 ```
 ```

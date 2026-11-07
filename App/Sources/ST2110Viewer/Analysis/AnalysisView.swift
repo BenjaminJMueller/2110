@@ -39,7 +39,7 @@ struct AnalysisView: View {
         .toolbar {
             ToolbarItem {
                 Button { importing = true } label: { Label("Mitschnitt öffnen", systemImage: "doc.badge.plus") }
-                    .help("pcap- oder pcapng-Datei öffnen (z. B. aus Wireshark oder aus Essenz aufgezeichnet)")
+                    .help("pcap- oder pcapng-Datei öffnen (z. B. aus Wireshark oder aus 2110 Viewer aufgezeichnet)")
             }
         }
     }
@@ -52,13 +52,13 @@ private struct AnalysisEmptyView: View {
         VStack(spacing: 20) {
             Image(systemName: "waveform.path.ecg.rectangle").font(.system(size: 44, weight: .light)).foregroundStyle(.secondary)
             Text("Paketmitschnitt analysieren").font(.title2.weight(.medium))
-            Text("pcap- oder pcapng-Datei hierher ziehen. Essenz findet die ST-2110-Ströme, prüft Verluste, Paketabstände, das Zeitverhalten nach ST 2110-21, Audio-Laufzeiten, PTP und IGMP.")
+            Text("pcap- oder pcapng-Datei hierher ziehen. 2110 Viewer findet die ST-2110-Ströme, prüft Verluste, Paketabstände, das Zeitverhalten nach ST 2110-21, Audio-Laufzeiten, PTP und IGMP.")
                 .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: 520)
             HStack(spacing: 12) {
                 Button("Mitschnitt öffnen …") { importing = true }.controlButtonStyle(prominent: true)
             }
             VStack(alignment: .leading, spacing: 8) {
-                Label("Mitschnitt aus Essenz: beim Empfang unter Diagnose › Aufzeichnen", systemImage: "record.circle")
+                Label("Mitschnitt aus 2110 Viewer: beim Empfang unter Diagnose › Aufzeichnen", systemImage: "record.circle")
                 Label("Hardware-Mitschnitt (genaueste Zeitwerte): Capture-Karte oder Spiegelport am Switch, z. B. mit Wireshark", systemImage: "network")
             }
             .font(.callout).foregroundStyle(.secondary)

@@ -111,7 +111,7 @@ struct ContentView: View {
 
     private var title: String {
         switch model.mode {
-        case .receive: return model.player.current?.name ?? "Essenz"
+        case .receive: return model.player.current?.name ?? "2110 Viewer"
         case .send: return model.sender.isSending ? "Sendet: \(model.sender.sourceTitle)" : "Senden"
         case .analyze: return model.analysis.selected?.url.lastPathComponent ?? "Analyse"
         }
@@ -137,7 +137,7 @@ struct SendSidebar: View {
                 }
             }
             Section("Hinweis") {
-                Text("Blackmagic-Geräte wählen den Essenz-Strom im LCD-Menü unter „Outputs“ oder per NMOS-Controller. Mit „Verbinden“ stellt Essenz das Routing selbst per IS-05 her.")
+                Text("Blackmagic-Geräte wählen den 2110-Viewer-Strom im LCD-Menü unter „Outputs“ oder per NMOS-Controller. Mit „Verbinden“ stellt 2110 Viewer das Routing selbst per IS-05 her.")
                     .font(.callout).foregroundStyle(.secondary)
             }
         }

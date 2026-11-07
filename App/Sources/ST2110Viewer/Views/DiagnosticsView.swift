@@ -60,7 +60,7 @@ struct DiagnosticsView: View {
                                 }
                                 .controlSize(.small)
                             }
-                            Text("Speichert die empfangenen Pakete als pcapng im Ordner Filme › Essenz-Mitschnitte. Zeitstempel stammen vom Programm; für genaue ST-2110-21-Werte einen Hardware-Mitschnitt verwenden.")
+                            Text("Speichert die empfangenen Pakete als pcapng im Ordner Filme › 2110-Viewer-Mitschnitte. Zeitstempel stammen vom Programm; für genaue ST-2110-21-Werte einen Hardware-Mitschnitt verwenden.")
                                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)

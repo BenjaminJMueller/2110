@@ -130,7 +130,7 @@ public enum SourceGrouping {
 }
 
 
-/// Ein Ziel im Netz, an das Essenz senden kann (z. B. SDI-Ausgang 1 eines
+/// Ein Ziel im Netz, an das 2110 Viewer senden kann (z. B. SDI-Ausgang 1 eines
 /// 2110 IP Converter 3x3G): Video- und Audioempfänger derselben Gruppe.
 public struct DiscoveredDestination: Identifiable, Hashable, Sendable {
     public var id: String

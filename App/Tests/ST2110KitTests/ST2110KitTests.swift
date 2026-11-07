@@ -103,7 +103,7 @@ final class ST2110KitTests: XCTestCase {
 final class NodeResourceTests: XCTestCase {
     func testNodeResourcesAreConsistent() throws {
         let ids = NMOSNodeResources.Identity.make()
-        let r = NMOSNodeResources(ids: ids, label: "Essenz", hostname: "mac.local", hostIP: "192.168.10.50", port: 8123,
+        let r = NMOSNodeResources(ids: ids, label: "2110 Viewer", hostname: "mac.local", hostIP: "192.168.10.50", port: 8123,
                                   interfaceName: "en7",
                                   video: .init(width: 1920, height: 1080, fpsNum: 25, fpsDen: 1, destination: "239.50.0.1", port: 5004),
                                   audio: .init(channels: 2, destination: "239.50.0.2", port: 5004), active: true)

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Baut „Essenz.app“ und das DMG – reproduzierbar, ohne Homebrew.
+# Baut „2110 Viewer.app“ und das DMG – reproduzierbar, ohne Homebrew.
 #
 # Voraussetzungen (nur auf dem Build-Mac): macOS 15+ auf Apple Silicon,
 # Xcode 26 (für Liquid Glass; ältere Xcode-Versionen bauen ohne Glas-Effekte),
@@ -9,14 +9,14 @@
 #   SIGN_IDENTITY   "-" = ad-hoc (Standard, ohne Apple-Konto) oder
 #                   "Developer ID Application: Name (TEAMID)"
 #   NOTARY_PROFILE  Schlüsselbund-Profil für notarytool (siehe scripts/notarize.sh)
-#   BUNDLE_ID       Standard: io.github.benjaminjmueller.essenz
+#   BUNDLE_ID       Standard: io.github.benjaminjmueller.viewer2110
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-APP_NAME="Essenz"
-EXEC="Essenz"
-BUNDLE_ID="${BUNDLE_ID:-io.github.benjaminjmueller.essenz}"
+APP_NAME="2110 Viewer"
+EXEC="ST2110Viewer"
+BUNDLE_ID="${BUNDLE_ID:-io.github.benjaminjmueller.viewer2110}"
 VERSION="${APP_VERSION:-$(cat VERSION)}"
 BUILD="${BUILD_NUMBER:-$(git rev-list --count HEAD 2>/dev/null || echo 1)}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"
@@ -93,17 +93,17 @@ echo "== Lizenzprüfung des Bundles"
 python3 scripts/audit-bundle.py "$APP" --report "$DIST/license-audit-app.txt"
 
 echo "== DMG"
-"$ROOT/scripts/make-dmg.sh" "$APP" "$DIST/Essenz-$VERSION.dmg"
+"$ROOT/scripts/make-dmg.sh" "$APP" "$DIST/2110-Viewer-$VERSION.dmg"
 
 echo "== Lizenzprüfung des DMG"
 MNT="$(mktemp -d)"
-hdiutil attach -nobrowse -readonly -mountpoint "$MNT" "$DIST/Essenz-$VERSION.dmg" >/dev/null
+hdiutil attach -nobrowse -readonly -mountpoint "$MNT" "$DIST/2110-Viewer-$VERSION.dmg" >/dev/null
 python3 scripts/audit-bundle.py "$MNT" --report "$DIST/license-audit-dmg.txt" || { hdiutil detach "$MNT" >/dev/null; exit 1; }
 hdiutil detach "$MNT" >/dev/null
 
 if [ -n "${NOTARY_PROFILE:-}" ] && [ "$SIGN_IDENTITY" != "-" ]; then
-  "$ROOT/scripts/notarize.sh" "$DIST/Essenz-$VERSION.dmg"
+  "$ROOT/scripts/notarize.sh" "$DIST/2110-Viewer-$VERSION.dmg"
 else
   echo "Hinweis: nicht notarisiert (kein Developer-ID-Zertifikat/NOTARY_PROFILE). Siehe docs/04-Build-und-Verteilung.md."
 fi
-echo "Fertig: $DIST/Essenz-$VERSION.dmg"
+echo "Fertig: $DIST/2110-Viewer-$VERSION.dmg"

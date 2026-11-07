@@ -90,7 +90,7 @@ struct SendView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     card("An ein Gerät senden") {
                         if model.discovery.destinations.isEmpty {
-                            Text("Keine NMOS-Empfänger gefunden. Ohne NMOS kann am Blackmagic-Gerät der Essenz-Strom im LCD-Menü (Outputs) bzw. in Converters Setup gewählt werden, sobald Essenz ihn anbietet. Alternativ die SDP-Datei weitergeben.")
+                            Text("Keine NMOS-Empfänger gefunden. Ohne NMOS kann am Blackmagic-Gerät der 2110-Viewer-Strom im LCD-Menü (Outputs) bzw. in Converters Setup gewählt werden, sobald 2110 Viewer ihn anbietet. Alternativ die SDP-Datei weitergeben.")
                                 .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         }
                         ForEach(model.discovery.destinations) { d in
@@ -156,10 +156,10 @@ struct SendView: View {
                 s.source = .file(u)
             }
         }
-        .confirmationDialog("Gerät mit Essenz verbinden?", isPresented: Binding(get: { confirmTarget != nil }, set: { if !$0 { confirmTarget = nil } }), presenting: confirmTarget) { d in
+        .confirmationDialog("Gerät mit 2110 Viewer verbinden?", isPresented: Binding(get: { confirmTarget != nil }, set: { if !$0 { confirmTarget = nil } }), presenting: confirmTarget) { d in
             Button("Verbinden") { Task { await s.connect(d, client: model.discovery.client) } }
         } message: { d in
-            Text("„\(d.deviceLabel) – \(d.title)“ gibt danach den Essenz-Strom aus. Das ändert das Routing des Geräts für alle (IS-05).")
+            Text("„\(d.deviceLabel) – \(d.title)“ gibt danach den 2110-Viewer-Strom aus. Das ändert das Routing des Geräts für alle (IS-05).")
         }
         .onAppear {
             if s.videoAddress.isEmpty { s.suggestAddresses(range: model.settings.multicastRange, interface: chosenInterface) }

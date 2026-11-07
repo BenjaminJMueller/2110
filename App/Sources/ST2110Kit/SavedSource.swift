@@ -58,7 +58,7 @@ public final class SourceStore: @unchecked Sendable {
 
     public init(directory: URL? = nil) {
         let dir = directory ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Essenz", isDirectory: true)
+            .appendingPathComponent("2110 Viewer", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         url = dir.appendingPathComponent("sources.json")
     }

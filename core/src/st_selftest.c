@@ -1,5 +1,5 @@
 /*
- * Selbsttest für die ausgelieferte App (Essenz --selftest) und CI:
+ * Selbsttest für die ausgelieferte App (2110 Viewer --selftest) und CI:
  *  1. GStreamer startet, alle benötigten Plugins sind vorhanden
  *  2. Demo-Pipeline liefert Bild und Ton
  *  3. Loopback: ein interner RFC-4175-/L24-Sender schickt per UDP (Unicast

@@ -1,8 +1,8 @@
 import Foundation
 
-/// IS-04-Ressourcen, mit denen Essenz sich beim Senden als NMOS-Knoten
+/// IS-04-Ressourcen, mit denen 2110 Viewer sich beim Senden als NMOS-Knoten
 /// anbietet (Peer-to-Peer per mDNS bzw. bei einer Registry). Dadurch erscheint
-/// der Essenz-Sender in der Quellenliste von NMOS-fähigen Empfängern, z. B. im
+/// der 2110-Viewer-Sender in der Quellenliste von NMOS-fähigen Empfängern, z. B. im
 /// LCD-Menü eines Blackmagic 2110 IP Converter.
 public struct NMOSNodeResources: Sendable {
     public struct Identity: Codable, Hashable, Sendable {
