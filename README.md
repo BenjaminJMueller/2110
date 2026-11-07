@@ -17,7 +17,7 @@ Projektseite: `site/` (GitHub Pages, Einrichtung siehe unten).
 
 ## Installation
 
-DMG öffnen, **2110 Viewer** in **Programme** ziehen, starten. GStreamer und alle Bibliotheken sind in der App enthalten, Terminal oder Homebrew braucht es nicht. Solange die App nicht notarisiert ist (es fehlt ein Apple-Developer-Konto), beim ersten Start einmal *Systemeinstellungen › Datenschutz & Sicherheit › Dennoch öffnen*. Details: [Nutzeranleitung](docs/05-Nutzeranleitung.md).
+DMG öffnen, **2110 Viewer** in **Programme** ziehen, starten. GStreamer und alle Bibliotheken sind in der App enthalten. Solange die App nicht notarisiert ist (es fehlt ein Apple-Developer-Konto), beim ersten Start einmal *Systemeinstellungen › Datenschutz & Sicherheit › Dennoch öffnen*. Details: [Nutzeranleitung](docs/05-Nutzeranleitung.md).
 
 Die DMG liegt unter [Releases](https://github.com/BenjaminJMueller/2110/releases), zusammen mit dem Quellpaket der eingebetteten Bibliotheken und den Lizenzprüfberichten. Zwischenstände gibt es als Artefakt jedes CI-Laufs (Actions › „Build und Tests“ › *2110-Viewer-dmg*).
 
