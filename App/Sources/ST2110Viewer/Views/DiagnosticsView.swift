@@ -52,7 +52,7 @@ struct DiagnosticsView: View {
                     GroupBox("Mitschnitt") {
                         VStack(alignment: .leading, spacing: 6) {
                             if p.isRecording, let s = p.stats {
-                                Text(String(format: "Zeichnet auf: %.0f s, %llu Pakete", s.rec_seconds, s.rec_packets)).font(.callout.monospacedDigit())
+                                Text(String(format: "Zeichnet auf: %.0f s, %llu Pakete", locale: .current, s.rec_seconds, s.rec_packets)).font(.callout.monospacedDigit())
                             } else {
                                 HStack {
                                     Button("10 s aufzeichnen und analysieren") { model.recordAndAnalyze(seconds: 10) }
@@ -85,13 +85,18 @@ struct DiagnosticsView: View {
                 }
                 if let s = p.stats, p.video != nil || p.isDemo {
                     section("Video – gemessen") {
-                        row("Datenrate", String(format: "%.0f Mbit/s", s.v_rate_mbps))
-                        row("Bildrate (RTP)", String(format: "%.3f B/s", s.v_fps_measured))
+                        if p.isDemo {
+                            Text("Demo: Das Testbild entsteht im Mac, es gibt keine Netzwerkpakete. Datenrate, Bildrate und Verluste werden erst beim Empfang gemessen.")
+                                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        } else {
+                        row("Datenrate", String(format: "%.0f Mbit/s", locale: .current, s.v_rate_mbps))
+                        row("Bildrate (RTP)", String(format: "%.3f B/s", locale: .current, s.v_fps_measured))
                         row("Bildgröße", s.v_width_seen > 0 ? "\(s.v_width_seen)×\(s.v_height_seen)\(s.v_interlace_seen != 0 ? " (Halbbilder)" : "")" : "–")
                         row("Pakete / verloren", "\(s.v_packets) / \(s.v_lost)\(lossPct(s.v_lost, s.v_packets))")
                         row("Umsortiert / falscher PT", "\(s.v_reordered) / \(s.v_wrong_pt)")
                         row("Bilder empf. / gezeigt / verworfen", "\(s.v_frames) / \(s.v_frames_rendered) / \(s.v_frames_dropped)")
-                        row("Letztes Paket vor", s.v_age_ms < 0 ? "–" : String(format: "%.0f ms", s.v_age_ms))
+                        row("Letztes Paket vor", s.v_age_ms < 0 ? "–" : String(format: "%.0f ms", locale: .current, s.v_age_ms))
+                        }
                     }
                 }
                 if let a = p.audio {
@@ -104,10 +109,10 @@ struct DiagnosticsView: View {
                 }
                 if let s = p.stats, p.audio != nil {
                     section("Audio – gemessen") {
-                        row("Paketzeit", s.a_ptime_measured_ms > 0 ? String(format: "%.3f ms (%d Byte Nutzlast)", s.a_ptime_measured_ms, s.a_payload_bytes) : "–")
+                        row("Paketzeit", s.a_ptime_measured_ms > 0 ? String(format: "%.3f ms (%d Byte Nutzlast)", locale: .current, s.a_ptime_measured_ms, s.a_payload_bytes) : "–")
                         row("Pakete / verloren", "\(s.a_packets) / \(s.a_lost)\(lossPct(s.a_lost, s.a_packets))")
                         row("Blöcke ausgegeben / verworfen", "\(s.a_buffers_rendered) / \(s.a_buffers_dropped)")
-                        row("Letztes Paket vor", s.a_age_ms < 0 ? "–" : String(format: "%.0f ms", s.a_age_ms))
+                        row("Letztes Paket vor", s.a_age_ms < 0 ? "–" : String(format: "%.0f ms", locale: .current, s.a_age_ms))
                     }
                 }
                 if let s = p.stats, !p.isDemo {
@@ -117,17 +122,17 @@ struct DiagnosticsView: View {
                         Text(syncExplanation(s.sync_active))
                             .font(.caption).foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
-                        row("Wiedergabepuffer", String(format: "%.0f ms%@", s.latency_ms, s.latency_auto_raised > 0 ? " (automatisch erhöht)" : ""))
-                        row("Ankunft nach Aufnahme V / A", String(format: "%.1f / %.1f ms", s.v_transit_ms, s.a_transit_ms))
-                        row("Verspätung max. V / A", String(format: "%.1f / %.1f ms", s.v_late_max_ms, s.a_late_max_ms))
+                        row("Wiedergabepuffer", String(format: "%.0f ms%@", locale: .current, s.latency_ms, s.latency_auto_raised > 0 ? " (automatisch erhöht)" : ""))
+                        row("Ankunft nach Aufnahme V / A", String(format: "%.1f / %.1f ms", locale: .current, s.v_transit_ms, s.a_transit_ms))
+                        row("Verspätung max. V / A", String(format: "%.1f / %.1f ms", locale: .current, s.v_late_max_ms, s.a_late_max_ms))
                         if s.sync_active == ST_SYNC_RTP_ALIGNED {
-                            row("Taktabweichung Sender ↔ Mac", String(format: "%.2f ppm", s.offset_drift_ppm))
+                            row("Taktabweichung Sender ↔ Mac", String(format: "%.2f ppm", locale: .current, s.offset_drift_ppm))
                         }
                         row("Neuausrichtungen", "\(s.resyncs)")
                     }
                     section("Lippensynchron-Messung (Testsignal)") {
                         if s.sync_measurements > 0 {
-                            row("Ton gegenüber Bild", String(format: "%+.1f ms (Mittel %+.1f ms, n = %llu)", s.sync_offset_last_ms, s.sync_offset_avg_ms, s.sync_measurements))
+                            row("Ton gegenüber Bild", String(format: "%+.1f ms (Mittel %+.1f ms, n = %llu)", locale: .current, s.sync_offset_last_ms, s.sync_offset_avg_ms, s.sync_measurements))
                         } else {
                             row("Messwerte", "noch keine (\(s.flashes_seen) Blitze, \(s.onsets_seen) Toneinsätze erkannt)")
                         }
@@ -141,7 +146,7 @@ struct DiagnosticsView: View {
                             row("Domain", "\(s.ptp_domain)")
                             row("Grandmaster", cString(s.ptp_grandmaster).isEmpty ? "–" : cString(s.ptp_grandmaster))
                             row("Master", cString(s.ptp_master).isEmpty ? "–" : cString(s.ptp_master))
-                            row("Pfadverzögerung", String(format: "%.1f µs", s.ptp_path_delay_us))
+                            row("Pfadverzögerung", String(format: "%.1f µs", locale: .current, s.ptp_path_delay_us))
                             row("GM wie in SDP", s.ptp_gm_matches_sdp < 0 ? "unbekannt" : (s.ptp_gm_matches_sdp != 0 ? "ja" : "nein"))
                         } else {
                             row("Status", "nicht verwendet")
@@ -180,7 +185,7 @@ struct DiagnosticsView: View {
     private func lossPct(_ lost: UInt64, _ got: UInt64) -> String {
         let total = lost + got
         guard total > 0, lost > 0 else { return "" }
-        return String(format: " (%.4f %%)", Double(lost) / Double(total) * 100)
+        return String(format: " (%.4f %%)", locale: .current, Double(lost) / Double(total) * 100)
     }
 
     private func syncExplanation(_ m: st_sync_mode) -> String {

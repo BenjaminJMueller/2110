@@ -29,6 +29,7 @@ struct SidebarView: View {
                     Text("SDP-Dateien hierher ziehen oder mit ＋ hinzufügen.")
                         .font(.callout)
                         .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 } else {
                     ForEach(model.saved.sorted(by: { ($0.lastUsed ?? $0.createdAt) > ($1.lastUsed ?? $1.createdAt) })) { s in
                         SavedRow(source: s)

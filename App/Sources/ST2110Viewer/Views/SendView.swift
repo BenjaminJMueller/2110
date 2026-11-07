@@ -114,12 +114,12 @@ struct SendView: View {
                         if let st = s.stats, s.isSending {
                             Grid(alignment: .leading, horizontalSpacing: 20, verticalSpacing: 6) {
                                 GridRow { Text("Bilder").foregroundStyle(.secondary); Text(String(st.frames_sent) + (st.frames_from_source > 0 ? " (aus Quelle)" : " (Testbild)")) }
-                                GridRow { Text("Datenrate Video").foregroundStyle(.secondary); Text(String(format: "%.0f Mbit/s", st.video_mbps)) }
+                                GridRow { Text("Datenrate Video").foregroundStyle(.secondary); Text(String(format: "%.0f Mbit/s", locale: .current, st.video_mbps)) }
                                 GridRow { Text("Pakete Video / Audio").foregroundStyle(.secondary); Text("\(st.video_packets) / \(st.audio_packets)") }
-                                GridRow { Text("Verspätet gesendet").foregroundStyle(.secondary); Text(String(format: "%llu (max. %.0f µs)", st.late_packets, st.max_late_us)) }
+                                GridRow { Text("Verspätet gesendet").foregroundStyle(.secondary); Text(String(format: "%llu (max. %.0f µs)", locale: .current, st.late_packets, st.max_late_us)) }
                                 GridRow { Text("Zeitbezug").foregroundStyle(.secondary); Text(st.ptp_locked != 0 ? "PTP, Grandmaster \(cString(st.ptp_grandmaster))" : "Systemzeit (kein PTP)") }
-                                GridRow { Text("Audiopuffer").foregroundStyle(.secondary); Text(String(format: "%.0f ms, %llu Aussetzer", st.audio_fill_ms, st.audio_underruns)) }
-                                if let p = s.nmosPort { GridRow { Text("NMOS-Knoten").foregroundStyle(.secondary); Text("Port \(p), per mDNS angekündigt") } }
+                                GridRow { Text("Audiopuffer").foregroundStyle(.secondary); Text(String(format: "%.0f ms, %llu Aussetzer", locale: .current, st.audio_fill_ms, st.audio_underruns)) }
+                                if let p = s.nmosPort { GridRow { Text("NMOS-Knoten").foregroundStyle(.secondary); Text("Port " + String(p) + ", per mDNS angekündigt") } }
                             }
                             .font(.callout.monospacedDigit())
                         } else {
@@ -193,7 +193,7 @@ struct SendView: View {
 
     private var rateText: String {
         let g = model.sender.format.gbps
-        var t = String(format: "Datenrate ca. %.1f Gbit/s", g)
+        var t = String(format: "Datenrate ca. %.1f Gbit/s", locale: .current, g)
         if let i = chosenInterface { t += " · \(i.displayName)\(i.speedText.map { " (\($0))" } ?? "")" }
         if rateWarning { t += " – Verbindung zu langsam" }
         return t

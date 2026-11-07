@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @Environment(AppModel.self) private var model
     @State private var columns: NavigationSplitViewVisibility = .all
+    @State private var sidebarAutoHidden = false
 
     var body: some View {
         @Bindable var model = model
@@ -16,7 +17,7 @@ struct ContentView: View {
                 case .analyze: AnalysisSidebar()
                 }
             }
-            .navigationSplitViewColumnWidth(min: 250, ideal: 280, max: 400)
+            .navigationSplitViewColumnWidth(min: 220, ideal: 250, max: 400)
         } detail: {
             Group {
                 switch model.mode {
@@ -24,7 +25,7 @@ struct ContentView: View {
                     PlayerView()
                         .inspector(isPresented: $model.inspectorShown) {
                             DiagnosticsView()
-                                .inspectorColumnWidth(min: 320, ideal: 400, max: 560)
+                                .inspectorColumnWidth(min: 300, ideal: 340, max: 560)
                         }
                 case .send: SendView()
                 case .analyze: AnalysisView()
@@ -32,7 +33,8 @@ struct ContentView: View {
             }
         }
         .navigationTitle(title)
-        .navigationSubtitle(model.mode == .receive && model.player.isDemo ? "Demo: Testbild und Testton" : "")
+        .navigationSubtitle(subtitle)
+        .onChange(of: model.inspectorShown) { _, shown in fitInspector(shown) }
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Picker("Modus", selection: $model.mode) {
@@ -129,6 +131,7 @@ struct SendSidebar: View {
                 if model.discovery.destinations.isEmpty {
                     Text("Keine gefunden. Senden geht trotzdem: Der Strom ist per Multicast und als NMOS-Quelle verfügbar.")
                         .font(.callout).foregroundStyle(.secondary)
+                    .lineLimit(nil).fixedSize(horizontal: false, vertical: true)
                 }
                 ForEach(model.discovery.destinations) { d in
                     VStack(alignment: .leading, spacing: 2) {
@@ -140,6 +143,7 @@ struct SendSidebar: View {
             Section("Hinweis") {
                 Text("Blackmagic-Geräte wählen den 2110-Viewer-Strom im LCD-Menü unter „Outputs“ oder per NMOS-Controller. Mit „Verbinden“ stellt 2110 Viewer das Routing selbst per IS-05 her.")
                     .font(.callout).foregroundStyle(.secondary)
+                    .lineLimit(nil).fixedSize(horizontal: false, vertical: true)
             }
         }
         .listStyle(.sidebar)
@@ -160,7 +164,7 @@ struct AnalysisSidebar: View {
                 ForEach(a.entries) { e in
                     VStack(alignment: .leading, spacing: 2) {
                         Text(e.url.lastPathComponent).lineLimit(1)
-                        Text(e.report.map { "\($0.streams.count) Ströme · \(String(format: "%.1f", $0.capture.duration_s)) s" } ?? (e.error ?? ""))
+                        Text(e.report.map { "\($0.streams.count) Ströme · \(String(format: "%.1f", locale: .current, $0.capture.duration_s)) s" } ?? (e.error ?? ""))
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     .tag(e.id)
@@ -169,5 +173,27 @@ struct AnalysisSidebar: View {
             }
         }
         .listStyle(.sidebar)
+    }
+}
+
+extension ContentView {
+    /// Untertitel nur, wenn er etwas anderes sagt als der Titel.
+    var subtitle: String {
+        guard model.mode == .receive, model.player.isDemo else { return "" }
+        let s = "Demo: Testbild und Testton"
+        return title == s ? "" : s
+    }
+
+    /// Ist das Fenster für Seitenleiste, Bild und Diagnose zu schmal, weicht die
+    /// Seitenleiste, solange die Diagnose offen ist (statt den Inhalt abzuschneiden).
+    func fitInspector(_ shown: Bool) {
+        let width = NSApp.keyWindow?.frame.width ?? NSApp.windows.first?.frame.width ?? 0
+        if shown, columns != .detailOnly, width > 0, width < 250 + 340 + 760 {
+            withAnimation { columns = .detailOnly }
+            sidebarAutoHidden = true
+        } else if !shown, sidebarAutoHidden {
+            withAnimation { columns = .all }
+            sidebarAutoHidden = false
+        }
     }
 }

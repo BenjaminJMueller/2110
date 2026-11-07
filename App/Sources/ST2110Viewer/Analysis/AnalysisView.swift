@@ -186,15 +186,15 @@ private struct StreamReport: View {
                     .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
             }
             HStack(spacing: 12) {
-                StatTile(label: "Datenrate", value: String(format: "%.0f Mbit/s", s.rate_mbps ?? 0))
+                StatTile(label: "Datenrate", value: String(format: "%.0f Mbit/s", locale: .current, s.rate_mbps ?? 0))
                 StatTile(label: "Verluste", value: s.lost.formatted(), note: lossNote)
                 if let v = s.video {
-                    StatTile(label: "Bildrate", value: String(format: "%.3f", v.fps ?? 0), note: "\(v.frames.formatted()) Bilder")
+                    StatTile(label: "Bildrate", value: String(format: "%.3f", locale: .current, v.fps ?? 0), note: "\(v.frames.formatted()) Bilder")
                     StatTile(label: "ST 2110-21", value: senderClass(v.st2110_21_class),
-                             note: String(format: "Cmax %.0f · VRX %.0f", v.cinst.max, v.vrx.max))
+                             note: String(format: "Cmax %.0f · VRX %.0f", locale: .current, v.cinst.max, v.vrx.max))
                 } else if let au = s.audio {
-                    StatTile(label: "Paketzeit", value: String(format: "%g ms", au.ptime_ms ?? 0), note: String(au.channels) + (au.channels_from_sdp ? " Kanäle" : " Kanäle (geschätzt)"))
-                    StatTile(label: "TS-DF max.", value: String(format: "%.0f µs", au.tsdf_us.max), note: "1-s-Fenster")
+                    StatTile(label: "Paketzeit", value: String(format: "%g ms", locale: .current, au.ptime_ms ?? 0), note: String(au.channels) + (au.channels_from_sdp ? " Kanäle" : " Kanäle (geschätzt)"))
+                    StatTile(label: "TS-DF max.", value: String(format: "%.0f µs", locale: .current, au.tsdf_us.max), note: "1-s-Fenster")
                 }
             }
             if s.video != nil || s.audio != nil {
@@ -220,7 +220,7 @@ private struct StreamReport: View {
                     Text("Befunde").font(.headline)
                     ForEach(s.findings, id: \.self) { FindingRow(finding: $0) }
                     if let anc = s.anc, !anc.did_sdid.isEmpty {
-                        Text("DID/SDID: " + anc.did_sdid.map { String(format: "%02X/%02X (%d)", $0.did, $0.sdid, $0.count) }.joined(separator: ", "))
+                        Text("DID/SDID: " + anc.did_sdid.map { String(format: "%02X/%02X (%d)", locale: .current, $0.did, $0.sdid, $0.count) }.joined(separator: ", "))
                             .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
                     }
                 }
@@ -243,7 +243,7 @@ private struct StreamReport: View {
     private var lossNote: String? {
         let total = stream.packets + stream.lost
         guard total > 0 else { return nil }
-        return String(format: "%.4f %% von %@", Double(stream.lost) / Double(total) * 100, total.formatted())
+        return String(format: "%.4f %% von %@", locale: .current, Double(stream.lost) / Double(total) * 100, total.formatted())
     }
 
     private var chartChoices: [(String, String)] {
@@ -302,7 +302,7 @@ private struct MainChart: View {
                 ForEach(Array(limits.enumerated()), id: \.offset) { i, l in
                     // nahe beieinander liegende Grenzen abwechselnd links und rechts beschriften
                     let align: Alignment = i % 2 == 0 ? .trailing : .leading
-                    let label: String = l.0 + " " + String(format: "%g", l.1)
+                    let label: String = l.0 + " " + String(format: "%g", locale: .current, l.1)
                     RuleMark(y: .value(l.0, l.1))
                         .foregroundStyle(Color.secondary)
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
@@ -354,7 +354,7 @@ private struct NetworkReport: View {
                     GridRow { Text("Grandmaster").foregroundStyle(.secondary); Text(p.grandmaster.isEmpty ? "–" : p.grandmaster).monospacedDigit() }
                     GridRow { Text("Sendende Master").foregroundStyle(.secondary); Text("\(p.masters)").foregroundStyle(p.masters > 1 ? .red : .primary) }
                     GridRow { Text("Priorität 1 / 2, Klasse").foregroundStyle(.secondary); Text("\(p.priority1) / \(p.priority2), Clock Class \(p.clock_class)") }
-                    GridRow { Text("Sync / Announce je s").foregroundStyle(.secondary); Text(String(format: "%.2f / %.2f%@", p.sync_rate ?? 0, p.announce_rate ?? 0, p.two_step ? " (Two-Step)" : "")).monospacedDigit() }
+                    GridRow { Text("Sync / Announce je s").foregroundStyle(.secondary); Text(String(format: "%.2f / %.2f%@", locale: .current, p.sync_rate ?? 0, p.announce_rate ?? 0, p.two_step ? " (Two-Step)" : "")).monospacedDigit() }
                     GridRow { Text("Delay-Req / -Resp").foregroundStyle(.secondary); Text("\(p.delay_req) / \(p.delay_resp)").monospacedDigit() }
                     GridRow { Text("UTC-Versatz").foregroundStyle(.secondary); Text("\(p.utc_offset) s") }
                 }
@@ -373,14 +373,14 @@ private struct NetworkReport: View {
 }
 
 private func captureLine(_ c: AnalysisReport.Capture) -> String {
-    var t: String = c.format + " · " + c.packets.formatted() + " Pakete · " + String(format: "%.1f", c.duration_s) + " s"
+    var t: String = c.format + " · " + c.packets.formatted() + " Pakete · " + String(format: "%.1f", locale: .current, c.duration_s) + " s"
     t += " · Zeitauflösung " + String(c.timestamp_resolution_ns) + " ns"
     if c.software_capture { t += " · Software-Mitschnitt" }
     return t
 }
 
 private func streamLine(_ s: AnalysisReport.Stream) -> String {
-    var t: String = s.source + " → " + s.destination + " · SSRC " + String(format: "%08X", s.ssrc) + " · PT " + String(s.payload_type)
+    var t: String = s.source + " → " + s.destination + " · SSRC " + String(format: "%08X", locale: .current, s.ssrc) + " · PT " + String(s.payload_type)
     if s.sdp_matched { t += " · SDP zugeordnet" }
     return t
 }
