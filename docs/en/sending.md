@@ -15,7 +15,7 @@
 
 ## Formats
 
-1080p25, 1080p50, 1080p29.97, 1080p59.94, 720p50, 720p59.94. The 3x3G outputs these progressive HD formats on its SDI output (according to its tech specs). Audio: up to 8 channels at 1 ms, more channels at 0.125 ms (ST 2110-30 Level C).
+1080p25, 1080p50, 1080p29.97, 1080p59.94, 720p25, 720p50, 720p59.94. The 3x3G outputs these progressive HD formats on its SDI output (according to its tech specs). Audio: up to 8 channels at 1 ms, more channels at 0.125 ms (ST 2110-30 Level C).
 
 ## Time reference
 
