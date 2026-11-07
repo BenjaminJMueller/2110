@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>Essenz</title>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b2d32"/>
+      <stop offset="1" stop-color="#18191c"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="186" fill="url(#tile)" filter="url(#shadow)"/>
+  <rect x="100.5" y="100.5" width="823" height="823" rx="185.5" fill="none" stroke="#ffffff" stroke-opacity="0.09" stroke-width="2"/>
+  <!-- eingehendes Signal (SDI) -->
+  <path d="M232 512 H418" stroke="#ececef" stroke-width="46" stroke-linecap="round" fill="none"/>
+  <circle cx="462" cy="512" r="58" fill="#ececef"/>
+  <circle cx="462" cy="512" r="22" fill="#18191c"/>
+  <!-- drei Essenzen: Video (hervorgehoben), Audio, Daten -->
+  <path d="M508 478 C602 478 612 326 712 326 H796" stroke="#4f87ff" stroke-width="42" stroke-linecap="round" fill="none"/>
+  <path d="M528 512 H796" stroke="#c9cad0" stroke-width="26" stroke-linecap="round" fill="none"/>
+  <path d="M508 546 C602 546 612 698 712 698 H796" stroke="#8e9097" stroke-width="18" stroke-linecap="round" fill="none"/>
+</svg>

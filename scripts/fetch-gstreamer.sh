@@ -29,7 +29,12 @@ fetch() { # Datei, Prüfsumme
   local f="$1" sum="$2"
   if [ ! -f "$DL/$f" ] || [ "$(shasum -a 256 "$DL/$f" | cut -d' ' -f1)" != "$sum" ]; then
     echo "Lade $f …"
-    curl -fL --retry 4 --retry-delay 3 -o "$DL/$f.part" "$BASE/$f"
+    local ok=0
+    for attempt in 1 2 3 4 5; do
+      if curl -fL --http1.1 --retry 3 --retry-all-errors --retry-delay 3 -C - -o "$DL/$f.part" "$BASE/$f"; then ok=1; break; fi
+      echo "Download unterbrochen (Versuch $attempt), setze fort …"; sleep $((attempt * 3))
+    done
+    [ $ok = 1 ] || { echo "Download von $f fehlgeschlagen."; exit 1; }
     mv "$DL/$f.part" "$DL/$f"
   fi
   local got
