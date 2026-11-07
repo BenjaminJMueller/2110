@@ -49,7 +49,7 @@ struct ControlBar: View {
                         model.settings.volume = $0
                         p.setVolume($0)
                     }), in: 0...1.5)
-                    .frame(width: 120)
+                    .frame(minWidth: 60, maxWidth: 120)
                     .accessibilityLabel("Lautstärke")
                     .accessibilityValue(tr("\(Int(model.settings.volume * 100)) Prozent"))
 
@@ -80,8 +80,10 @@ private struct StatusPill: View {
         let (color, text) = status
         HStack(spacing: 6) {
             Circle().fill(color).frame(width: 9, height: 9).accessibilityHidden(true)
-            Text(tr(text)).font(.callout).lineLimit(1)
+            Text(tr(text)).font(.callout).lineLimit(1).truncationMode(.tail)
         }
+        .layoutPriority(-1)
+        .help(tr(text))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(tr("Status: \(text)"))
     }

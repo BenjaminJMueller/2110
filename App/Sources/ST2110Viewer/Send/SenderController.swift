@@ -18,12 +18,12 @@ final class SenderController {
 
     enum Format: String, CaseIterable, Identifiable {
         case p1080_25 = "1080p25", p1080_50 = "1080p50", p1080_2997 = "1080p29.97", p1080_5994 = "1080p59.94"
-        case p720_50 = "720p50", p720_5994 = "720p59.94"
+        case p720_25 = "720p25", p720_50 = "720p50", p720_5994 = "720p59.94"
         var id: String { rawValue }
         var size: (Int, Int) { rawValue.hasPrefix("1080") ? (1920, 1080) : (1280, 720) }
         var rate: (Int, Int) {
             switch self {
-            case .p1080_25: return (25, 1)
+            case .p1080_25, .p720_25: return (25, 1)
             case .p1080_50, .p720_50: return (50, 1)
             case .p1080_2997: return (30000, 1001)
             case .p1080_5994, .p720_5994: return (60000, 1001)

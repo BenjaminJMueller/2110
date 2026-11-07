@@ -16,44 +16,14 @@ struct SendView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 header(s)
-            HStack(alignment: .top, spacing: 24) {
-                VStack(alignment: .leading, spacing: 20) {
-                    card("Quelle") {
-                        LabeledContent("Quelle") {
-                            Picker("Quelle", selection: sourceBinding) {
-                                Text("Testbild mit 1-kHz-Ton").tag("bars")
-                                Text("Lippensynchron-Test").tag("sync")
-                                Text("Videodatei …").tag("file")
-                                ForEach(CaptureFeeder.cameras, id: \.uniqueID) { c in Text(tr(c.localizedName)).tag("cam:" + c.uniqueID) }
-                            }
-                            .labelsHidden().fixedSize()
-                        }
-                        if case .file(let u) = s.source {
-                            Divider()
-                            LabeledContent("Datei") {
-                                HStack {
-                                    Text(tr(u.lastPathComponent)).lineLimit(1).truncationMode(.middle).foregroundStyle(.secondary)
-                                    Button("Ändern …") { importing = true }.controlSize(.small)
-                                }
-                            }
-                            Text("Läuft in Echtzeit und in Schleife. macOS dekodiert H.264, HEVC, ProRes und AAC selbst.")
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                        if case .camera = s.source {
-                            Divider()
-                            LabeledContent("Mikrofon") {
-                                Picker("Mikrofon", selection: $s.microphoneID) {
-                                    Text("Standard").tag(String?.none)
-                                    ForEach(CaptureFeeder.microphones, id: \.uniqueID) { m in Text(tr(m.localizedName)).tag(Optional(m.uniqueID)) }
-                                }
-                                .labelsHidden().fixedSize()
-                            }
-                        }
-                    }
+
+                sourcePicker(s)
+
+                HStack(alignment: .top, spacing: 20) {
                     card("Format") {
                         LabeledContent("Video") {
                             Picker("Video", selection: $s.format) {
-                                ForEach(SenderController.Format.allCases) { f in Text(tr(f.rawValue)).tag(f) }
+                                ForEach(SenderController.Format.allCases) { f in Text(f.rawValue).tag(f) }
                             }
                             .labelsHidden().fixedSize()
                         }
@@ -68,89 +38,87 @@ struct SendView: View {
                             .toggleStyle(.switch)
                             .disabled(s.audioChannels > 8 || s.audioChannels == 0)
                             .help("Ab 9 Kanälen vorgeschrieben")
-                        Text(tr(rateText)).font(.caption).foregroundStyle(rateWarning ? .orange : .secondary)
+                        Label(tr(rateText), systemImage: rateWarning ? "exclamationmark.triangle.fill" : "speedometer")
+                            .font(.caption).foregroundStyle(rateWarning ? .orange : .secondary)
                     }
                     card("Netzwerk") {
                         LabeledContent("Video an") {
-                            TextField("Multicast-Adresse", text: $s.videoAddress).frame(width: 150).monospacedDigit().multilineTextAlignment(.trailing)
+                            TextField("Multicast-Adresse", text: $s.videoAddress).frame(width: 140).monospacedDigit().multilineTextAlignment(.trailing)
                         }
                         Divider()
                         LabeledContent("Audio an") {
-                            TextField("Multicast-Adresse", text: $s.audioAddress).frame(width: 150).monospacedDigit().multilineTextAlignment(.trailing)
+                            TextField("Multicast-Adresse", text: $s.audioAddress).frame(width: 140).monospacedDigit().multilineTextAlignment(.trailing)
                         }
                         Divider()
                         LabeledContent("Port") {
-                            TextField("Port", value: $s.port, format: .number.grouping(.never)).frame(width: 80).multilineTextAlignment(.trailing)
-                        }
-                        HStack {
-                            Spacer()
-                            Button("Adressen vorschlagen") {
-                                s.suggestAddresses(range: model.settings.multicastRange, interface: chosenInterface)
-                            }
-                            .controlSize(.small)
+                            TextField("Port", value: $s.port, format: .number.grouping(.never)).frame(width: 70).multilineTextAlignment(.trailing)
                         }
                         Divider()
                         Toggle("Zeit vom PTP-Grandmaster", isOn: $s.usePTP).toggleStyle(.switch)
                             .help("Übernimmt die Zeit passiv; die App wird nie Master")
                         Divider()
                         Toggle("Als NMOS-Quelle anbieten", isOn: $s.announceNMOS).toggleStyle(.switch)
-                        Divider()
-                        LabeledContent("Name im Netz") {
-                            TextField("Name", text: $s.label).frame(maxWidth: 220).multilineTextAlignment(.trailing)
+                        HStack {
+                            TextField("Name im Netz", text: $s.label).textFieldStyle(.roundedBorder)
+                            Button("Adressen vorschlagen") {
+                                s.suggestAddresses(range: model.settings.multicastRange, interface: chosenInterface)
+                            }
+                            .controlSize(.small)
                         }
-                    }
-                    .disabled(s.isSending)
-
-                    if let m = s.message {
-                        Label(tr(m), systemImage: "exclamationmark.triangle.fill").font(.callout)
-                            .symbolRenderingMode(.multicolor)
-                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
-                .frame(width: 420)
+                .disabled(s.isSending)
 
-                VStack(alignment: .leading, spacing: 20) {
-                    card("An ein Gerät senden") {
-                        if model.discovery.destinations.isEmpty {
-                            Text("Keine NMOS-Empfänger gefunden. Ohne NMOS kann am Blackmagic-Gerät der 2110-Viewer-Strom im LCD-Menü (Outputs) bzw. in Converters Setup gewählt werden, sobald 2110 Viewer ihn anbietet. Alternativ die SDP-Datei weitergeben.")
-                                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                        }
-                        ForEach(model.discovery.destinations) { d in
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(tr("\(d.deviceLabel) – \(d.title)")).font(.callout)
-                                    Text(tr(destinationDetail(d)))
-                                        .font(.caption).foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                Button("Verbinden") { confirmTarget = d }
-                                    .controlSize(.small)
-                                    .disabled(!s.isSending)
+                if let m = s.message {
+                    Label(tr(m), systemImage: "exclamationmark.triangle.fill").font(.callout)
+                        .symbolRenderingMode(.multicolor)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                if let st = s.stats, s.isSending {
+                    HStack(spacing: 12) {
+                        Metric(label: "Bilder", value: st.frames_sent.formatted(), note: st.frames_from_source > 0 ? "aus Quelle" : "Testbild")
+                        Metric(label: "Datenrate Video", value: String(format: "%.0f Mbit/s", locale: .current, st.video_mbps), note: nil)
+                        Metric(label: "Zeitbezug", value: st.ptp_locked != 0 ? "PTP" : "Systemzeit", note: st.ptp_locked != 0 ? cString(st.ptp_grandmaster) : "kein PTP")
+                        Metric(label: "Verspätet gesendet", value: st.late_packets.formatted(), note: String(format: "max. %.0f µs", locale: .current, st.max_late_us))
+                    }
+                    .transition(.opacity)
+                }
+
+                card("Ziel") {
+                    Button { model.receiveOwnStream() } label: {
+                        Label("Auf diesem Mac empfangen", systemImage: "laptopcomputer.and.arrow.down")
+                    }
+                    .controlButtonStyle()
+                    .disabled(!s.isSending)
+                    .help("Öffnet den eigenen Strom im Modus Empfangen, über das Netzwerk dieses Macs")
+                    Divider()
+                    if model.discovery.destinations.isEmpty {
+                        Label("Keine NMOS-Empfänger gefunden. Am Blackmagic-Gerät den Strom im LCD-Menü unter „Outputs“ wählen.", systemImage: "info.circle")
+                            .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    }
+                    ForEach(model.discovery.destinations) { d in
+                        HStack {
+                            Image(systemName: "rectangle.connected.to.line.below").foregroundStyle(Color.accentColor).frame(width: 22)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(tr(d.deviceLabel + " – " + d.title)).font(.callout)
+                                Text(tr(destinationDetail(d))).font(.caption).foregroundStyle(.secondary)
                             }
-                        }
-                        if let c = s.connectedDestination {
-                            Label(tr("Verbunden mit \(c)"), systemImage: "link").font(.callout)
+                            Spacer()
+                            Button("Verbinden") { confirmTarget = d }
+                                .controlSize(.small)
+                                .disabled(!s.isSending)
                         }
                     }
-                    card("Status") {
-                        if let st = s.stats, s.isSending {
-                            Grid(alignment: .leading, horizontalSpacing: 20, verticalSpacing: 6) {
-                                GridRow { Text("Bilder").foregroundStyle(.secondary); Text(tr(String(st.frames_sent) + (st.frames_from_source > 0 ? " (aus Quelle)" : " (Testbild)"))) }
-                                GridRow { Text("Datenrate Video").foregroundStyle(.secondary); Text(tr(String(format: "%.0f Mbit/s", locale: .current, st.video_mbps))) }
-                                GridRow { Text("Pakete Video / Audio").foregroundStyle(.secondary); Text(tr("\(st.video_packets) / \(st.audio_packets)")) }
-                                GridRow { Text("Verspätet gesendet").foregroundStyle(.secondary); Text(tr(String(format: "%llu (max. %.0f µs)", locale: .current, st.late_packets, st.max_late_us))) }
-                                GridRow { Text("Zeitbezug").foregroundStyle(.secondary); Text(tr(st.ptp_locked != 0 ? "PTP, Grandmaster \(cString(st.ptp_grandmaster))" : "Systemzeit (kein PTP)")) }
-                                GridRow { Text("Audiopuffer").foregroundStyle(.secondary); Text(tr(String(format: "%.0f ms, %llu Aussetzer", locale: .current, st.audio_fill_ms, st.audio_underruns))) }
-                                if let p = s.nmosPort { GridRow { Text("NMOS-Knoten").foregroundStyle(.secondary); Text(tr("Port " + String(p) + ", per mDNS angekündigt")) } }
-                            }
-                            .font(.callout.monospacedDigit())
-                        } else {
-                            Text("Nicht aktiv.").font(.callout).foregroundStyle(.secondary)
-                        }
+                    if let c = s.connectedDestination {
+                        Label(tr("Verbunden mit \(c)"), systemImage: "link").font(.callout).foregroundStyle(.green)
                     }
-                    card("SDP") {
-                        if let v = s.videoSDP {
-                            Text(tr(([v] + (s.audioSDP.map { [$0] } ?? [])).joined(separator: "\n")))
+                }
+
+                if let v = s.videoSDP {
+                    DisclosureGroup("SDP") {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(([v] + (s.audioSDP.map { [$0] } ?? [])).joined(separator: "\n"))
                                 .font(.system(.caption, design: .monospaced))
                                 .textSelection(.enabled)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -158,20 +126,28 @@ struct SendView: View {
                                 Button("Kopieren") { s.copySDP() }.controlSize(.small)
                                 Button("Als Dateien sichern …") { s.saveSDP() }.controlSize(.small)
                             }
-                        } else {
-                            Text("Erscheint nach dem Start.").font(.callout).foregroundStyle(.secondary)
                         }
+                        .padding(.top, 8)
                     }
-                    if !s.log.isEmpty {
-                        card("Ereignisse") {
+                    .padding(14)
+                    .cardBackground()
+                }
+                if !s.log.isEmpty {
+                    DisclosureGroup("Ereignisse") {
+                        VStack(alignment: .leading, spacing: 4) {
                             ForEach(s.log.suffix(8).reversed(), id: \.self) { Text(tr($0)).font(.caption.monospacedDigit()) }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 8)
                     }
+                    .padding(14)
+                    .cardBackground()
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            }
-            .padding(24)
+            .frame(maxWidth: 860)
+            .padding(28)
+            .frame(maxWidth: .infinity)
+            .animation(.smooth, value: s.isSending)
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.movie, .video, .audiovisualContent]) { r in
             if case .success(let u) = r {
@@ -187,6 +163,52 @@ struct SendView: View {
         .onAppear {
             if s.videoAddress.isEmpty { s.suggestAddresses(range: model.settings.multicastRange, interface: chosenInterface) }
         }
+    }
+
+    @ViewBuilder
+    private func sourcePicker(_ s: SenderController) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Quelle").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary).padding(.leading, 4)
+            HStack(spacing: 12) {
+                SourceTile(icon: "chart.bar.fill", title: "Testbild", subtitle: "Farbbalken, 1 kHz", selected: sourceBinding.wrappedValue == "bars") { sourceBinding.wrappedValue = "bars" }
+                SourceTile(icon: "bolt.fill", title: "Lippensynchron", subtitle: "Blitz und Piep", selected: sourceBinding.wrappedValue == "sync") { sourceBinding.wrappedValue = "sync" }
+                SourceTile(icon: "film.fill", title: "Videodatei", subtitle: fileName(s) ?? "H.264, HEVC, ProRes", selected: sourceBinding.wrappedValue == "file") { importing = true }
+                SourceTile(icon: "video.fill", title: "Kamera", subtitle: cameraName(s) ?? "Kamera wählen", selected: sourceBinding.wrappedValue.hasPrefix("cam:")) {
+                    if let c = CaptureFeeder.cameras.first { sourceBinding.wrappedValue = "cam:" + c.uniqueID }
+                }
+            }
+            .disabled(s.isSending)
+            if case .camera = s.source {
+                HStack(spacing: 16) {
+                    Picker("Kamera", selection: sourceBinding) {
+                        ForEach(CaptureFeeder.cameras, id: \.uniqueID) { c in Text(tr(c.localizedName)).tag("cam:" + c.uniqueID) }
+                    }
+                    .fixedSize()
+                    Picker("Mikrofon", selection: $sMicrophone) {
+                        Text("Standard").tag(String?.none)
+                        ForEach(CaptureFeeder.microphones, id: \.uniqueID) { m in Text(tr(m.localizedName)).tag(Optional(m.uniqueID)) }
+                    }
+                    .fixedSize()
+                }
+                .disabled(s.isSending)
+                .padding(.leading, 4)
+            }
+        }
+    }
+
+    private var sMicrophone: Binding<String?> {
+        let sender: SenderController = model.sender
+        return Binding<String?>(get: { sender.microphoneID }, set: { sender.microphoneID = $0 })
+    }
+
+    private func fileName(_ s: SenderController) -> String? {
+        if case .file(let u) = s.source { return u.lastPathComponent }
+        return nil
+    }
+
+    private func cameraName(_ s: SenderController) -> String? {
+        if case .camera(let id) = s.source { return CaptureFeeder.cameras.first { $0.uniqueID == id }?.localizedName }
+        return nil
     }
 
     private func destinationDetail(_ d: DiscoveredDestination) -> String {
@@ -277,5 +299,60 @@ struct SendView: View {
 
     private func card<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {
         GroupedBox(title) { content() }
+    }
+}
+
+
+/// Auswählbare Kachel für die Sendequelle.
+private struct SourceTile: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let selected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 26))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(selected ? Color.accentColor : Color.secondary)
+                    .frame(height: 32)
+                Text(tr(title)).font(.callout.weight(.semibold)).foregroundStyle(.primary)
+                Text(tr(subtitle)).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16).padding(.horizontal, 8)
+            .background(selected ? Color.accentColor.opacity(0.12) : Color(nsColor: .quaternarySystemFill),
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(selected ? Color.accentColor : Color(nsColor: .separatorColor).opacity(0.5), lineWidth: selected ? 2 : 0.5))
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .animation(.smooth(duration: 0.2), value: selected)
+    }
+}
+
+/// Große Kennzahl beim Senden.
+private struct Metric: View {
+    let label: String
+    let value: String
+    let note: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(tr(label)).font(.caption).foregroundStyle(.secondary)
+            Text(tr(value)).font(.system(size: 22, weight: .semibold, design: .rounded).monospacedDigit())
+                .contentTransition(.numericText())
+                .lineLimit(1).minimumScaleFactor(0.6)
+            if let note { Text(tr(note)).font(.caption).foregroundStyle(.secondary).lineLimit(1) }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .cardBackground()
+        .accessibilityElement(children: .combine)
     }
 }

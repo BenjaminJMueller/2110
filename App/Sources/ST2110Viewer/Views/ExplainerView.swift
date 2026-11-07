@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Erklärung beim ersten Start und jederzeit über „?“: wie ST 2110 funktioniert
@@ -6,72 +7,72 @@ import SwiftUI
 struct ExplainerView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    static let pageCount = 5
+    static let pageCount = 6
 
     var body: some View {
-        @Bindable var model = model
         let page = model.explainerPage
         VStack(spacing: 0) {
             HStack {
-                Text("So funktioniert ST 2110").font(.callout).foregroundStyle(.secondary)
                 Spacer()
                 Button("Schließen") { finish() }
                     .keyboardShortcut(.cancelAction)
                     .buttonStyle(.borderless)
+                    .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 24)
             .padding(.top, 16)
 
             Group {
                 switch page {
-                case 0: EssencesPage()
-                case 1: MulticastPage()
-                case 2: PTPPage()
-                case 3: NMOSPage()
-                default: StartPage()
+                case 0: WelcomePage()
+                case 1: EssencesPage()
+                case 2: MulticastPage()
+                case 3: PTPPage()
+                case 4: NMOSPage()
+                default: ReadyPage(start: { finish() }, demo: { model.selection = .demo; finish() })
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .padding(.horizontal, 32)
-            .padding(.vertical, 16)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.horizontal, 40)
             .id(page)
-            .transition(.opacity)
+            .transition(.asymmetric(insertion: .opacity.combined(with: .offset(x: 24)), removal: .opacity))
 
             HStack(spacing: 12) {
-                HStack(spacing: 6) {
+                HStack(spacing: 7) {
                     ForEach(0..<Self.pageCount, id: \.self) { i in
                         Capsule()
                             .fill(i == page ? Color.accentColor : Color.primary.opacity(0.15))
-                            .frame(width: i == page ? 20 : 8, height: 8)
+                            .frame(width: i == page ? 22 : 8, height: 8)
+                            .contentShape(Rectangle())
                             .onTapGesture { go(i) }
                             .accessibilityLabel(tr("Seite \(i + 1) von \(Self.pageCount)"))
                             .accessibilityAddTraits(i == page ? .isSelected : [])
                     }
                 }
                 Spacer()
-                if page > 0 {
+                if page > 0 && page < Self.pageCount - 1 {
                     Button("Zurück") { go(page - 1) }
                         .keyboardShortcut(.leftArrow, modifiers: [])
+                        .controlButtonStyle()
+                        .controlSize(.large)
                 }
-                if page == Self.pageCount - 1 {
-                    Button("Fertig") { finish() }
-                        .keyboardShortcut(.defaultAction)
-                        .controlButtonStyle(prominent: true)
-                } else {
-                    Button("Weiter") { go(page + 1) }
-                        .keyboardShortcut(.rightArrow, modifiers: [])
-                        .controlButtonStyle(prominent: true)
+                if page < Self.pageCount - 1 {
+                    Button { go(page + 1) } label: {
+                        Text(page == 0 ? "Los geht’s" : "Weiter").frame(minWidth: 120)
+                    }
+                    .keyboardShortcut(.defaultAction)
+                    .controlButtonStyle(prominent: true)
+                    .controlSize(.large)
                 }
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 16)
-            .background(.bar)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 20)
         }
-        .frame(width: 860, height: 620)
+        .frame(width: 880, height: 640)
     }
 
     private func go(_ p: Int) {
-        withAnimation(.easeOut(duration: 0.2)) { model.explainerPage = max(0, min(Self.pageCount - 1, p)) }
+        withAnimation(.smooth(duration: 0.35)) { model.explainerPage = max(0, min(Self.pageCount - 1, p)) }
     }
 
     private func finish() {
@@ -80,44 +81,101 @@ struct ExplainerView: View {
     }
 }
 
-// MARK: - Seiten
+// MARK: - Bausteine
 
-private struct PageText: View {
+/// Überschrift und ein Satz, zentriert.
+private struct Headline: View {
     let title: String
     let lead: String
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(tr(title)).font(.system(size: 28, weight: .semibold))
-            Text(tr(lead)).font(.title3).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: 680, alignment: .leading)
+        VStack(spacing: 10) {
+            Text(tr(title)).font(.system(size: 34, weight: .bold)).multilineTextAlignment(.center)
+            Text(tr(lead)).font(.title3).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                .frame(maxWidth: 560).fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)
     }
 }
 
-private struct Bullet: View {
+/// Kurzer Hinweis als Kapsel unter der Grafik.
+private struct Chip: View {
     let icon: String
     let text: String
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Image(systemName: icon).foregroundStyle(.secondary).frame(width: 18).accessibilityHidden(true)
-            Text(tr(text)).fixedSize(horizontal: false, vertical: true)
+        Label(tr(text), systemImage: icon)
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 14).padding(.vertical, 8)
+            .background(Color(nsColor: .quaternarySystemFill), in: Capsule())
+    }
+}
+
+private struct Chips: View {
+    let items: [(String, String)]
+    var body: some View {
+        HStack(spacing: 10) { ForEach(Array(items.enumerated()), id: \.offset) { _, it in Chip(icon: it.0, text: it.1) } }
+    }
+}
+
+/// Große Kachel mit Symbol, Titel und einer Zeile.
+private struct Tile: View {
+    let icon: String
+    let title: String
+    let text: String
+    var tint: Color = .accentColor
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 34, weight: .regular))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(tint)
+                .frame(height: 44)
+            Text(tr(title)).font(.headline)
+            Text(tr(text)).font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .font(.callout)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 24).padding(.horizontal, 16)
+        .cardBackground(cornerRadius: 18)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+// MARK: - Seiten
+
+private struct WelcomePage: View {
+    var body: some View {
+        VStack(spacing: 28) {
+            Spacer(minLength: 0)
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable().frame(width: 112, height: 112)
+                .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
+                .accessibilityHidden(true)
+            Headline(title: "Willkommen bei 2110 Viewer",
+                     lead: "Bild und Ton von ST-2110-Geräten direkt auf dem Mac. Entstanden für die Lehre.")
+            HStack(spacing: 16) {
+                Tile(icon: "play.rectangle.fill", title: "Empfangen", text: "Geräte finden, Bild ansehen, Ton hören")
+                Tile(icon: "dot.radiowaves.up.forward", title: "Senden", text: "Testbild, Datei oder Kamera ins Netz")
+                Tile(icon: "waveform.path.ecg.rectangle.fill", title: "Analysieren", text: "Mitschnitte auf Fehler prüfen")
+            }
+            .frame(maxWidth: 680)
+            Spacer(minLength: 0)
+        }
     }
 }
 
 private struct EssencesPage: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            PageText(title: "Was ST 2110 macht",
-                     lead: "SDI trägt Bild, Ton und Zusatzdaten in einem Kabel. ST 2110 trennt sie in eigene Netzwerkströme, die Essenzen. Jede Essenz hat eine eigene Multicast-Adresse.")
+        VStack(spacing: 24) {
+            Spacer(minLength: 0)
+            Headline(title: "Aus einem Kabel werden drei Ströme",
+                     lead: "ST 2110 trennt Bild, Ton und Daten. Jeder Strom hat seine eigene Adresse im Netz.")
             FlowDiagram(nodes: [
-                .init(id: "sdi", title: "Kamera", subtitle: "SDI 1080p50", icon: "video", x: 0.08, y: 0.5),
-                .init(id: "conv", title: "2110 IP Converter", subtitle: "wandelt SDI in IP", icon: "arrow.left.arrow.right.square", x: 0.38, y: 0.5),
-                .init(id: "v", title: "Video", subtitle: "ST 2110-20, etwa 2,2 Gbit/s", icon: "film", x: 0.84, y: 0.16),
-                .init(id: "a", title: "Audio", subtitle: "ST 2110-30, 16 Kanäle", icon: "waveform", x: 0.84, y: 0.5),
-                .init(id: "d", title: "Daten", subtitle: "ST 2110-40, Timecode", icon: "text.alignleft", x: 0.84, y: 0.84),
+                .init(id: "sdi", title: "Kamera", subtitle: "SDI", icon: "video", x: 0.08, y: 0.5),
+                .init(id: "conv", title: "Converter", subtitle: "SDI zu IP", icon: "arrow.left.arrow.right.square", x: 0.4, y: 0.5),
+                .init(id: "v", title: "Video", subtitle: "ST 2110-20", icon: "film", x: 0.86, y: 0.14),
+                .init(id: "a", title: "Audio", subtitle: "ST 2110-30", icon: "waveform", x: 0.86, y: 0.5),
+                .init(id: "d", title: "Daten", subtitle: "ST 2110-40", icon: "text.alignleft", x: 0.86, y: 0.86),
             ], links: [
                 .init(from: "sdi", to: "conv", style: .cable, density: 0),
                 .init(from: "conv", to: "v", style: .accent, density: 12),
@@ -125,25 +183,24 @@ private struct EssencesPage: View {
                 .init(from: "conv", to: "d", style: .normal, density: 1),
             ])
             .frame(height: 260)
-            VStack(alignment: .leading, spacing: 8) {
-                Bullet(icon: "film", text: "Das Video ist unkomprimiert. Ein HD-Strom braucht deshalb 1 bis 2,6 Gbit/s und einen 10-GbE-Anschluss.")
-                Bullet(icon: "point.3.connected.trianglepath.dotted", text: "Weil die Essenzen getrennt sind, lassen sich Bild und Ton unabhängig verteilen. Der Empfänger muss sie danach wieder zusammenführen.")
-            }
+            Chips(items: [("speedometer", "Unkomprimiert, bis 2,6 Gbit/s"), ("cable.connector", "Braucht 10-GbE")])
+            Spacer(minLength: 0)
         }
     }
 }
 
 private struct MulticastPage: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            PageText(title: "Multicast",
-                     lead: "Ein Sender schickt jeden Strom nur einmal ins Netz. Der Switch leitet ihn nur an Geräte weiter, die ihn mit IGMP angefordert haben.")
+        VStack(spacing: 24) {
+            Spacer(minLength: 0)
+            Headline(title: "Einmal senden, viele empfangen",
+                     lead: "Der Switch gibt jeden Strom nur an die Geräte weiter, die ihn angefordert haben.")
             FlowDiagram(nodes: [
-                .init(id: "s", title: "Sender", subtitle: "239.21.1.1", icon: "dot.radiowaves.up.forward", x: 0.08, y: 0.5),
-                .init(id: "sw", title: "Switch", subtitle: "IGMPv3-Snooping", icon: "rectangle.connected.to.line.below", x: 0.4, y: 0.5),
-                .init(id: "r1", title: "Monitor", subtitle: "beigetreten", icon: "display", x: 0.84, y: 0.16),
-                .init(id: "r2", title: "2110 Viewer", subtitle: "beigetreten", icon: "laptopcomputer", x: 0.84, y: 0.5),
-                .init(id: "r3", title: "Recorder", subtitle: "nicht beigetreten", icon: "externaldrive", x: 0.84, y: 0.84),
+                .init(id: "s", title: "Sender", subtitle: "Multicast", icon: "dot.radiowaves.up.forward", x: 0.08, y: 0.5),
+                .init(id: "sw", title: "Switch", subtitle: "IGMP", icon: "rectangle.connected.to.line.below", x: 0.42, y: 0.5),
+                .init(id: "r1", title: "Monitor", subtitle: "beigetreten", icon: "display", x: 0.86, y: 0.14),
+                .init(id: "r2", title: "2110 Viewer", subtitle: "beigetreten", icon: "laptopcomputer", x: 0.86, y: 0.5),
+                .init(id: "r3", title: "Recorder", subtitle: "nicht beigetreten", icon: "externaldrive", x: 0.86, y: 0.86),
             ], links: [
                 .init(from: "s", to: "sw", style: .accent, density: 8),
                 .init(from: "sw", to: "r1", style: .accent, density: 8),
@@ -151,96 +208,86 @@ private struct MulticastPage: View {
                 .init(from: "sw", to: "r3", style: .idle, density: 0),
             ])
             .frame(height: 260)
-            VStack(alignment: .leading, spacing: 8) {
-                Bullet(icon: "questionmark.circle", text: "Kommt nichts an, liegt es oft am Switch: Er braucht IGMP-Snooping und einen Querier, der die Anmeldungen regelmäßig abfragt.")
-                Bullet(icon: "network", text: "2110 Viewer tritt der Gruppe auf genau der Netzwerkschnittstelle bei, die zum Sender passt, z. B. dem 10-GbE-Adapter.")
-            }
+            Chips(items: [("questionmark.circle", "Kein Bild? Oft fehlt am Switch der IGMP-Querier")])
+            Spacer(minLength: 0)
         }
     }
 }
 
 private struct PTPPage: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            PageText(title: "Die gemeinsame Uhr (PTP)",
-                     lead: "Ein Grandmaster verteilt die Uhrzeit per PTP. Jedes Paket trägt einen Zeitstempel dieser Uhr. So weiß der Empfänger, welcher Ton zu welchem Bild gehört.")
+        VStack(spacing: 22) {
+            Spacer(minLength: 0)
+            Headline(title: "Eine Uhr für alle",
+                     lead: "Jedes Paket trägt die Zeit des Grandmasters. So passen Bild und Ton genau zusammen.")
             FlowDiagram(nodes: [
-                .init(id: "gm", title: "Grandmaster", subtitle: "Domain 127", icon: "clock", x: 0.5, y: 0.12),
-                .init(id: "c", title: "Converter", subtitle: "Follower", icon: "arrow.left.arrow.right.square", x: 0.14, y: 0.82),
-                .init(id: "sw", title: "Switch", subtitle: "", icon: "rectangle.connected.to.line.below", x: 0.5, y: 0.82),
-                .init(id: "m", title: "2110 Viewer", subtitle: "nur Follower", icon: "laptopcomputer", x: 0.86, y: 0.82),
+                .init(id: "gm", title: "Grandmaster", subtitle: "PTP", icon: "clock", x: 0.5, y: 0.12),
+                .init(id: "c", title: "Converter", subtitle: "Follower", icon: "arrow.left.arrow.right.square", x: 0.16, y: 0.84),
+                .init(id: "sw", title: "Switch", subtitle: "", icon: "rectangle.connected.to.line.below", x: 0.5, y: 0.84),
+                .init(id: "m", title: "2110 Viewer", subtitle: "Follower", icon: "laptopcomputer", x: 0.84, y: 0.84),
             ], links: [
                 .init(from: "gm", to: "c", style: .clock, density: 2),
                 .init(from: "gm", to: "sw", style: .clock, density: 2),
                 .init(from: "gm", to: "m", style: .clock, density: 2),
             ])
-            .frame(height: 190)
+            .frame(height: 180)
             TimestampStrip()
-                .frame(height: 96)
+                .frame(height: 86)
                 .accessibilityLabel("Zeitachse: Videobilder alle 20 Millisekunden und Audiopakete jede Millisekunde tragen Zeitstempel derselben Uhr")
-            Bullet(icon: "speaker.wave.2", text: "2110 Viewer richtet Bild und Ton an diesen Zeitstempeln aus. Ohne Grandmaster geht das auch, dann mit der Uhr des Macs. Den verbleibenden Versatz misst die Diagnose mit einem Testsignal aus Lichtblitz und Piepton.")
+            Chips(items: [("ear", "Die App hört nur zu und wird nie Master")])
+            Spacer(minLength: 0)
         }
     }
 }
 
 private struct NMOSPage: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            PageText(title: "Geräte finden mit NMOS",
-                     lead: "Geräte kündigen ihre Ströme im Netz an (IS-04). 2110 Viewer findet sie ohne Konfiguration und kann Verbindungen herstellen (IS-05).")
+        VStack(spacing: 24) {
+            Spacer(minLength: 0)
+            Headline(title: "Geräte finden sich selbst",
+                     lead: "Per NMOS kündigen Geräte ihre Ströme an. 2110 Viewer zeigt sie links in der Seitenleiste.")
             FlowDiagram(nodes: [
-                .init(id: "c", title: "2110 IP Converter", subtitle: "„SDI 1 Video, Audio“", icon: "arrow.left.arrow.right.square", x: 0.14, y: 0.5),
-                .init(id: "e", title: "2110 Viewer", subtitle: "zeigt die Quelle an", icon: "laptopcomputer", x: 0.86, y: 0.5),
+                .init(id: "c", title: "Converter", subtitle: "„SDI 1“", icon: "arrow.left.arrow.right.square", x: 0.16, y: 0.5),
+                .init(id: "e", title: "2110 Viewer", subtitle: "zeigt die Quelle an", icon: "laptopcomputer", x: 0.84, y: 0.5),
             ], links: [
-                .init(from: "c", to: "e", style: .accent, density: 3, label: "IS-04: Ich sende „SDI 1“"),
+                .init(from: "c", to: "e", style: .accent, density: 3, label: "Ich sende „SDI 1“"),
             ])
-            .frame(height: 170)
-            VStack(alignment: .leading, spacing: 8) {
-                Bullet(icon: "magnifyingglass", text: "Der 3x3G meldet sich laut Blackmagic per mDNS, eine Registry ist nicht nötig. Findet 2110 Viewer nichts, hilft „Gerät per Adresse hinzufügen“.")
-                Bullet(icon: "doc.text", text: "Adresse, Format und Zeitbezug eines Stroms stehen in einer SDP-Datei. 2110 Viewer holt sie automatisch, oder Sie ziehen die Datei ins Fenster.")
-                Bullet(icon: "dot.radiowaves.up.forward", text: "Beim Senden kündigt sich 2110 Viewer selbst so an. Der Converter kann den 2110-Viewer-Strom dann am SDI-Ausgang ausgeben.")
-            }
+            .frame(height: 180)
+            Chips(items: [("plus.circle", "Nichts gefunden? Gerät per Adresse hinzufügen"), ("doc", "Oder eine SDP-Datei ins Fenster ziehen")])
+            Spacer(minLength: 0)
         }
     }
 }
 
-private struct StartPage: View {
+private struct ReadyPage: View {
+    let start: () -> Void
+    let demo: () -> Void
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            PageText(title: "Drei Arbeitsweisen in 2110 Viewer",
-                     lead: "Oben in der Symbolleiste wechseln Sie zwischen Empfangen, Senden und Analysieren.")
-            HStack(alignment: .top, spacing: 16) {
-                ModeCard(icon: "play.rectangle", title: "Empfangen", text: "Quelle links wählen, Bild sehen, Kanäle abhören. Die Diagnose zeigt Verluste und Synchronisation.")
-                ModeCard(icon: "dot.radiowaves.up.forward", title: "Senden", text: "Testbild, Videodatei oder Kamera als ST 2110 ins Netz schicken, zum Beispiel an einen SDI-Ausgang des Converters.")
-                ModeCard(icon: "waveform.path.ecg.rectangle", title: "Analysieren", text: "Paketmitschnitte auf Zeitverhalten nach ST 2110-21, Audio-Laufzeit, PTP und IGMP prüfen.")
+        VStack(spacing: 28) {
+            Spacer(minLength: 0)
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 64))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(Color.accentColor)
+                .accessibilityHidden(true)
+            Headline(title: "Alles bereit",
+                     lead: "Wenn macOS nach dem lokalen Netzwerk fragt, bitte erlauben. Ohne Netzwerk können Sie das Testbild ausprobieren.")
+            HStack(spacing: 16) {
+                Tile(icon: "network", title: "Lokales Netzwerk", text: "Erlauben, damit die App Geräte findet")
+                Tile(icon: "tv", title: "Ohne Netzwerk", text: "Testbild und Testton ansehen", tint: .orange)
             }
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Was macOS fragen kann").font(.headline)
-                Bullet(icon: "network", text: "Den Zugriff auf das lokale Netzwerk bitte erlauben. Ohne ihn findet die App keine Geräte und empfängt nichts.")
-                Bullet(icon: "shield.lefthalf.filled", text: "Ist die Firewall aktiv, eingehende Verbindungen für 2110 Viewer und das Hilfsprogramm gst-ptp-helper erlauben.")
-                Bullet(icon: "camera", text: "Nach Kamera und Mikrofon fragt macOS nur, wenn Sie beim Senden eine Kamera wählen.")
+            .frame(maxWidth: 520)
+            HStack(spacing: 12) {
+                Button { demo() } label: { Label("Testbild ansehen", systemImage: "tv").frame(minWidth: 150) }
+                    .controlButtonStyle()
+                    .controlSize(.large)
+                Button { start() } label: { Text("Los geht’s").frame(minWidth: 150) }
+                    .keyboardShortcut(.defaultAction)
+                    .controlButtonStyle(prominent: true)
+                    .controlSize(.large)
             }
-            Text("Ohne Netzwerk ausprobieren: „Demo: Testbild und Testton“ unten in der Seitenleiste.")
-                .font(.callout).foregroundStyle(.secondary)
+            Spacer(minLength: 0)
         }
-    }
-}
-
-private struct ModeCard: View {
-    let icon: String
-    let title: String
-    let text: String
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: icon).font(.title2).foregroundStyle(Color.accentColor).accessibilityHidden(true)
-            Text(tr(title)).font(.headline)
-            Text(tr(text)).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .padding(16)
-        .cardBackground()
-        .accessibilityElement(children: .combine)
     }
 }
 

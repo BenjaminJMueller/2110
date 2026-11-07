@@ -25,7 +25,7 @@ struct ContentView: View {
                     PlayerView()
                         .inspector(isPresented: $model.inspectorShown) {
                             DiagnosticsView()
-                                .inspectorColumnWidth(min: 300, ideal: 340, max: 560)
+                                .inspectorColumnWidth(min: 320, ideal: 360, max: 560)
                         }
                 case .send: SendView()
                 case .analyze: AnalysisView()
@@ -46,7 +46,7 @@ struct ContentView: View {
             }
             ToolbarItemGroup(placement: .primaryAction) {
                 Button {
-                    model.explainerPage = 0
+                    model.explainerPage = 1
                     model.showOnboarding = true
                 } label: {
                     Label("So funktioniert ST 2110", systemImage: "questionmark.circle")
@@ -188,7 +188,7 @@ extension ContentView {
     /// Seitenleiste, solange die Diagnose offen ist (statt den Inhalt abzuschneiden).
     func fitInspector(_ shown: Bool) {
         let width = NSApp.keyWindow?.frame.width ?? NSApp.windows.first?.frame.width ?? 0
-        if shown, columns != .detailOnly, width > 0, width < 250 + 340 + 760 {
+        if shown, columns != .detailOnly, width > 0, width < 1500 {
             withAnimation { columns = .detailOnly }
             sidebarAutoHidden = true
         } else if !shown, sidebarAutoHidden {

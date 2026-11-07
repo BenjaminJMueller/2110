@@ -213,6 +213,18 @@ final class AppModel {
 
     // MARK: Quellen verwalten
 
+    /// Den eigenen Sendestrom auf diesem Mac empfangen (über die eigene Netzwerkschnittstelle bzw. Loopback).
+    func receiveOwnStream() {
+        guard sender.isSending, sender.videoSDP != nil || sender.audioSDP != nil else { return }
+        let name = "Eigener 2110-Viewer-Strom"
+        var src = saved.first(where: { $0.name == name }) ?? SavedSource(name: name, origin: .sdp)
+        src.videoSDP = sender.videoSDP
+        src.audioSDP = sender.audioSDP
+        upsert(src)
+        mode = .receive
+        if selection == .saved(src.id) { activate(selection) } else { selection = .saved(src.id) }
+    }
+
     func upsert(_ s: SavedSource) {
         if let i = saved.firstIndex(where: { $0.id == s.id }) { saved[i] = s } else { saved.append(s) }
         store.save(saved)

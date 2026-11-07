@@ -110,7 +110,7 @@ struct AppCommands: Commands {
                 .keyboardShortcut("b", modifiers: [.command, .shift])
         }
         CommandGroup(replacing: .help) {
-            Button("So funktioniert ST 2110") { model.explainerPage = 0; model.showOnboarding = true }
+            Button("So funktioniert ST 2110") { model.explainerPage = 1; model.showOnboarding = true }
             Button("Erste Schritte und Berechtigungen") { model.explainerPage = ExplainerView.pageCount - 1; model.showOnboarding = true }
         }
     }

@@ -62,9 +62,15 @@ struct DiagnosticsView: View {
                             if p.isRecording, let s = p.stats {
                                 Text(tr(String(format: "Zeichnet auf: %.0f s, %llu Pakete", locale: .current, s.rec_seconds, s.rec_packets))).font(.callout.monospacedDigit())
                             } else {
-                                HStack {
-                                    Button("10 s aufzeichnen und analysieren") { model.recordAndAnalyze(seconds: 10) }
-                                    Button("60 s") { model.recordAndAnalyze(seconds: 60) }
+                                ViewThatFits(in: .horizontal) {
+                                    HStack {
+                                        Button("10 s aufzeichnen und analysieren") { model.recordAndAnalyze(seconds: 10) }
+                                        Button("60 s") { model.recordAndAnalyze(seconds: 60) }
+                                    }
+                                    VStack(alignment: .leading) {
+                                        Button("10 s aufzeichnen und analysieren") { model.recordAndAnalyze(seconds: 10) }
+                                        Button("60 s") { model.recordAndAnalyze(seconds: 60) }
+                                    }
                                 }
                                 .controlSize(.small)
                             }
@@ -177,7 +183,7 @@ struct DiagnosticsView: View {
                 }
             }
             .padding()
-            .textSelection(.enabled)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -221,7 +227,7 @@ struct DiagnosticsView: View {
             Spacer(minLength: 8)
             Text(tr(v)).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
                 .fixedSize(horizontal: false, vertical: true)
-                .textSelection(.enabled)
+                .layoutPriority(1)
         }
         .font(.callout)
         .accessibilityElement(children: .combine)
@@ -259,9 +265,11 @@ private struct SenderControlSection: View {
                     Text("Status nicht verfügbar (Gerät meldet keine Connection API).").font(.callout).foregroundStyle(.secondary)
                 }
                 if model.settings.allowSenderControl {
-                    HStack {
-                        TextField("Multicast-Adresse", text: $newAddress).frame(width: 150)
-                        TextField("Port", text: $newPort).frame(width: 70)
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            TextField("Multicast-Adresse", text: $newAddress).frame(minWidth: 100, maxWidth: 160)
+                            TextField("Port", text: $newPort).frame(minWidth: 50, maxWidth: 70)
+                        }
                         Button("Sender aktivieren / Ziel setzen …") { confirm = true }
                     }
                     .controlSize(.small)

@@ -30,7 +30,7 @@ private struct GeneralTab: View {
             }
             .pickerStyle(.segmented)
             Text("Das Videobild selbst bleibt in jeder Darstellung unverändert.").font(.caption).foregroundStyle(.secondary)
-            Button("Erklärung „So funktioniert ST 2110“ zeigen") { model.explainerPage = 0; model.showOnboarding = true }
+            Button("Erklärung „So funktioniert ST 2110“ zeigen") { model.explainerPage = 1; model.showOnboarding = true }
         }
         .formStyle(.grouped)
     }
