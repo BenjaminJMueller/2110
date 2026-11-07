@@ -16,7 +16,7 @@ mkdir -p "$SRC"
 sha() { if command -v sha256sum >/dev/null; then sha256sum "$1" | cut -d' ' -f1; else shasum -a 256 "$1" | cut -d' ' -f1; fi; }
 get() { # Name URL SHA256
   echo "Lade $1"
-  curl -fsSL --retry 4 -o "$SRC/$1" "$2"
+  curl -fsSL --http1.1 --retry 5 --retry-all-errors --retry-delay 3 -o "$SRC/$1" "$2"
   local got; got="$(sha "$SRC/$1")"
   if [ -n "$3" ] && [ "$got" != "$3" ]; then echo "Prüfsumme falsch für $1: $got"; exit 1; fi
   echo "$got  $1" >> "$SRC/SHA256SUMS"
