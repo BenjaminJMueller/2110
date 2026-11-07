@@ -184,7 +184,7 @@ struct SendView: View {
                         ForEach(CaptureFeeder.cameras, id: \.uniqueID) { c in Text(tr(c.localizedName)).tag("cam:" + c.uniqueID) }
                     }
                     .fixedSize()
-                    Picker("Mikrofon", selection: $sMicrophone) {
+                    Picker("Mikrofon", selection: sMicrophone) {
                         Text("Standard").tag(String?.none)
                         ForEach(CaptureFeeder.microphones, id: \.uniqueID) { m in Text(tr(m.localizedName)).tag(Optional(m.uniqueID)) }
                     }
