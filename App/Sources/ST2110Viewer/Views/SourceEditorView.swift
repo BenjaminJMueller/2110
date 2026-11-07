@@ -101,7 +101,7 @@ private struct SDPSlot: View {
             TextEditor(text: $text)
                 .font(.system(.caption, design: .monospaced))
                 .frame(minHeight: 220)
-                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(targeted ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: targeted ? 2 : 1))
+                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(targeted ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: targeted ? 2 : 1))
                 .overlay {
                     if text.isEmpty {
                         Text("SDP hierher ziehen, einfügen oder eintippen")

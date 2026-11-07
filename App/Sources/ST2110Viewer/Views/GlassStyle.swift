@@ -19,18 +19,73 @@ extension View {
         #endif
     }
 
-    /// Schaltflächenstil: Glas ab macOS 26, sonst „bordered“.
+    /// Schaltflächenstil wie in Apples Apps: Kapsel, Glas ab macOS 26, sonst „bordered“.
     @ViewBuilder
     func controlButtonStyle(prominent: Bool = false) -> some View {
         #if compiler(>=6.2)
         if #available(macOS 26.0, *) {
-            if prominent { self.buttonStyle(.glassProminent) } else { self.buttonStyle(.glass) }
+            if prominent { self.buttonStyle(.glassProminent).buttonBorderShape(.capsule) } else { self.buttonStyle(.glass).buttonBorderShape(.capsule) }
         } else {
-            if prominent { self.buttonStyle(.borderedProminent) } else { self.buttonStyle(.bordered) }
+            if prominent { self.buttonStyle(.borderedProminent).buttonBorderShape(.capsule) } else { self.buttonStyle(.bordered).buttonBorderShape(.capsule) }
         }
         #else
-        if prominent { self.buttonStyle(.borderedProminent) } else { self.buttonStyle(.bordered) }
+        if prominent { self.buttonStyle(.borderedProminent).buttonBorderShape(.capsule) } else { self.buttonStyle(.bordered).buttonBorderShape(.capsule) }
         #endif
+    }
+
+    /// Runde Symbolschaltfläche (Stumm, Vollbild …), neutral, nicht eingefärbt.
+    @ViewBuilder
+    func iconButtonStyle() -> some View {
+        #if compiler(>=6.2)
+        if #available(macOS 26.0, *) {
+            self.buttonStyle(.glass).buttonBorderShape(.circle)
+        } else {
+            self.buttonStyle(.bordered).buttonBorderShape(.circle)
+        }
+        #else
+        self.buttonStyle(.bordered).buttonBorderShape(.circle)
+        #endif
+    }
+
+    /// Menü als Kapsel-Schaltfläche in Bedienleisten.
+    func controlMenuStyle(indicator: Bool = true) -> some View {
+        self.menuStyle(.button)
+            .menuIndicator(indicator ? .visible : .hidden)
+            .controlButtonStyle()
+    }
+
+    /// Hintergrund für gruppierte Inhalte (wie die Gruppen in den Systemeinstellungen).
+    func cardBackground(cornerRadius: CGFloat = Theme.cardRadius) -> some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        return self
+            .background(Color(nsColor: .quaternarySystemFill), in: shape)
+            .overlay(shape.strokeBorder(Color(nsColor: .separatorColor).opacity(0.5), lineWidth: 0.5))
+    }
+}
+
+/// Gruppe mit Überschrift über der Fläche – entspricht `Section` in einem
+/// gruppierten Formular, funktioniert aber auch in Spalten und Inspektoren.
+struct GroupedBox<Content: View>: View {
+    let title: String
+    @ViewBuilder var content: Content
+
+    init(_ title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.leading, 4)
+                .accessibilityAddTraits(.isHeader)
+            VStack(alignment: .leading, spacing: 10) { content }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(14)
+                .cardBackground()
+        }
     }
 }
 
@@ -69,12 +124,9 @@ private struct FallbackSurface: ViewModifier {
 }
 
 
-/// Farbwelt: neutrale Systemflächen, eine kühle Kobalt-Akzentfarbe für die
-/// eine wichtige Aktion bzw. Auswahl je Ansicht.
+/// Farbwelt: Systemflächen und die Akzentfarbe des Systems.
 enum Theme {
-    static let accent = Color(nsColor: NSColor(name: "ViewerAccent") { a in
-        a.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-            ? NSColor(srgbRed: 0.42, green: 0.62, blue: 1.0, alpha: 1)
-            : NSColor(srgbRed: 0.15, green: 0.40, blue: 0.86, alpha: 1)
-    })
+    /// Systemakzentfarbe (folgt Systemeinstellungen › Erscheinungsbild), wie in Apples Apps.
+    static let accent = Color.accentColor
+    static let cardRadius: CGFloat = 12
 }

@@ -76,6 +76,7 @@ struct SendView: View {
                                 .frame(minWidth: 160)
                         }
                         .controlButtonStyle(prominent: !s.isSending)
+                        .controlSize(.large)
                         .disabled(s.isStarting)
                         .keyboardShortcut(.return, modifiers: [.command])
                         if s.isStarting { ProgressView().controlSize(.small); Text("Starte, suche PTP …").font(.callout).foregroundStyle(.secondary) }
@@ -221,13 +222,6 @@ struct SendView: View {
     }
 
     private func card<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(title).font(.headline)
-            content()
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.primary.opacity(0.08)))
+        GroupedBox(title) { content() }
     }
 }

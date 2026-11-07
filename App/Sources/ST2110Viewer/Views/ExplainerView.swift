@@ -239,8 +239,7 @@ private struct ModeCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .padding(16)
-        .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.primary.opacity(0.08)))
+        .cardBackground()
         .accessibilityElement(children: .combine)
     }
 }
@@ -303,7 +302,7 @@ struct FlowDiagram: View {
                     if let a = pos(l.from, size), let b = pos(l.to, size) {
                         Text(l.label!).font(.callout).foregroundStyle(.secondary)
                             .padding(.horizontal, 8).padding(.vertical, 4)
-                            .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 6))
+                            .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                             .position(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - 22)
                     }
                 }
@@ -348,8 +347,9 @@ private struct NodeView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.primary.opacity(0.1)))
+        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.primary.opacity(0.1)))
+        .shadow(color: .black.opacity(0.08), radius: 6, y: 2)
         .fixedSize()
     }
 }

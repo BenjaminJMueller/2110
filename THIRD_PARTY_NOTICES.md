@@ -65,9 +65,11 @@ verwendet.
   Herstellerdateien** (Handbücher, SDKs, Firmware, Treiber, Bilder, Logos, SDP- oder
   Konfigurationsdateien von Blackmagic) im Repository oder in der App enthalten.
   Test-SDPs und NMOS-Testantworten sind selbst erstellt.
-* Gestaltungsregeln „unslop“ von Damir Sokolovsky (@heydamir),
-  https://github.com/heydamir/unslop, CC BY 4.0: Richtlinien angewendet, kein
-  Code und keine Grafiken übernommen.
+* Gestaltung: Die Oberfläche folgt den Human Interface Guidelines von Apple
+  (Systemsteuerelemente, Liquid Glass, SF Symbols). Einzelne Textregeln (z. B.
+  sachliche Meldungen ohne Ausrufezeichen) gehen auf „unslop“ von Damir Sokolovsky
+  (@heydamir, https://github.com/heydamir/unslop, CC BY 4.0) zurück; kein Code und
+  keine Grafiken übernommen.
 
 ## 5 Marken
 

@@ -19,7 +19,8 @@ struct ControlBar: View {
                         model.togglePlay()
                     } label: {
                         Label(p.isActive ? "Stopp" : "Start", systemImage: p.isActive ? "stop.fill" : "play.fill")
-                            .frame(minWidth: 70)
+                            .contentTransition(.symbolEffect(.replace))
+                            .frame(minWidth: 76)
                     }
                     .controlButtonStyle(prominent: !p.isActive)
                     .disabled(p.current == nil && model.selection == nil)
@@ -36,9 +37,10 @@ struct ControlBar: View {
                         p.setMute(model.settings.muted)
                     } label: {
                         Image(systemName: model.settings.muted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                            .frame(width: 18)
+                            .contentTransition(.symbolEffect(.replace))
+                            .frame(width: 18, height: 18)
                     }
-                    .controlButtonStyle()
+                    .iconButtonStyle()
                     .accessibilityLabel(model.settings.muted ? "Stummschaltung aufheben" : "Stummschalten")
                     .help("Stummschalten (M)")
 
@@ -56,15 +58,16 @@ struct ControlBar: View {
                         NSApp.keyWindow?.toggleFullScreen(nil)
                     } label: {
                         Image(systemName: model.isFullScreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                            .frame(width: 18, height: 18)
                     }
-                    .controlButtonStyle()
+                    .iconButtonStyle()
                     .accessibilityLabel(model.isFullScreen ? "Vollbild beenden" : "Vollbild")
                     .help("Vollbild (⌃⌘F)")
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .controlSurface()
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .controlSurface(cornerRadius: 22)
         }
     }
 }
@@ -137,6 +140,7 @@ private struct MonitorPicker: View {
         } label: {
             Label(label(n: n), systemImage: "headphones")
         }
+        .controlMenuStyle()
         .fixedSize()
         .disabled(n == 0)
         .help("Abhören: Kanalpaar oder Einzelkanal wählen (⌘[ / ⌘])")
@@ -172,6 +176,7 @@ private struct OutputPicker: View {
         } label: {
             Image(systemName: "hifispeaker")
         }
+        .controlMenuStyle(indicator: false)
         .fixedSize()
         .help("Audioausgabegerät: \(currentName)")
         .accessibilityLabel("Audioausgabegerät: \(currentName)")
@@ -228,13 +233,18 @@ private struct MeterBar: View {
         GeometryReader { g in
             // Skala −60 … 0 dBFS
             let frac = CGFloat(max(0, min(1, (db + 60) / 60)))
+            let shape = RoundedRectangle(cornerRadius: 3, style: .continuous)
             ZStack(alignment: .bottom) {
-                RoundedRectangle(cornerRadius: 1.5).fill(Color.primary.opacity(highlighted ? 0.18 : 0.08))
-                RoundedRectangle(cornerRadius: 1.5)
-                    .fill(db > -1 ? Color.red : (db > -9 ? Color.yellow : Color.green))
-                    .frame(height: g.size.height * frac)
+                shape.fill(Color.primary.opacity(highlighted ? 0.16 : 0.07))
+                // Skala über die volle Höhe, sichtbar nur bis zum Pegel (wie Pegelanzeigen in Logic)
+                LinearGradient(stops: [.init(color: .green, location: 0), .init(color: .green, location: 0.78),
+                                       .init(color: .yellow, location: 0.88), .init(color: .red, location: 1)],
+                               startPoint: .bottom, endPoint: .top)
+                    .mask(alignment: .bottom) { Rectangle().frame(height: g.size.height * frac) }
+                    .clipShape(shape)
             }
-            .overlay(RoundedRectangle(cornerRadius: 1.5).strokeBorder(highlighted ? Color.accentColor : .clear, lineWidth: 1))
+            .overlay(shape.strokeBorder(highlighted ? Color.accentColor : .clear, lineWidth: 1.5))
+            .animation(.linear(duration: 0.08), value: frac)
         }
     }
 }

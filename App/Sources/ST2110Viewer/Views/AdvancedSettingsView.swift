@@ -13,6 +13,7 @@ struct AdvancedSettingsView: View {
             AboutTab().tabItem { Label("Info", systemImage: "info.circle") }
         }
         .frame(width: 640, height: 500)
+        .buttonBorderShape(.capsule)
     }
 }
 

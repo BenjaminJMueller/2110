@@ -15,19 +15,27 @@ struct DiagnosticsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
-                    Text("Diagnose").font(.title2.weight(.semibold))
+                    Text("Diagnose").font(.title3.weight(.semibold))
                     Spacer()
-                    Button("Bericht kopieren") {
+                    Button {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(p.reportText(appVersion: model.appVersion), forType: .string)
+                    } label: {
+                        Label("Bericht kopieren", systemImage: "doc.on.doc")
                     }
-                    .controlSize(.small)
-                    Button("Speichern …") { saveReport() }
-                        .controlSize(.small)
+                    .labelStyle(.iconOnly)
+                    .iconButtonStyle()
+                    .help("Diagnosebericht kopieren – zum Einfügen in eine Rückmeldung")
+                    Button { saveReport() } label: {
+                        Label("Bericht speichern …", systemImage: "square.and.arrow.down")
+                    }
+                    .labelStyle(.iconOnly)
+                    .iconButtonStyle()
+                    .help("Diagnosebericht als Textdatei speichern")
                 }
 
                 if !p.hints.isEmpty {
-                    GroupBox("Hinweise") {
+                    GroupedBox("Hinweise") {
                         VStack(alignment: .leading, spacing: 8) {
                             ForEach(p.hints) { h in
                                 HStack(alignment: .top, spacing: 8) {
@@ -49,7 +57,7 @@ struct DiagnosticsView: View {
                 }
 
                 if !p.isDemo && p.isActive {
-                    GroupBox("Mitschnitt") {
+                    GroupedBox("Mitschnitt") {
                         VStack(alignment: .leading, spacing: 6) {
                             if p.isRecording, let s = p.stats {
                                 Text(String(format: "Zeichnet auf: %.0f s, %llu Pakete", locale: .current, s.rec_seconds, s.rec_packets)).font(.callout.monospacedDigit())
@@ -201,17 +209,19 @@ struct DiagnosticsView: View {
 
     @ViewBuilder
     private func section<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {
-        GroupBox(title) {
-            VStack(alignment: .leading, spacing: 4) { content() }
+        GroupedBox(title) {
+            VStack(alignment: .leading, spacing: 6) { content() }
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
     private func row(_ k: String, _ v: String) -> some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(k).foregroundStyle(.secondary).frame(width: 150, alignment: .leading)
-            Text(v).fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 0)
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Text(k)
+            Spacer(minLength: 8)
+            Text(v).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
+                .fixedSize(horizontal: false, vertical: true)
+                .textSelection(.enabled)
         }
         .font(.callout)
         .accessibilityElement(children: .combine)
@@ -240,7 +250,7 @@ private struct SenderControlSection: View {
 
     var body: some View {
         let p = model.player
-        GroupBox("Sender (NMOS IS-05)") {
+        GroupedBox("Sender (NMOS IS-05)") {
             VStack(alignment: .leading, spacing: 6) {
                 if let a = p.nmosActive {
                     Text("Aktiv: \(a.master_enable == true ? "ja" : "nein") · Ziel \(a.transport_params?.first?.destination_ip ?? "–"):\(a.transport_params?.first?.destination_port?.intValue.map(String.init) ?? "–")")

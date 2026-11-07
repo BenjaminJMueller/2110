@@ -63,7 +63,7 @@ private struct AnalysisEmptyView: View {
             }
             .font(.callout).foregroundStyle(.secondary)
             .padding(16)
-            .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
+            .cardBackground()
         }
         .padding(32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -161,12 +161,13 @@ private struct StatTile: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label).font(.caption).foregroundStyle(.secondary)
-            Text(value).font(.system(size: 26, weight: .medium).monospacedDigit())
+            Text(value).font(.system(size: 26, weight: .semibold, design: .rounded).monospacedDigit())
+                .contentTransition(.numericText())
             if let note { Text(note).font(.caption).foregroundStyle(.secondary) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
+        .cardBackground()
         .accessibilityElement(children: .combine)
     }
 }
@@ -230,7 +231,7 @@ private struct StreamReport: View {
                         Text("Bild aus dem Mitschnitt").font(.headline)
                         Image(nsImage: thumbnail).resizable().aspectRatio(contentMode: .fit)
                             .frame(width: 320)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                             .accessibilityLabel("Vorschaubild des Videostroms")
                     }
                     Text("Paketabstände").font(.headline)
@@ -360,7 +361,7 @@ private struct NetworkReport: View {
                 }
                 .font(.callout)
                 .padding(16)
-                .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
+                .cardBackground()
             }
             Text("IGMP").font(.title3.weight(.medium))
             Text(report.igmp.queries > 0 ? "Querier: \(report.igmp.querier) (\(report.igmp.queries) Abfragen, davon \(report.igmp.v3_queries) IGMPv3)" : "Keine IGMP-Abfragen gesehen. Ohne Querier kann der Switch Multicast nach einiger Zeit abschalten.")

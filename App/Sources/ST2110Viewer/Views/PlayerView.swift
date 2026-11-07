@@ -181,7 +181,7 @@ private struct HintBanner: View {
                 .controlSize(.small)
         }
         .padding(10)
-        .background(color.opacity(0.10), in: RoundedRectangle(cornerRadius: 10))
+        .background(color.opacity(0.10), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 }

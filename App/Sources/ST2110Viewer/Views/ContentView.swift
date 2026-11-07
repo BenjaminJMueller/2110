@@ -106,7 +106,7 @@ struct ContentView: View {
             model.activate(new)
         }
         .onAppear { model.applyAppearance() }
-        .tint(Theme.accent)
+        .buttonBorderShape(.capsule)
         .task {
             if let dir = SnapshotRunner.outputDir { await SnapshotRunner.run(model: model, dir: dir) }
         }
