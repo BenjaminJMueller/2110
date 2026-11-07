@@ -35,7 +35,7 @@ enum SnapshotRunner {
         for (ap, name) in [(2, "dunkel"), (1, "hell")] {
             model.settings.appearance = ap
             model.mode = .receive
-            if model.selection != .demo { model.selection = .demo } else { model.activate(.demo) }
+            if model.selection != .demo { model.selection = .demo } else if !model.player.isActive { model.activate(.demo) }
             await wait(3)
             shot("empfangen-demo-\(name)")
         }

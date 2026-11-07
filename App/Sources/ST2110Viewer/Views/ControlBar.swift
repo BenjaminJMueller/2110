@@ -12,7 +12,8 @@ struct ControlBar: View {
             VStack(spacing: 8) {
                 if p.channelCount > 0 {
                     LevelMeters(levels: p.levels, left: p.monitorLeft, right: p.monitorRight)
-                        .frame(height: 30)
+                        .frame(height: 28)
+                        .padding(.horizontal, 2)
                 }
                 HStack(spacing: 12) {
                     Button {
@@ -205,14 +206,14 @@ struct LevelMeters: View {
     var body: some View {
         GeometryReader { geo in
             let n = max(levels.count, 1)
-            let spacing: CGFloat = n > 16 ? 1 : 3
+            let spacing: CGFloat = n > 16 ? 2 : 4
             let w = max(4, (geo.size.width - spacing * CGFloat(n - 1)) / CGFloat(n))
             HStack(alignment: .bottom, spacing: spacing) {
                 ForEach(Array(levels.enumerated()), id: \.offset) { i, db in
                     VStack(spacing: 1) {
                         MeterBar(db: db, highlighted: i == left || i == right)
                         if n <= 32 {
-                            Text("\(i + 1)").font(.system(size: 8)).foregroundStyle(.secondary)
+                            Text("\(i + 1)").font(.system(size: 9, weight: .medium).monospacedDigit()).foregroundStyle(.tertiary)
                         }
                     }
                     .frame(width: w)
