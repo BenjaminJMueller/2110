@@ -46,6 +46,7 @@ struct AnalysisView: View {
 }
 
 private struct AnalysisEmptyView: View {
+    @Environment(AppModel.self) private var model
     @Binding var importing: Bool
 
     var body: some View {
