@@ -36,7 +36,7 @@ struct ManualEntryView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Manuelle Eingabe (Experte)").font(.title2.weight(.semibold))
-            Text("Nur nötig, wenn weder NMOS noch SDP-Dateien zur Verfügung stehen. Die Werte stehen in der Blackmagic-Software „Converters Setup“ (Registerkarte 2110) bzw. im LCD-Menü des Geräts.")
+            InfoRow("Nur nötig ohne NMOS und SDP-Datei.", info: "Nur nötig, wenn weder NMOS noch SDP-Dateien zur Verfügung stehen. Die Werte stehen in der Blackmagic-Software „Converters Setup“ (Registerkarte 2110) bzw. im LCD-Menü des Geräts.")
                 .font(.callout).foregroundStyle(.secondary)
             TextField("Name", text: $name).textFieldStyle(.roundedBorder)
             HStack(alignment: .top, spacing: 20) {
@@ -188,7 +188,7 @@ struct AddNodeView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("NMOS-Gerät hinzufügen").font(.title2.weight(.semibold))
-            Text("IP-Adresse des Blackmagic-Geräts eingeben (steht im LCD-Menü unter „Setup › Netzwerk“), z. B. 192.168.10.21. Optional mit Port oder vollständiger URL.")
+            InfoRow("IP-Adresse des Geräts, z. B. 192.168.10.21", info: "Die Adresse steht im LCD-Menü unter „Setup › Netzwerk“. Optional mit Port oder vollständiger URL.")
                 .font(.callout).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             TextField("Adresse", text: $address).textFieldStyle(.roundedBorder)

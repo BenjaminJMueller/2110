@@ -281,7 +281,7 @@ private struct SenderControlSection: View {
                     }
                     .controlSize(.small)
                 } else {
-                    Text("Änderungen am Sender sind unter „Erweitert › NMOS & Adressen“ freizuschalten.")
+                    Text("Freischalten unter Erweitert › NMOS & Adressen.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 if let m = message { Text(tr(m)).font(.caption).foregroundStyle(.secondary) }

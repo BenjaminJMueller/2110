@@ -28,7 +28,7 @@ struct SourceEditorView: View {
                 }
                 .frame(width: 260)
             }
-            Text("Tipp: SDP-Dateien lassen sich auf die Felder ziehen. Eine SDP mit Video und Audio wird automatisch aufgeteilt.")
+            Text("SDP-Dateien lassen sich auf die Felder ziehen.")
                 .font(.caption).foregroundStyle(.secondary)
             HStack {
                 Spacer()
