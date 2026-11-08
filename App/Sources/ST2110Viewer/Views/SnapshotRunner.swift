@@ -102,6 +102,9 @@ enum SnapshotRunner {
                 await wait(3)
                 log(String(format: "Helligkeit Ausgabe (%@): %.3f", d.name, brightness(screen: d.id)))
                 log("Ausgabe: " + model.output.debugSummary)
+                if let n = model.output.windowNumber {
+                    log(String(format: "Helligkeit Ausgabefenster: %.3f", brightness(args: ["-x", "-o", "-l", String(n)])))
+                }
                 log("Hauptbild: " + model.player.renderer.debugSummary)
                 saveScreen(d.id, "ausgabe")
                 model.output.hide()

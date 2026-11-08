@@ -24,6 +24,7 @@ final class ExternalOutput {
     var isActive: Bool { activeDisplay != nil }
     var activeName: String? { displays.first { $0.id == activeDisplay }?.name }
     func dismissMessage() { message = nil }
+    var windowNumber: Int? { window?.windowNumber }
     var debugSummary: String {
         guard let window, let renderer else { return "keine Ausgabe" }
         let v = window.contentView
@@ -117,10 +118,11 @@ final class ExternalOutput {
         w.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.mainMenuWindow)) + 1)
         w.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
         w.title = "2110 Viewer – Ausgabe"
-        let v = OutputView(frame: .zero)
-        r.configure(v)
-        v.setAccessibilityLabel("Videoausgabe auf zweitem Bildschirm")
-        w.contentView = v
+        // Gleicher Aufbau wie das Bild im Hauptfenster (SwiftUI um eine MTKView);
+        // eine nackte MTKView als contentView blieb auf manchen Macs schwarz.
+        let host = NSHostingView(rootView: OutputContent(renderer: r))
+        host.setAccessibilityLabel("Videoausgabe auf zweitem Bildschirm")
+        w.contentView = host
         renderer = r
         window = w
         return w
@@ -140,15 +142,18 @@ private final class OutputWindow: NSWindow {
     }
 }
 
-/// Metal-Ansicht, die den Mauszeiger über der Ausgabe ausblendet.
-private final class OutputView: MTKView {
-    override func resetCursorRects() {
-        addCursorRect(bounds, cursor: Self.blank)
+/// Inhalt der Ausgabe: nur das Bild auf Schwarz, Mauszeiger ausgeblendet.
+private struct OutputContent: View {
+    let renderer: VideoRenderer
+
+    var body: some View {
+        ZStack {
+            Color.black
+            VideoSurface(renderer: renderer)
+        }
+        .ignoresSafeArea()
+        .onContinuousHover { _ in NSCursor.setHiddenUntilMouseMoves(true) }
     }
-    private static let blank: NSCursor = {
-        let img = NSImage(size: NSSize(width: 1, height: 1))
-        return NSCursor(image: img, hotSpot: .zero)
-    }()
 }
 
 /// Menü für Symbolleiste und Wiedergabe-Steuerung.
