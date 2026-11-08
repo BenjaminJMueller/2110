@@ -129,7 +129,7 @@ public enum Diagnosis {
             if !i.isUp {
                 out.append(Hint(id: "if-down", severity: .error, certainty: .measured,
                                 title: "Netzwerkschnittstelle ohne Verbindung",
-                                detail: "„\(i.displayName)“ (\(i.name)) meldet keine Verbindung. Bitte Kabel bzw. Adapter prüfen."))
+                                detail: "„\(i.displayName)“ hat keine Verbindung. Kabel oder Adapter prüfen."))
             } else if i.ipv4 == nil {
                 out.append(Hint(id: "if-noip", severity: .error, certainty: .measured,
                                 title: "Schnittstelle ohne IPv4-Adresse",
@@ -138,11 +138,11 @@ public enum Diagnosis {
             if i.isWireless {
                 out.append(Hint(id: "if-wifi", severity: .warning, certainty: .measured,
                                 title: "WLAN ausgewählt",
-                                detail: "Unkomprimiertes ST 2110 (ca. 1–2,6 Gbit/s je HD-Strom) ist über WLAN nicht empfangbar. Bitte den Ethernet-Anschluss (z. B. Thunderbolt-10-GbE-Adapter) wählen."))
+                                detail: "ST 2110 braucht 1 bis 2,6 Gbit/s je HD-Strom, das schafft WLAN nicht. Ethernet wählen, etwa einen 10-GbE-Adapter."))
             } else if i.linkSpeedBps > 0 && i.linkSpeedBps < 2_500_000_000 && d.expectsVideo {
                 out.append(Hint(id: "if-slow", severity: .warning, certainty: .measured,
                                 title: "Verbindung zu langsam für unkomprimiertes HD-Video",
-                                detail: "Die Schnittstelle meldet \(i.speedText ?? "?"). 1080p25 benötigt ca. 1,1 Gbit/s, 1080p50 ca. 2,2 Gbit/s. Bitte einen 10-GbE-Anschluss verwenden."))
+                                detail: "Die Schnittstelle hat \(i.speedText ?? "?"). 1080p25 braucht etwa 1,1 Gbit/s, 1080p50 etwa 2,2 Gbit/s. 10-GbE verwenden."))
             }
             if let s = d.senderAddress, IPv4(s) != nil, !(IPv4(s)?.isMulticast ?? false), i.ipv4 != nil, !i.contains(s) {
                 let alt = d.otherInterfaces.first(where: { $0.contains(s) && $0.name != i.name })
@@ -163,7 +163,7 @@ public enum Diagnosis {
             if d.nmosSenderEnabled == false {
                 out.append(Hint(id: "nmos-disabled", severity: .error, certainty: .measured,
                                 title: "Sender ist am Gerät deaktiviert",
-                                detail: "Laut NMOS (IS-05) ist der Sender nicht aktiv (master_enable = false). Er kann unter „Erweitert“ aktiviert werden."))
+                                detail: "Laut NMOS ist der Sender aus. Unter „Erweitert“ lässt er sich einschalten."))
             }
             out.append(Hint(id: "mc-causes", severity: .info, certainty: .suspected,
                             title: "Mögliche Ursachen",
@@ -171,12 +171,12 @@ public enum Diagnosis {
             if d.ptpRequested && d.ptpDomainsSeen > 0 {
                 out.append(Hint(id: "ptp-seen", severity: .info, certainty: .measured,
                                 title: "Netz grundsätzlich erreichbar",
-                                detail: "PTP-Pakete kommen an. Die Verbindung zum Netz steht also; das Problem betrifft vermutlich nur die Multicast-Ströme."))
+                                detail: "PTP kommt an, das Netz steht. Vermutlich betrifft es nur die Multicast-Ströme."))
             }
         case .stalled:
             out.append(Hint(id: "stalled", severity: .error, certainty: .measured,
                             title: "Signal unterbrochen",
-                            detail: "Seit \(Int(d.secondsInState)) s kommen keine Pakete mehr. Die App verbindet sich automatisch neu, sobald wieder Daten eintreffen."))
+                            detail: "Seit \(Int(d.secondsInState)) s keine Pakete. Die App verbindet sich neu, sobald wieder Daten kommen."))
             out.append(Hint(id: "stalled-causes", severity: .info, certainty: .suspected,
                             title: "Mögliche Ursachen",
                             detail: "• Sender neu gestartet oder umkonfiguriert\n• SDI-Signal am Blackmagic-Gerät fehlt\n• Kabel/Adapter getrennt\n• Multicast-Mitgliedschaft am Switch abgelaufen (IGMP-Querier fehlt)"))
@@ -188,36 +188,36 @@ public enum Diagnosis {
             if d.expectsVideo && d.videoPackets == 0 && d.secondsInState > 3 {
                 out.append(Hint(id: "video-missing", severity: .warning, certainty: .measured,
                                 title: "Nur Audio empfangen",
-                                detail: "Audiopakete kommen an, Videopakete nicht. Video-Multicastadresse/Port in der SDP prüfen."))
+                                detail: "Audio kommt an, Video nicht. Videoadresse und Port in der SDP prüfen."))
             }
             if d.expectsAudio && d.audioPackets == 0 && d.secondsInState > 3 {
                 out.append(Hint(id: "audio-missing", severity: .warning, certainty: .measured,
                                 title: "Nur Video empfangen",
-                                detail: "Videopakete kommen an, Audiopakete nicht. Audio-SDP prüfen oder Audiosender am Gerät aktivieren."))
+                                detail: "Video kommt an, Audio nicht. Audio-SDP prüfen oder Audiosender am Gerät einschalten."))
             }
             let vTotal = d.videoPackets + d.videoLost
             if vTotal > 10_000 {
                 let ratio = Double(d.videoLost) / Double(vTotal)
                 if ratio > 0.0001 {
                     out.append(Hint(id: "loss", severity: ratio > 0.001 ? .warning : .info, certainty: .measured,
-                                    title: String(format: "Paketverluste Video: %.3f %%", ratio * 100),
-                                    detail: "Mögliche Ursachen: Netzwerkadapter oder Switch überlastet, Mac stark ausgelastet, Empfangspuffer zu klein (\(d.socketBufferBytes / 1024 / 1024) MB; macOS begrenzt ihn standardmäßig auf 8 MB)."))
+                                    title: String(format: "Video-Paketverlust %.2f %%", ratio * 100),
+                                    detail: "Möglich: Adapter oder Switch überlastet, Mac ausgelastet oder Empfangspuffer zu klein (\(d.socketBufferBytes / 1024 / 1024) MB, macOS erlaubt höchstens 8 MB)."))
                 }
             }
             if d.ptpRequested && !d.ptpActive {
                 out.append(Hint(id: "ptp-fallback", severity: .warning, certainty: .measured,
                                 title: "Ohne PTP wiedergegeben",
-                                detail: "PTP war gewünscht, ist aber nicht aktiv. Video und Audio werden über ihre RTP-Zeitstempel zueinander ausgerichtet (lippensynchron, aber nicht am Grandmaster ausgerichtet)."))
+                                detail: "Kein PTP verfügbar. Bild und Ton bleiben über ihre Zeitstempel lippensynchron, nur nicht am Studiotakt."))
             }
             if d.ptpActive && d.ptpGrandmasterMatchesSDP == 0 {
                 out.append(Hint(id: "ptp-gm", severity: .warning, certainty: .measured,
                                 title: "Anderer Grandmaster als in der SDP",
-                                detail: "Der Mac ist auf einen anderen PTP-Grandmaster synchronisiert, als der Sender in seiner SDP angibt. Möglicherweise haben sich die Grandmaster gewechselt oder die SDP ist veraltet."))
+                                detail: "Der Mac folgt einem anderen Grandmaster als in der SDP angegeben. Vielleicht hat er gewechselt oder die SDP ist alt."))
             }
             if d.latencyRaised {
                 out.append(Hint(id: "latency", severity: .info, certainty: .measured,
                                 title: "Wiedergabepuffer erhöht",
-                                detail: String(format: "Daten kamen später als erwartet; der Puffer wurde automatisch auf %.0f ms erhöht. Video und Audio bleiben dabei gleichermaßen verzögert.", d.latencyMs)))
+                                detail: String(format: "Daten kamen spät, der Puffer steht jetzt auf %.0f ms. Bild und Ton bleiben synchron.", d.latencyMs)))
             }
         }
         return out.sorted { $0.severity > $1.severity }

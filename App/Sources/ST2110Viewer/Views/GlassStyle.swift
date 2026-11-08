@@ -130,3 +130,41 @@ enum Theme {
     static let accent = Color.accentColor
     static let cardRadius: CGFloat = 12
 }
+
+/// Einstellungszeile wie in den Systemeinstellungen: Bezeichnung links, Steuerelement rechts.
+struct SettingRow<Content: View>: View {
+    let title: String
+    @ViewBuilder var content: Content
+
+    init(_ title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(tr(title))
+            Spacer(minLength: 8)
+            content
+        }
+    }
+}
+
+/// Schalterzeile: Bezeichnung links, Schalter rechts.
+struct SwitchRow: View {
+    let title: String
+    @Binding var isOn: Bool
+
+    init(_ title: String, isOn: Binding<Bool>) {
+        self.title = title
+        self._isOn = isOn
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(tr(title))
+            Spacer(minLength: 8)
+            Toggle(tr(title), isOn: $isOn).labelsHidden().toggleStyle(.switch)
+        }
+    }
+}

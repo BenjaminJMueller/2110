@@ -52,6 +52,9 @@ final class SenderController {
     private(set) var isSending = false
     private(set) var isStarting = false
     private(set) var stats: st_sender_stats?
+    struct Live: Equatable { var rate = LiveSeries(), late = LiveSeries(), audioBuffer = LiveSeries() }
+    private(set) var live = Live()
+    private var lastLate: UInt64?
     private(set) var videoSDP: String?
     private(set) var audioSDP: String?
     private(set) var interface: InterfaceSnapshot?
@@ -195,6 +198,8 @@ final class SenderController {
         }
 
         if announceNMOS { publishNMOS(settings: settings) }
+        live = Live()
+        lastLate = nil
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
@@ -217,8 +222,19 @@ final class SenderController {
         stats = nil
     }
 
+    private var tickCount = 0
+
     private func tick() {
         stats = sender?.stats()
+        tickCount += 1
+        if tickCount % 2 == 0, let s = stats {
+            var l = live
+            l.rate.append(s.video_mbps)
+            if let p = lastLate, s.late_packets >= p { l.late.append(Double(s.late_packets - p)) }
+            lastLate = s.late_packets
+            l.audioBuffer.append(s.audio_fill_ms)
+            live = l
+        }
         // Nach PTP-Lock stehen Grandmaster-ID und neue SDP bereit
         if let s = sender, let v = s.sdp(video: true), v != videoSDP {
             videoSDP = v

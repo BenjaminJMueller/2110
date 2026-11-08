@@ -1,3 +1,4 @@
+import AppKit
 import ST2110Kit
 import SwiftUI
 
@@ -48,8 +49,7 @@ private struct NetworkTab: View {
                     Text(tr(i.menuTitle)).tag(i.name)
                 }
             }
-            Text("„Automatisch“ wählt die Schnittstelle im Netz des Senders, sonst die schnellste kabelgebundene. Änderungen gelten beim nächsten Start einer Quelle.")
-                .font(.caption).foregroundStyle(.secondary)
+            InfoRow("Gilt ab dem nächsten Start einer Quelle.", info: "„Automatisch“ wählt die Schnittstelle im Netz des Senders, sonst die schnellste kabelgebundene.")
             Toggle("Quellfilter (Source-Specific Multicast) verwenden, wenn die SDP eine Sender-IP nennt", isOn: $model.settings.useSourceFilter)
             Picker("Empfangspuffer", selection: $model.settings.socketBufferMB) {
                 Text("Automatisch (so groß wie macOS erlaubt)").tag(0)
@@ -73,9 +73,7 @@ private struct SyncTab: View {
                 ForEach(AppSettings.SyncChoice.allCases) { Text(tr($0.title)).tag($0) }
             }
             .pickerStyle(.radioGroup)
-            Text("Automatisch: Der Mac lauscht als passiver PTP-Follower (nur Slave, wird nie Master) und richtet Bild und Ton an der PTP-Zeit aus. Ohne Grandmaster werden Bild und Ton über ihre RTP-Zeitstempel zueinander ausgerichtet. „Einfache Vorschau“ gibt jeden Strom bei Ankunft wieder und ist nicht lippensynchron.")
-                .font(.caption).foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            InfoRow("„Automatisch“ passt fast immer.", info: "Automatisch: Der Mac lauscht als passiver PTP-Follower (nur Slave, wird nie Master) und richtet Bild und Ton an der PTP-Zeit aus. Ohne Grandmaster werden Bild und Ton über ihre RTP-Zeitstempel zueinander ausgerichtet. „Einfache Vorschau“ gibt jeden Strom bei Ankunft wieder und ist nicht lippensynchron.")
             Picker("PTP-Domain", selection: $model.settings.ptpDomain) {
                 Text("Aus SDP (sonst 127)").tag(-1)
                 ForEach([0, 1, 127], id: \.self) { Text(tr("\($0)")).tag($0) }
@@ -108,9 +106,7 @@ private struct AudioTab: View {
                     model.player.setAudioDelay(Int($0))
                 }), in: 0...500, step: 5)
             }
-            Text("Gleicht z. B. die Verzögerung eines Bildschirms aus. Ersetzt keine korrekte Synchronisation; die Lippensynchron-Messung in der Diagnose erfolgt ohne diesen Versatz.")
-                .font(.caption).foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            InfoRow("Gleicht verzögernde Bildschirme aus.", info: "Gleicht z. B. die Verzögerung eines Bildschirms aus. Ersetzt keine korrekte Synchronisation; die Lippensynchron-Messung in der Diagnose erfolgt ohne diesen Versatz.")
             Button("Versatz zurücksetzen") {
                 model.settings.audioDelayMs = 0
                 model.player.setAudioDelay(0)
@@ -163,10 +159,9 @@ private struct NMOSTab: View {
             }
             Section("Multicast") {
                 TextField("Erlaubter Multicast-Bereich", text: $model.settings.multicastRange)
-                Text("Wird bei manueller Eingabe und beim Setzen von Zieladressen über IS-05 geprüft.")
-                    .font(.caption).foregroundStyle(.secondary)
+                InfoRow("Gilt für manuelle Eingabe und IS-05.", info: "Wird bei manueller Eingabe und beim Setzen von Zieladressen über IS-05 geprüft.")
                 Toggle("Sender über NMOS IS-05 verändern dürfen (aktivieren, Zieladresse setzen)", isOn: $model.settings.allowSenderControl)
-                Text("Achtung: Änderungen wirken auf das Gerät und damit auf alle Empfänger im Netz.")
+                Text("Wirkt auf das Gerät und damit auf alle Empfänger.")
                     .font(.caption).foregroundStyle(.orange)
             }
             Section("Status") {
@@ -192,11 +187,56 @@ private struct AboutTab: View {
                 LabeledContent("Fehlende Komponenten", value: GStreamerEnvironment.missingPlugins)
             }
             LabeledContent("macOS", value: ProcessInfo.processInfo.operatingSystemVersionString)
-            Text("Diese App enthält GStreamer (LGPL 2.1) und weitere Open-Source-Bibliotheken. Lizenztexte: App-Paket › Contents › Resources › Licenses.")
-                .font(.caption).foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            Section("Lizenzen") {
+                LicenseLink(name: "2110 Viewer", license: "MIT", url: "https://github.com/BenjaminJMueller/2110/blob/main/LICENSE")
+                LicenseLink(name: "GStreamer 1.28", license: "LGPL-2.1", url: "https://gstreamer.freedesktop.org/documentation/frequently-asked-questions/licensing.html")
+                LicenseLink(name: "GLib", license: "LGPL-2.1", url: "https://gitlab.gnome.org/GNOME/glib/-/blob/main/COPYING")
+                LicenseLink(name: "ORC", license: "BSD", url: "https://gitlab.freedesktop.org/gstreamer/orc/-/blob/main/COPYING")
+                LicenseLink(name: "libffi", license: "MIT", url: "https://github.com/libffi/libffi/blob/master/LICENSE")
+                LicenseLink(name: "PCRE2", license: "BSD", url: "https://github.com/PCRE2Project/pcre2/blob/master/LICENCE.md")
+                LicenseLink(name: "zlib", license: "zlib", url: "https://zlib.net/zlib_license.html")
+                LicenseLink(name: "GNU LGPL 2.1 (Volltext)", license: "", url: "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html")
+                LicenseLink(name: "Alle Drittanbieter-Hinweise", license: "", url: "https://github.com/BenjaminJMueller/2110/blob/main/THIRD_PARTY_NOTICES.md")
+                LicenseLink(name: "Quellcode der eingebetteten Bibliotheken", license: "", url: "https://github.com/BenjaminJMueller/2110/releases/latest")
+                Button("Lizenztexte in der App zeigen") {
+                    let dir = Bundle.main.resourceURL?.appendingPathComponent("Licenses")
+                    if let dir, FileManager.default.fileExists(atPath: dir.path) { NSWorkspace.shared.open(dir) }
+                }
+            }
             Button("Einführung erneut anzeigen") { model.showOnboarding = true }
         }
         .formStyle(.grouped)
+    }
+}
+
+/// Zeile mit Name, Lizenz und Link.
+private struct LicenseLink: View {
+    let name: String
+    let license: String
+    let url: String
+
+    var body: some View {
+        HStack {
+            Text(tr(name))
+            Spacer()
+            if !license.isEmpty { Text(license).foregroundStyle(.secondary) }
+            if let u = URL(string: url) {
+                Link(destination: u) { Image(systemName: "arrow.up.right.square") }
+                    .help(url)
+            }
+        }
+    }
+}
+
+/// Kurzer Hinweis mit Info-Knopf für die ausführliche Erklärung.
+struct InfoRow: View {
+    let short: String
+    let info: String
+    init(_ short: String, info: String) { self.short = short; self.info = info }
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(tr(short)).font(.caption).foregroundStyle(.secondary)
+            InfoButton(text: info)
+        }
     }
 }

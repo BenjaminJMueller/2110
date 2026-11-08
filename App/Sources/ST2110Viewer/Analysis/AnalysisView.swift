@@ -46,6 +46,7 @@ struct AnalysisView: View {
 }
 
 private struct AnalysisEmptyView: View {
+    @Environment(AppModel.self) private var model
     @Binding var importing: Bool
 
     var body: some View {
@@ -57,10 +58,16 @@ private struct AnalysisEmptyView: View {
             Text("Mitschnitt analysieren").font(.title.weight(.semibold))
             Text("Eine pcap- oder pcapng-Datei hierher ziehen. Die App findet die ST-2110-Ströme und prüft Verluste, Zeitverhalten, PTP und IGMP.")
                 .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: 460)
-            Button { importing = true } label: { Label("Mitschnitt öffnen …", systemImage: "folder") }
-                .controlButtonStyle(prominent: true)
-                .controlSize(.large)
-                .padding(.top, 4)
+            HStack(spacing: 12) {
+                Button { importing = true } label: { Label("Mitschnitt öffnen …", systemImage: "folder") }
+                    .controlButtonStyle(prominent: true)
+                Button { model.analysis.startLive(model: model) } label: { Label("Empfang live analysieren", systemImage: "waveform.path.ecg") }
+                    .controlButtonStyle()
+                    .disabled(!model.player.isActive || model.player.isDemo)
+                    .help("Analysiert die laufende Quelle fortlaufend in Abschnitten von 3 Sekunden")
+            }
+            .controlSize(.large)
+            .padding(.top, 4)
             VStack(alignment: .leading, spacing: 10) {
                 Label("Aufnehmen direkt beim Empfang: Diagnose › Mitschnitt", systemImage: "record.circle")
                 Label("Genaueste Zeitwerte liefert ein Hardware-Mitschnitt, etwa über den Spiegelport des Switches.", systemImage: "network")
@@ -133,8 +140,22 @@ private struct CaptureHeader: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {
                 Text(tr(entry.url.lastPathComponent)).font(.title2.weight(.medium))
+                if model.analysis.isLive(entry) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "circle.fill").font(.system(size: 8)).foregroundStyle(.red)
+                            .symbolEffect(.pulse, options: .repeating)
+                        Text("Live").font(.caption.weight(.semibold))
+                    }
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Color.red.opacity(0.12), in: Capsule())
+                }
                 Spacer()
-                Button("Als JSON exportieren …") { model.analysis.exportJSON(entry) }.controlSize(.small)
+                if model.analysis.isLive(entry) {
+                    Button { model.analysis.stopLive() } label: { Label("Live beenden", systemImage: "stop.fill") }
+                        .controlButtonStyle()
+                } else if entry.url.isFileURL && FileManager.default.fileExists(atPath: entry.url.path) {
+                    Button("Als JSON exportieren …") { model.analysis.exportJSON(entry) }.controlSize(.small)
+                }
             }
             Text(tr(captureLine(c)))
                 .font(.callout.monospacedDigit()).foregroundStyle(.secondary)

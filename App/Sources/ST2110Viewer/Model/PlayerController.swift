@@ -31,6 +31,12 @@ final class PlayerController {
     private(set) var audio: SDPMedia?
     private(set) var isDemo = false
     private(set) var stats: st_stats?
+    /// Verläufe für die Live-Diagramme (ein Wert je Sekunde)
+    struct Live: Equatable {
+        var rate = LiveSeries(), fps = LiveSeries(), loss = LiveSeries(), transit = LiveSeries(), audioLoss = LiveSeries()
+    }
+    private(set) var live = Live()
+    private var lastCounts: (vp: UInt64, vl: UInt64, ap: UInt64, al: UInt64)?
     private(set) var levels: [Float] = []
     private(set) var coreState: st_state = ST_STATE_STOPPED
     private(set) var stateSince = Date()
@@ -112,6 +118,8 @@ final class PlayerController {
     private func start(source: SavedSource, settings: AppSettings, demo: Bool) {
         let previous = receiver
         receiver = nil
+        live = Live()
+        lastCounts = nil
         generation += 1
         let gen = generation
         self.settings = settings
@@ -319,7 +327,25 @@ final class PlayerController {
         }
         levels = r.levels()
         if tick % 5 == 0 { stats = r.stats() }
+        if tick % 20 == 0, let s = stats { recordLive(s) }
         if tick % 20 == 0 { watchdog() }
+    }
+
+    private func recordLive(_ s: st_stats) {
+        func pct(_ lost: UInt64, _ got: UInt64) -> Double {
+            let total = Double(lost) + Double(got)
+            return total > 0 ? Double(lost) / total * 100 : 0
+        }
+        var l = live
+        l.rate.append(s.v_rate_mbps)
+        l.fps.append(s.v_fps_measured)
+        l.transit.append(s.v_transit_ms)
+        if let c = lastCounts, s.v_packets >= c.vp, s.v_lost >= c.vl, s.a_packets >= c.ap, s.a_lost >= c.al {
+            l.loss.append(pct(s.v_lost - c.vl, s.v_packets - c.vp))
+            l.audioLoss.append(pct(s.a_lost - c.al, s.a_packets - c.ap))
+        }
+        lastCounts = (s.v_packets, s.v_lost, s.a_packets, s.a_lost)
+        live = l
     }
 
     private func watchdog() {
@@ -368,6 +394,14 @@ final class PlayerController {
     private(set) var recordingURL: URL?
 
     /// Zeichnet die empfangenen Pakete als pcapng auf (Software-Zeitstempel).
+    /// Mitschnitt in eine bestimmte Datei (für die Live-Analyse), ohne Eintrag im Protokoll.
+    func startRecording(to url: URL, seconds: Int) -> Bool {
+        guard let r = receiver else { return false }
+        return r.startRecording(path: url.path, seconds: seconds) == nil
+    }
+
+    func stopRecordingQuietly() { receiver?.stopRecording() }
+
     func startRecording(seconds: Int) -> URL? {
         guard let r = receiver else { return nil }
         let dir = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask)[0].appendingPathComponent("2110-Viewer-Mitschnitte", isDirectory: true)

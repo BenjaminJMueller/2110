@@ -134,7 +134,7 @@ private struct Tile: View {
             Text(tr(text)).font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .padding(.vertical, 24).padding(.horizontal, 16)
         .cardBackground(cornerRadius: 18)
         .accessibilityElement(children: .combine)
@@ -158,6 +158,7 @@ private struct WelcomePage: View {
                 Tile(icon: "dot.radiowaves.up.forward", title: "Senden", text: "Testbild, Datei oder Kamera ins Netz")
                 Tile(icon: "waveform.path.ecg.rectangle.fill", title: "Analysieren", text: "Mitschnitte auf Fehler prüfen")
             }
+            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: 680)
             Spacer(minLength: 0)
         }
@@ -276,6 +277,7 @@ private struct ReadyPage: View {
                 Tile(icon: "network", title: "Lokales Netzwerk", text: "Erlauben, damit die App Geräte findet")
                 Tile(icon: "tv", title: "Ohne Netzwerk", text: "Testbild und Testton ansehen", tint: .orange)
             }
+            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: 520)
             HStack(spacing: 12) {
                 Button { demo() } label: { Label("Testbild ansehen", systemImage: "tv").frame(minWidth: 150) }

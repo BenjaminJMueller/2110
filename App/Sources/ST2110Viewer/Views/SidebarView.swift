@@ -24,14 +24,14 @@ struct SidebarView: View {
                 }
             }
 
-            Section("Gespeichert") {
+            Section("Zuletzt verwendet") {
                 if model.saved.isEmpty {
                     Label("SDP-Datei hierher ziehen", systemImage: "arrow.down.doc")
                         .foregroundStyle(.secondary)
                         .help("SDP-Dateien ins Fenster ziehen oder mit ＋ hinzufügen")
                 } else {
                     ForEach(model.saved.sorted(by: { ($0.lastUsed ?? $0.createdAt) > ($1.lastUsed ?? $1.createdAt) })) { s in
-                        SavedRow(source: s)
+                        SavedRow(source: s) { model.delete(s.id) }
                             .tag(SidebarItem.saved(s.id))
                             .contextMenu {
                                 Button("Bearbeiten …") { model.edit(s.id) }
@@ -154,6 +154,8 @@ private struct DiscoveredRow: View {
 
 private struct SavedRow: View {
     let source: SavedSource
+    let onDelete: () -> Void
+    @State private var hovering = false
 
     var body: some View {
         HStack(spacing: 8) {
@@ -162,12 +164,24 @@ private struct SavedRow: View {
                 .frame(width: 18)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 1) {
-                Text(tr(source.name))
+                Text(tr(source.name)).lineLimit(1)
                 Text(tr(subtitle))
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
+            Spacer(minLength: 4)
+            Button(action: onDelete) {
+                Image(systemName: "xmark.circle.fill")
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .opacity(hovering ? 1 : 0.35)
+            .help("Aus der Liste entfernen")
+            .accessibilityLabel("Entfernen")
         }
+        .onHover { hovering = $0 }
     }
 
     private var icon: String {

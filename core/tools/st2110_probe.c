@@ -73,8 +73,20 @@ static void on_event(void *user, st_event ev, int code, const char *message)
 static uint64_t g_frames = 0;
 static void on_frame(void *user, const st_video_frame *f) { (void)user; (void)f; g_frames++; }
 
+#include <dirent.h>
+static int count_fds(void)
+{
+    int n = 0;
+    DIR *d = opendir("/dev/fd");
+    if (!d) return -1;
+    while (readdir(d)) n++;
+    closedir(d);
+    return n;
+}
+
 int main(int argc, char **argv)
 {
+    int restart_test = 0;
     st_receiver_config cfg;
     memset(&cfg, 0, sizeof cfg);
     cfg.sync_mode = ST_SYNC_RTP_ALIGNED;
@@ -95,6 +107,7 @@ int main(int argc, char **argv)
         else if (OPT("--mode")) cfg.sync_mode = strcmp(v, "preview") == 0 ? ST_SYNC_PREVIEW : strcmp(v, "ptp") == 0 ? ST_SYNC_PTP : ST_SYNC_RTP_ALIGNED;
         else if (OPT("--duration")) duration = atoi(v);
         else if (OPT("--latency")) cfg.latency_ms = atoi(v);
+        else if (OPT("--restart-test")) restart_test = atoi(v);
         else if (OPT("--ptp-domain")) cfg.ptp_domain = atoi(v);
         else if (OPT("--record")) record = v;
         else if (strcmp(a, "--fixed-latency") == 0) cfg.auto_latency = 0;
@@ -123,6 +136,23 @@ int main(int argc, char **argv)
     printf("[Info] GStreamer %s, Modus: %s\n", st_gstreamer_version(), st_sync_mode_name(cfg.sync_mode));
 
     st_callbacks cb = { .user = NULL, .video_frame = on_frame, .event = on_event };
+    if (restart_test > 0) {
+        /* Dauertest für Neustarts: offene Dateideskriptoren dürfen nicht wachsen. */
+        int first = -1, last = -1;
+        for (int i = 0; i < restart_test; i++) {
+            st_receiver *x = st_receiver_new(&cfg, &cb, err, sizeof err);
+            if (!x) { fprintf(stderr, "%s\n", err); return 1; }
+            if (st_receiver_start(x, err, sizeof err)) fprintf(stderr, "Start %d: %s\n", i, err);
+            usleep(100000);
+            st_receiver_free(x);
+            int n = count_fds();
+            if (i == 2) first = n;
+            last = n;
+            if (i % 20 == 0) printf("Neustart %d: %d offene Dateideskriptoren\n", i, n);
+        }
+        printf("RESTART_FDS first=%d last=%d\n", first, last);
+        return last > first + 4 ? 3 : 0;
+    }
     st_receiver *r = st_receiver_new(&cfg, &cb, err, sizeof err);
     if (!r) { fprintf(stderr, "%s\n", err); return 1; }
     if (st_receiver_start(r, err, sizeof err)) { fprintf(stderr, "%s\n", err); st_receiver_free(r); return 1; }

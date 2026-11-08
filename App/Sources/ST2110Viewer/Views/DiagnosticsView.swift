@@ -13,7 +13,7 @@ struct DiagnosticsView: View {
     var body: some View {
         let p = model.player
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 18) {
                 HStack {
                     Text("Diagnose").font(.title3.weight(.semibold))
                     Spacer()
@@ -34,17 +34,27 @@ struct DiagnosticsView: View {
                     .help("Diagnosebericht als Textdatei speichern")
                 }
 
+                if p.isActive && !p.isDemo {
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                        LiveChartTile(title: "Datenrate", unit: "Mbit/s", series: p.live.rate)
+                        LiveChartTile(title: "Bildrate", unit: "B/s", series: p.live.fps, format: "%.2f")
+                        LiveChartTile(title: "Verlust Video", unit: "%", series: p.live.loss, format: "%.2f", warnAbove: 0.01,
+                                      info: "Anteil der Videopakete, die in der letzten Sekunde gefehlt haben.")
+                        LiveChartTile(title: "Laufzeit", unit: "ms", series: p.live.transit, format: "%.1f",
+                                      info: "Zeit von der Aufnahme beim Sender bis zur Ankunft am Mac, aus den RTP-Zeitstempeln.")
+                    }
+                }
+
                 if !p.hints.isEmpty {
                     GroupedBox("Hinweise") {
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 12) {
                             ForEach(p.hints) { h in
-                                HStack(alignment: .top, spacing: 8) {
-                                    Image(systemName: h.severity == .error ? "xmark.octagon.fill" : h.severity == .warning ? "exclamationmark.triangle.fill" : "info.circle")
-                                        .foregroundStyle(h.severity == .error ? .red : h.severity == .warning ? .orange : .secondary)
+                                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                                    Image(systemName: h.severity == .error ? "xmark.octagon.fill" : h.severity == .warning ? "exclamationmark.triangle.fill" : "info.circle.fill")
+                                        .foregroundStyle(h.severity == .error ? .red : h.severity == .warning ? .orange : .blue)
                                         .accessibilityHidden(true)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(tr(h.title + (h.certainty == .suspected ? " (vermutet)" : " (gemessen)")))
-                                            .font(.callout.weight(.semibold))
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(tr(h.title)).font(.callout.weight(.semibold))
                                         Text(tr(h.detail)).font(.callout).foregroundStyle(.secondary)
                                             .fixedSize(horizontal: false, vertical: true)
                                     }
@@ -56,135 +66,124 @@ struct DiagnosticsView: View {
                     }
                 }
 
-                if !p.isDemo && p.isActive {
-                    GroupedBox("Mitschnitt") {
-                        VStack(alignment: .leading, spacing: 6) {
-                            if p.isRecording, let s = p.stats {
-                                Text(tr(String(format: "Zeichnet auf: %.0f s, %llu Pakete", locale: .current, s.rec_seconds, s.rec_packets))).font(.callout.monospacedDigit())
-                            } else {
-                                ViewThatFits(in: .horizontal) {
-                                    HStack {
-                                        Button("10 s aufzeichnen und analysieren") { model.recordAndAnalyze(seconds: 10) }
-                                        Button("60 s") { model.recordAndAnalyze(seconds: 60) }
-                                    }
-                                    VStack(alignment: .leading) {
-                                        Button("10 s aufzeichnen und analysieren") { model.recordAndAnalyze(seconds: 10) }
-                                        Button("60 s") { model.recordAndAnalyze(seconds: 60) }
-                                    }
-                                }
-                                .controlSize(.small)
-                            }
-                            Text("Speichert die empfangenen Pakete als pcapng im Ordner Filme › 2110-Viewer-Mitschnitte. Zeitstempel stammen vom Programm; für genaue ST-2110-21-Werte einen Hardware-Mitschnitt verwenden.")
-                                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                if let v = p.video {
+                    section("Video") {
+                        row("Format", v.summary)
+                        row("Ziel", "\(v.destination):\(v.port)")
+                        if let s = p.stats, !p.isDemo {
+                            row("Bildgröße", s.v_width_seen > 0 ? "\(s.v_width_seen)×\(s.v_height_seen)\(s.v_interlace_seen != 0 ? "i" : "")" : "–")
+                            row("Pakete", s.v_packets.formatted())
+                            row("Verloren", s.v_lost.formatted() + lossPct(s.v_lost, s.v_packets))
+                            row("Bilder gezeigt", s.v_frames_rendered.formatted())
+                            row("Bilder verworfen", s.v_frames_dropped.formatted())
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        row("Farbraum", v.colorimetry.isEmpty ? "–" : v.colorimetry + (v.tcs.isEmpty ? "" : ", " + v.tcs))
+                        if !v.sourceAddress.isEmpty { row("Quelle (SSM)", v.sourceAddress) }
+                    }
+                }
+                if p.isDemo {
+                    section("Demo") {
+                        Label("Testbild aus dem Mac, ohne Netzwerkpakete", systemImage: "tv").font(.callout).foregroundStyle(.secondary)
+                    }
+                }
+                if let a = p.audio {
+                    section("Audio") {
+                        row("Format", a.summary)
+                        row("Ziel", "\(a.destination):\(a.port)")
+                        if let s = p.stats {
+                            if s.a_ptime_measured_ms > 0 { row("Paketzeit", String(format: "%.3f ms", locale: .current, s.a_ptime_measured_ms)) }
+                            row("Pakete", s.a_packets.formatted())
+                            row("Verloren", s.a_lost.formatted() + lossPct(s.a_lost, s.a_packets))
+                        }
+                    }
+                }
+                if let s = p.stats, !p.isDemo {
+                    section("Synchronisation", info: syncExplanation(s.sync_active)) {
+                        row("Modus", String(cString: st_sync_mode_name(s.sync_active)))
+                        row("Puffer", String(format: "%.0f ms", locale: .current, s.latency_ms) + (s.latency_auto_raised > 0 ? " ↑" : ""))
+                        row("Laufzeit V / A", String(format: "%.1f / %.1f ms", locale: .current, s.v_transit_ms, s.a_transit_ms))
+                        if s.sync_active == ST_SYNC_RTP_ALIGNED {
+                            row("Taktabweichung", String(format: "%.2f ppm", locale: .current, s.offset_drift_ppm))
+                        }
+                        row("Neuausrichtungen", s.resyncs.formatted())
+                        if s.sync_measurements > 0 {
+                            row("Ton zu Bild", String(format: "%+.1f ms", locale: .current, s.sync_offset_avg_ms))
+                        }
+                    }
+                    section("PTP", info: p.ptpMessage) {
+                        if s.ptp_enabled != 0 {
+                            row("Status", s.ptp_synced != 0 ? "synchron" : "nicht synchron")
+                            row("Domain", "\(s.ptp_domain)")
+                            row("Grandmaster", cString(s.ptp_grandmaster).isEmpty ? "–" : cString(s.ptp_grandmaster))
+                            row("Pfadverzögerung", String(format: "%.1f µs", locale: .current, s.ptp_path_delay_us))
+                        } else {
+                            row("Status", "nicht verwendet")
+                        }
+                    }
+                }
+
+                if !p.isDemo && p.isActive {
+                    section("Mitschnitt", info: "Speichert die empfangenen Pakete als pcapng im Ordner Filme › 2110-Viewer-Mitschnitte und öffnet sie in der Analyse. Die Zeitstempel stammen vom Programm; genaue ST-2110-21-Werte liefert nur ein Hardware-Mitschnitt.") {
+                        if p.isRecording, let s = p.stats {
+                            Label(tr(String(format: "Zeichnet auf: %.0f s, %llu Pakete", locale: .current, s.rec_seconds, s.rec_packets)), systemImage: "record.circle")
+                                .font(.callout.monospacedDigit()).foregroundStyle(.red)
+                        } else {
+                            HStack(spacing: 8) {
+                                Button { model.recordAndAnalyze(seconds: 10) } label: { Label("10 s", systemImage: "record.circle") }
+                                Button("60 s") { model.recordAndAnalyze(seconds: 60) }
+                                Button { model.mode = .analyze; model.analysis.startLive(model: model) } label: { Label("Live", systemImage: "waveform.path.ecg") }
+                                    .help("Analysiert den Empfang fortlaufend")
+                            }
+                            .controlSize(.small)
+                        }
                     }
                 }
 
                 section("Quelle") {
                     row("Name", p.current?.name ?? "–")
-                    row("Herkunft", p.isDemo ? "Demo (synthetisch)" : origin)
-                    if let i = p.interface { row("Schnittstelle", i.menuTitle) }
-                    if let s = p.stats { row("Empfangspuffer", "\(s.socket_buffer_bytes / 1024 / 1024) MB") }
-                }
-
-                if let v = p.video {
-                    section("Video laut SDP") {
-                        row("Format", v.summary)
-                        row("Farbraum / Kennlinie", "\(v.colorimetry.isEmpty ? "–" : v.colorimetry) / \(v.tcs.isEmpty ? "–" : v.tcs)\(v.range.isEmpty ? "" : " / " + v.range)")
-                        row("Ziel", "\(v.destination):\(v.port), PT \(v.payloadType)")
-                        row("Quelle (SSM)", v.sourceAddress.isEmpty ? "–" : v.sourceAddress)
-                        row("Zeitbezug", v.refclk.isEmpty ? "nicht angegeben" : v.refclk)
-                    }
-                }
-                if let s = p.stats, p.video != nil || p.isDemo {
-                    section("Video gemessen") {
-                        if p.isDemo {
-                            Text("Demo: Das Testbild entsteht im Mac, es gibt keine Netzwerkpakete. Datenrate, Bildrate und Verluste werden erst beim Empfang gemessen.")
-                                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                        } else {
-                        row("Datenrate", String(format: "%.0f Mbit/s", locale: .current, s.v_rate_mbps))
-                        row("Bildrate (RTP)", String(format: "%.3f B/s", locale: .current, s.v_fps_measured))
-                        row("Bildgröße", s.v_width_seen > 0 ? "\(s.v_width_seen)×\(s.v_height_seen)\(s.v_interlace_seen != 0 ? " (Halbbilder)" : "")" : "–")
-                        row("Pakete / verloren", "\(s.v_packets) / \(s.v_lost)\(lossPct(s.v_lost, s.v_packets))")
-                        row("Umsortiert / falscher PT", "\(s.v_reordered) / \(s.v_wrong_pt)")
-                        row("Bilder empf. / gezeigt / verworfen", "\(s.v_frames) / \(s.v_frames_rendered) / \(s.v_frames_dropped)")
-                        row("Letztes Paket vor", s.v_age_ms < 0 ? "–" : String(format: "%.0f ms", locale: .current, s.v_age_ms))
-                        }
-                    }
-                }
-                if let a = p.audio {
-                    section("Audio laut SDP") {
-                        row("Format", a.summary)
-                        row("Ziel", "\(a.destination):\(a.port), PT \(a.payloadType)")
-                        row("Quelle (SSM)", a.sourceAddress.isEmpty ? "–" : a.sourceAddress)
-                        row("Zeitbezug", a.refclk.isEmpty ? "nicht angegeben" : a.refclk)
-                    }
-                }
-                if let s = p.stats, p.audio != nil {
-                    section("Audio gemessen") {
-                        row("Paketzeit", s.a_ptime_measured_ms > 0 ? String(format: "%.3f ms (%d Byte Nutzlast)", locale: .current, s.a_ptime_measured_ms, s.a_payload_bytes) : "–")
-                        row("Pakete / verloren", "\(s.a_packets) / \(s.a_lost)\(lossPct(s.a_lost, s.a_packets))")
-                        row("Blöcke ausgegeben / verworfen", "\(s.a_buffers_rendered) / \(s.a_buffers_dropped)")
-                        row("Letztes Paket vor", s.a_age_ms < 0 ? "–" : String(format: "%.0f ms", locale: .current, s.a_age_ms))
-                    }
-                }
-                if let s = p.stats, !p.isDemo {
-                    section("Synchronisation") {
-                        row("Gewünscht", p.effectiveSync.title)
-                        row("Wirksam", String(cString: st_sync_mode_name(s.sync_active)))
-                        Text(tr(syncExplanation(s.sync_active)))
-                            .font(.caption).foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                        row("Wiedergabepuffer", String(format: "%.0f ms%@", locale: .current, s.latency_ms, s.latency_auto_raised > 0 ? " (automatisch erhöht)" : ""))
-                        row("Ankunft nach Aufnahme V / A", String(format: "%.1f / %.1f ms", locale: .current, s.v_transit_ms, s.a_transit_ms))
-                        row("Verspätung max. V / A", String(format: "%.1f / %.1f ms", locale: .current, s.v_late_max_ms, s.a_late_max_ms))
-                        if s.sync_active == ST_SYNC_RTP_ALIGNED {
-                            row("Taktabweichung Sender ↔ Mac", String(format: "%.2f ppm", locale: .current, s.offset_drift_ppm))
-                        }
-                        row("Neuausrichtungen", "\(s.resyncs)")
-                    }
-                    section("Lippensynchron-Messung (Testsignal)") {
-                        if s.sync_measurements > 0 {
-                            row("Ton gegenüber Bild", String(format: "%+.1f ms (Mittel %+.1f ms, n = %llu)", locale: .current, s.sync_offset_last_ms, s.sync_offset_avg_ms, s.sync_measurements))
-                        } else {
-                            row("Messwerte", "noch keine (\(s.flashes_seen) Blitze, \(s.onsets_seen) Toneinsätze erkannt)")
-                        }
-                        Text("Misst den Abstand zwischen weißem Blitz in der Bildmitte und Ton-Einsatz an den Ausgabezeitstempeln. Dafür ein Blitz/Piep-Testsignal am SDI-Eingang einspeisen. Bildschirm- und Audiogeräte-Latenz sind nicht enthalten; positiv = Ton später.")
-                            .font(.caption).foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    section("PTP") {
-                        if s.ptp_enabled != 0 {
-                            row("Status", s.ptp_synced != 0 ? "gelockt (passiver Follower, nur Slave)" : "nicht gelockt")
-                            row("Domain", "\(s.ptp_domain)")
-                            row("Grandmaster", cString(s.ptp_grandmaster).isEmpty ? "–" : cString(s.ptp_grandmaster))
-                            row("Master", cString(s.ptp_master).isEmpty ? "–" : cString(s.ptp_master))
-                            row("Pfadverzögerung", String(format: "%.1f µs", locale: .current, s.ptp_path_delay_us))
-                            row("GM wie in SDP", s.ptp_gm_matches_sdp < 0 ? "unbekannt" : (s.ptp_gm_matches_sdp != 0 ? "ja" : "nein"))
-                        } else {
-                            row("Status", "nicht verwendet")
-                        }
-                        if let m = p.ptpMessage {
-                            Text(tr(m)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
+                    row("Herkunft", p.isDemo ? "Demo" : origin)
+                    if let i = p.interface { row("Schnittstelle", i.displayName) }
                 }
                 if p.current?.nmos != nil {
                     SenderControlSection()
                 }
                 section("Ereignisse") {
-                    ForEach(p.log.suffix(40).reversed()) { e in
-                        HStack(alignment: .top) {
+                    ForEach(collapsedLog(p.log.suffix(60))) { e in
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
                             Text(e.date, style: .time).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                            Text(tr(e.text)).font(.caption).fixedSize(horizontal: false, vertical: true)
+                            Text(tr(e.text)).font(.caption).lineLimit(2)
+                            Spacer(minLength: 0)
+                            if e.count > 1 {
+                                Text("×\(e.count)").font(.caption2.monospacedDigit().weight(.semibold))
+                                    .padding(.horizontal, 6).padding(.vertical, 1)
+                                    .background(Color(nsColor: .quaternarySystemFill), in: Capsule())
+                            }
                         }
+                        .help(tr(e.text))
                     }
                 }
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    private struct CollapsedEvent: Identifiable {
+        let id: Int
+        let date: Date
+        let text: String
+        var count: Int
+    }
+
+    /// Gleiche aufeinanderfolgende Ereignisse zusammenfassen, neueste zuerst.
+    private func collapsedLog<C: Collection>(_ log: C) -> [CollapsedEvent] where C.Element == PlayerController.LogEntry {
+        var out: [CollapsedEvent] = []
+        for e in log.reversed() {
+            if let last = out.last, last.text == e.text { out[out.count - 1].count += 1; continue }
+            out.append(CollapsedEvent(id: out.count, date: e.date, text: e.text, count: 1))
+            if out.count >= 15 { break }
+        }
+        return out
     }
 
     private var origin: String {
@@ -214,20 +213,28 @@ struct DiagnosticsView: View {
     }
 
     @ViewBuilder
-    private func section<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {
-        GroupedBox(title) {
-            VStack(alignment: .leading, spacing: 6) { content() }
+    private func section<C: View>(_ title: String, info: String? = nil, @ViewBuilder _ content: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 4) {
+                Text(tr(title)).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                if let info { InfoButton(text: info) }
+            }
+            .padding(.leading, 4)
+            VStack(alignment: .leading, spacing: 7) { content() }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12)
+                .cardBackground()
         }
     }
 
+    /// Zeile: Bezeichnung links in einer Zeile, Wert rechts (kürzt in der Mitte statt umzubrechen).
     private func row(_ k: String, _ v: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text(tr(k))
+            Text(tr(k)).lineLimit(1).fixedSize()
             Spacer(minLength: 8)
-            Text(tr(v)).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
-                .fixedSize(horizontal: false, vertical: true)
-                .layoutPriority(1)
+            Text(tr(v)).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                .monospacedDigit()
+                .help(tr(v))
         }
         .font(.callout)
         .accessibilityElement(children: .combine)
@@ -274,7 +281,7 @@ private struct SenderControlSection: View {
                     }
                     .controlSize(.small)
                 } else {
-                    Text("Änderungen am Sender sind unter „Erweitert › NMOS & Adressen“ freizuschalten.")
+                    Text("Freischalten unter Erweitert › NMOS & Adressen.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 if let m = message { Text(tr(m)).font(.caption).foregroundStyle(.secondary) }
