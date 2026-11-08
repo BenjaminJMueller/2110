@@ -95,6 +95,13 @@ probe "$OUT/t7.txt" --video-sdp "$OUT/video_small.sdp" --mode rtp --duration 6
 stop_sender
 grep_check "Formatwechsel gemeldet" "$OUT/t7.txt" "passt nicht zur SDP"
 
+echo "== 7b Viele Neustarts: keine offenen Dateideskriptoren übrig (Absturz nach langer Laufzeit)"
+if $B/st2110-probe --video-sdp "$OUT/video.sdp" --audio-sdp "$OUT/audio.sdp" --iface-addr "$IFACE_ADDR" --restart-test 40 > "$OUT/t7b.txt" 2>&1; then
+  echo "  OK    $(grep RESTART_FDS "$OUT/t7b.txt")"; pass=$((pass+1))
+else
+  echo "  FEHLER Dateideskriptoren wachsen: $(grep RESTART_FDS "$OUT/t7b.txt")"; fail=$((fail+1))
+fi
+
 echo "== 8 Nicht unterstützte Formate werden abgewiesen"
 $B/st2110-probe --video-sdp tests/sdp/video_1080i50.sdp --duration 1 > "$OUT/t8.txt" 2>&1
 grep_check "1080i abgewiesen mit Abhilfe" "$OUT/t8.txt" "progressives Format"

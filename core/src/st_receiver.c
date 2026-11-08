@@ -1071,7 +1071,10 @@ static GstBusSyncReply bus_sync(GstBus *bus, GstMessage *msg, gpointer user)
     default:
         break;
     }
-    return GST_BUS_DROP;
+    /* PASS statt DROP: Mit DROP blieben in GStreamer 1.28 Referenzen auf die Pipeline
+     * hängen, sodass Pipeline und Bus nie freigegeben wurden. Die Nachrichten werden
+     * stattdessen in der Warteschlange gesammelt und im Überwachungsthread verworfen. */
+    return GST_BUS_PASS;
 }
 
 /* ------------------------------------------------------------------ */
@@ -1225,6 +1228,13 @@ static gpointer monitor_thread(gpointer user)
     while (!g_atomic_int_get(&r->monitor_stop)) {
         g_usleep(250000);
         if (g_atomic_int_get(&r->monitor_stop)) break;
+        /* Bus-Nachrichten (bereits im Sync-Handler ausgewertet) verwerfen */
+        GstBus *bus = gst_element_get_bus(r->pipeline);
+        if (bus) {
+            GstMessage *m;
+            while ((m = gst_bus_pop(bus))) gst_message_unref(m);
+            gst_object_unref(bus);
+        }
         int64_t now = g_get_monotonic_time();
         st_state want;
         g_mutex_lock(&r->lock);
@@ -1439,6 +1449,15 @@ void st_receiver_stop(st_receiver *r)
     }
     if (r->pipeline) {
         gst_element_set_state(r->pipeline, GST_STATE_NULL);
+        /* Sync-Handler wieder entfernen: Solange er gesetzt ist, gibt GStreamer die
+         * Pipeline samt Bus nicht frei (je Neustart blieben zwei Dateideskriptoren
+         * offen; nach vielen Neuverbindungen brach die App mit „Too many open files“ ab). */
+        GstBus *bus = gst_element_get_bus(r->pipeline);
+        if (bus) {
+            gst_bus_set_sync_handler(bus, NULL, NULL, NULL);
+            gst_bus_set_flushing(bus, TRUE);
+            gst_object_unref(bus);
+        }
         if (r->vsink) { gst_object_unref(r->vsink); r->vsink = NULL; }
         if (r->asink) { gst_object_unref(r->asink); r->asink = NULL; }
         if (r->volume) { gst_object_unref(r->volume); r->volume = NULL; }

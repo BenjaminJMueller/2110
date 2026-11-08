@@ -127,23 +127,21 @@ struct SendSidebar: View {
 
     var body: some View {
         List {
-            Section("Empfänger im Netz (NMOS)") {
+            Section("Empfänger im Netz") {
                 if model.discovery.destinations.isEmpty {
-                    Text("Keine gefunden. Senden geht trotzdem: Der Strom ist per Multicast und als NMOS-Quelle verfügbar.")
-                        .font(.callout).foregroundStyle(.secondary)
-                    .lineLimit(nil).fixedSize(horizontal: false, vertical: true)
+                    Label("Keine gefunden", systemImage: "antenna.radiowaves.left.and.right.slash")
+                        .foregroundStyle(.secondary)
                 }
                 ForEach(model.discovery.destinations) { d in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(tr(d.title))
-                        Text(tr(d.deviceLabel)).font(.caption).foregroundStyle(.secondary)
+                    Label {
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(tr(d.title))
+                            Text(tr(d.deviceLabel)).font(.caption).foregroundStyle(.secondary)
+                        }
+                    } icon: {
+                        Image(systemName: "rectangle.connected.to.line.below").foregroundStyle(Color.accentColor)
                     }
                 }
-            }
-            Section("Hinweis") {
-                Text("Blackmagic-Geräte wählen den 2110-Viewer-Strom im LCD-Menü unter „Outputs“ oder per NMOS-Controller. Mit „Verbinden“ stellt 2110 Viewer das Routing selbst per IS-05 her.")
-                    .font(.callout).foregroundStyle(.secondary)
-                    .lineLimit(nil).fixedSize(horizontal: false, vertical: true)
             }
         }
         .listStyle(.sidebar)

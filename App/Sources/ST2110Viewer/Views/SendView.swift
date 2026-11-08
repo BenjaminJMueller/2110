@@ -21,43 +21,42 @@ struct SendView: View {
 
                 HStack(alignment: .top, spacing: 20) {
                     card("Format") {
-                        LabeledContent("Video") {
+                        SettingRow("Video") {
                             Picker("Video", selection: $s.format) {
                                 ForEach(SenderController.Format.allCases) { f in Text(f.rawValue).tag(f) }
                             }
                             .labelsHidden().fixedSize()
                         }
                         Divider()
-                        LabeledContent("Audiokanäle") {
+                        SettingRow("Audiokanäle") {
                             Stepper(value: $s.audioChannels, in: 0...16) {
                                 Text(tr(s.audioChannels == 0 ? "aus" : String(s.audioChannels))).monospacedDigit().foregroundStyle(.secondary)
                             }
                         }
                         Divider()
-                        Toggle("Paketzeit 0,125 ms", isOn: ptimeBinding)
-                            .toggleStyle(.switch)
+                        SwitchRow("Paketzeit 0,125 ms", isOn: ptimeBinding)
                             .disabled(s.audioChannels > 8 || s.audioChannels == 0)
                             .help("Ab 9 Kanälen vorgeschrieben")
                         Label(tr(rateText), systemImage: rateWarning ? "exclamationmark.triangle.fill" : "speedometer")
                             .font(.caption).foregroundStyle(rateWarning ? .orange : .secondary)
                     }
                     card("Netzwerk") {
-                        LabeledContent("Video an") {
+                        SettingRow("Video an") {
                             TextField("Multicast-Adresse", text: $s.videoAddress).frame(width: 140).monospacedDigit().multilineTextAlignment(.trailing)
                         }
                         Divider()
-                        LabeledContent("Audio an") {
+                        SettingRow("Audio an") {
                             TextField("Multicast-Adresse", text: $s.audioAddress).frame(width: 140).monospacedDigit().multilineTextAlignment(.trailing)
                         }
                         Divider()
-                        LabeledContent("Port") {
+                        SettingRow("Port") {
                             TextField("Port", value: $s.port, format: .number.grouping(.never)).frame(width: 70).multilineTextAlignment(.trailing)
                         }
                         Divider()
-                        Toggle("Zeit vom PTP-Grandmaster", isOn: $s.usePTP).toggleStyle(.switch)
+                        SwitchRow("Zeit vom PTP-Grandmaster", isOn: $s.usePTP)
                             .help("Übernimmt die Zeit passiv; die App wird nie Master")
                         Divider()
-                        Toggle("Als NMOS-Quelle anbieten", isOn: $s.announceNMOS).toggleStyle(.switch)
+                        SwitchRow("Als NMOS-Quelle anbieten", isOn: $s.announceNMOS)
                         HStack {
                             TextField("Name im Netz", text: $s.label).textFieldStyle(.roundedBorder)
                             Button("Adressen vorschlagen") {
