@@ -24,6 +24,11 @@ final class ExternalOutput {
     var isActive: Bool { activeDisplay != nil }
     var activeName: String? { displays.first { $0.id == activeDisplay }?.name }
     func dismissMessage() { message = nil }
+    var debugSummary: String {
+        guard let window, let renderer else { return "keine Ausgabe" }
+        let v = window.contentView
+        return "Fenster \(Int(window.frame.width))×\(Int(window.frame.height)) sichtbar \(window.isVisible) Ebene \(window.level.rawValue), Ansicht \(Int(v?.frame.width ?? 0))×\(Int(v?.frame.height ?? 0)) Layer \(v?.layer.map { String(describing: type(of: $0)) } ?? "–"), " + renderer.debugSummary
+    }
 
     private var window: NSWindow?
     private var renderer: VideoRenderer?

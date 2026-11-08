@@ -101,6 +101,9 @@ enum SnapshotRunner {
                 model.showOutput(on: d.id)
                 await wait(3)
                 log(String(format: "Helligkeit Ausgabe (%@): %.3f", d.name, brightness(screen: d.id)))
+                log("Ausgabe: " + model.output.debugSummary)
+                log("Hauptbild: " + model.player.renderer.debugSummary)
+                saveScreen(d.id, "ausgabe")
                 model.output.hide()
                 await wait(1)
             } else {
@@ -153,6 +156,15 @@ enum SnapshotRunner {
     private static func brightness(screen id: CGDirectDisplayID) -> Double {
         let index = NSScreen.screens.firstIndex { ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value == id } ?? 0
         return brightness(args: ["-x", "-D", String(index + 1)])
+    }
+
+    private static func saveScreen(_ id: CGDirectDisplayID, _ name: String) {
+        guard let dir = outputDir else { return }
+        let index = NSScreen.screens.firstIndex { ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value == id } ?? 0
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+        p.arguments = ["-x", "-D", String(index + 1), dir.appendingPathComponent("\(name).png").path]
+        if (try? p.run()) != nil { p.waitUntilExit(); log("Bild: \(name).png (Bildschirm)") }
     }
 
     private static func brightness(args: [String]) -> Double {

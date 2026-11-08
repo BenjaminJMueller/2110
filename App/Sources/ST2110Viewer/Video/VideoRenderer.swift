@@ -138,6 +138,14 @@ final class VideoRenderer: NSObject, MTKViewDelegate {
     private var needsRedraw = true
     var pixelExact = false { didSet { needsRedraw = true } }
     private(set) var setupError: String?
+    /// Für die Fehlersuche: Aufrufe, gezeigte Bilder, letzte Zeichenfläche.
+    private(set) var drawCalls = 0
+    private(set) var framesShown = 0
+    private(set) var lastDrawableSize = CGSize.zero
+    private(set) var skippedNoDrawable = 0
+    var debugSummary: String {
+        "Aufrufe \(drawCalls), Bilder \(framesShown), ohne Zeichenfläche \(skippedNoDrawable), Fläche \(Int(lastDrawableSize.width))×\(Int(lastDrawableSize.height))"
+    }
 
     init(sink: VideoFrameSink) {
         self.sink = sink
@@ -189,12 +197,14 @@ final class VideoRenderer: NSObject, MTKViewDelegate {
 
     func draw(in view: MTKView) {
         guard let queue, let decodePSO, let drawPSO else { return }
+        drawCalls += 1
+        lastDrawableSize = view.drawableSize
         let frame = sink.beginRead()
         defer { sink.endRead() }
         let isNew = frame.map { $0.serial != lastSerial } ?? false
         if !isNew && !needsRedraw && frame != nil { return }
         guard let rpd = view.currentRenderPassDescriptor, let drawable = view.currentDrawable,
-              let cmd = queue.makeCommandBuffer() else { return }
+              let cmd = queue.makeCommandBuffer() else { skippedNoDrawable += 1; return }
         needsRedraw = false
 
         if let f = frame, isNew {
@@ -241,6 +251,7 @@ final class VideoRenderer: NSObject, MTKViewDelegate {
             enc.setFragmentTexture(tex, index: 0)
             if let sampler { enc.setFragmentSamplerState(sampler, index: 0) }
             enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+            framesShown += 1
         }
         enc.endEncoding()
         cmd.present(drawable)
