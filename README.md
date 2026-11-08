@@ -4,7 +4,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-**Receive, send and analyze ST 2110 on the Mac.** Made for teaching.
+**Receive, send and analyze ST 2110 on the Mac.** Made for teaching. Currently in development.
 
 **[Download DMG](https://github.com/BenjaminJMueller/2110/releases/latest/download/2110-Viewer.dmg)** (macOS 14 or later, Apple Silicon) | **[Website](https://benjaminjmueller.github.io/2110/en/)**
 

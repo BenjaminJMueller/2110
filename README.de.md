@@ -4,7 +4,7 @@
 
 [English](README.md) | **Deutsch**
 
-**ST 2110 am Mac empfangen, senden und analysieren.** Entstanden für die Lehre.
+**ST 2110 am Mac empfangen, senden und analysieren.** Entstanden für die Lehre. Aktuell in der Entwicklung.
 
 **[DMG laden](https://github.com/BenjaminJMueller/2110/releases/latest/download/2110-Viewer.dmg)** (macOS 14 oder neuer, Apple Silicon) | **[Webseite](https://benjaminjmueller.github.io/2110/)**
 
