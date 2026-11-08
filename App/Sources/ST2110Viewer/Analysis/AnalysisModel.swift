@@ -255,12 +255,14 @@ final class AnalysisModel {
                 case .failure(let err): e.error = err.localizedDescription
                 }
                 if let i = self.entries.firstIndex(where: { $0.id == id }) {
-                    self.entries[i] = e
+                    // Ein unlesbarer Abschnitt ersetzt keinen guten Stand
+                    if e.report != nil || self.entries[i].report == nil { self.entries[i] = e }
+                    if self.selectedID == id, self.selectedStream == nil {
+                        self.selectedStream = e.report?.defaultSelection
+                    }
                 } else {
                     self.entries.insert(e, at: 0)
                     self.selectedID = id
-                    self.selectedStream = e.report?.defaultSelection
-                } else if self.selectedID == id, self.selectedStream == nil {
                     self.selectedStream = e.report?.defaultSelection
                 }
                 self.liveRounds += 1
