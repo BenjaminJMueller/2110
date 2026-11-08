@@ -25,6 +25,9 @@ struct ContentView: View {
                 case .analyze: AnalysisView()
                 }
             }
+            // Feste Mindestbreite der Mitte: Das Fenster wird nicht schmaler als
+            // Seitenleiste, Mitte und Diagnose zusammen, statt etwas abzuschneiden.
+            .frame(minWidth: 500)
             // Die Diagnose gehört zum Empfangen; beim Moduswechsel verschwindet sie ohne Animation
             .inspector(isPresented: Binding(get: { model.inspectorShown && model.mode == .receive },
                                             set: { model.inspectorShown = $0 })) {

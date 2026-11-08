@@ -4,6 +4,9 @@ import SwiftUI
 
 struct ControlBar: View {
     @Environment(AppModel.self) private var model
+    /// Verfügbare Breite; bei schmalem Fenster treten Nebensächliches zurück,
+    /// statt die Seitenleisten aus dem Fenster zu drücken.
+    @State private var width: CGFloat = 1000
 
     var body: some View {
         @Bindable var model = model
@@ -27,7 +30,7 @@ struct ControlBar: View {
                     .disabled(p.current == nil && model.selection == nil)
                     .help(tr(p.isActive ? "Wiedergabe stoppen (Leertaste)" : "Wiedergabe starten (Leertaste)"))
 
-                    StatusPill()
+                    StatusPill(dotOnly: width < 560)
 
                     Spacer(minLength: 8)
 
@@ -45,15 +48,17 @@ struct ControlBar: View {
                     .accessibilityLabel(tr(model.settings.muted ? "Stummschaltung aufheben" : "Stummschalten"))
                     .help("Stummschalten (M)")
 
-                    Slider(value: Binding(get: { model.settings.volume }, set: {
-                        model.settings.volume = $0
-                        p.setVolume($0)
-                    }), in: 0...1.5)
-                    .frame(minWidth: 60, maxWidth: 120)
-                    .accessibilityLabel("Lautstärke")
-                    .accessibilityValue(tr("\(Int(model.settings.volume * 100)) Prozent"))
+                    if width >= 680 {
+                        Slider(value: Binding(get: { model.settings.volume }, set: {
+                            model.settings.volume = $0
+                            p.setVolume($0)
+                        }), in: 0...1.5)
+                        .frame(minWidth: 60, maxWidth: 120)
+                        .accessibilityLabel("Lautstärke")
+                        .accessibilityValue(tr("\(Int(model.settings.volume * 100)) Prozent"))
+                    }
 
-                    OutputPicker()
+                    if width >= 600 { OutputPicker() }
 
                     Button {
                         withAnimation { model.inspectorShown.toggle() }
@@ -79,18 +84,24 @@ struct ControlBar: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .controlSurface(cornerRadius: 22)
+            .background(GeometryReader { g in
+                Color.clear
+                    .onAppear { width = g.size.width }
+                    .onChange(of: g.size.width) { _, w in width = w }
+            })
         }
     }
 }
 
 private struct StatusPill: View {
     @Environment(AppModel.self) private var model
+    var dotOnly = false
 
     var body: some View {
         let (color, text) = status
         HStack(spacing: 6) {
             Circle().fill(color).frame(width: 9, height: 9).accessibilityHidden(true)
-            Text(tr(text)).font(.callout).lineLimit(1).truncationMode(.tail)
+            if !dotOnly { Text(tr(text)).font(.callout).lineLimit(1).truncationMode(.tail) }
         }
         .layoutPriority(-1)
         .help(tr(text))
