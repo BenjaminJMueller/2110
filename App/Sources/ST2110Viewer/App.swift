@@ -117,9 +117,9 @@ struct AppCommands: Commands {
             Divider()
             Button(tr(model.inspectorShown ? "Diagnose ausblenden" : "Diagnose einblenden")) { model.inspectorShown.toggle() }
                 .keyboardShortcut("i", modifiers: [.command])
-            Button("Vollbild") { NSApp.keyWindow?.toggleFullScreen(nil) }
+            Button("Vollbild") { model.toggleFullScreen() }
                 .keyboardShortcut("f", modifiers: [.command, .control])
-            Button(tr(model.output.isActive ? "Ausgabe auf zweitem Bildschirm beenden" : "Ausgabe auf zweitem Bildschirm")) { model.output.toggle() }
+            Button(tr(model.output.isActive ? "Ausgabe auf zweitem Bildschirm beenden" : "Ausgabe auf zweitem Bildschirm")) { model.toggleOutput() }
                 .keyboardShortcut("b", modifiers: [.command, .shift])
         }
         CommandGroup(replacing: .help) {

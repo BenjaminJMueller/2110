@@ -64,7 +64,7 @@ struct LiveChartTile: View {
             }
             .chartXAxis(.hidden)
             .chartYAxis(.hidden)
-            .chartXScale(domain: 0...max(LiveSeries.capacity - 1, series.values.count - 1))
+            .chartXScale(domain: 0...max(30, series.values.count - 1))
             .chartYScale(domain: yDomain)
             .frame(height: 44)
             .clipped()

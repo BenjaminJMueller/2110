@@ -163,6 +163,8 @@ final class VideoRenderer: NSObject, MTKViewDelegate {
     }
 
     func configure(_ view: MTKView) {
+        needsRedraw = true
+        lastSerial = 0
         view.device = device
         view.delegate = self
         view.colorPixelFormat = .bgr10a2Unorm

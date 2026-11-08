@@ -66,7 +66,7 @@ struct ControlBar: View {
                     .help("Diagnose ein-/ausblenden (⌘I)")
 
                     Button {
-                        NSApp.keyWindow?.toggleFullScreen(nil)
+                        model.toggleFullScreen()
                     } label: {
                         Image(systemName: model.isFullScreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
                             .frame(width: 18, height: 18)

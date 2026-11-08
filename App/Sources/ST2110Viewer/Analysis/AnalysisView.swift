@@ -135,24 +135,23 @@ private struct ReportView: View {
 
     var body: some View {
         let a = model.analysis
-        let key = a.selectedStream ?? report.defaultSelection
+        let live = a.isLive(entry)
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                if a.isLive(entry) {
-                    LiveHeader(report: report)
-                } else {
-                    CaptureHeader(entry: entry, report: report)
-                }
-                if key == AnalysisModel.network {
+            Group {
+                if a.selectedStream == AnalysisModel.network {
                     NetworkReport(report: report)
-                } else if let s = report.streams.first(where: { $0.key == key }) {
-                    StreamReport(stream: s, thumbnail: entry.thumbnails[s.key], duration: report.capture.duration_s,
-                                 trend: a.isLive(entry) ? a.liveTrends[s.key] : nil,
-                                 missing: a.isLive(entry) && a.liveMissing.contains(s.key))
+                } else if let key = a.selectedStream, let s = report.streams.first(where: { $0.key == key }) {
+                    StreamDetail(stream: s, thumbnail: entry.thumbnails[s.key],
+                                 trend: live ? a.liveTrends[s.key] : nil,
+                                 missing: live && a.liveMissing.contains(s.key))
+                        .id(key)
+                } else {
+                    CaptureOverview(entry: entry, report: report, live: live)
                 }
             }
-            .padding(20)
-            .frame(maxWidth: 1100, alignment: .leading)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 24)
+            .frame(maxWidth: 1040, alignment: .leading)
             .frame(maxWidth: .infinity)
         }
     }
@@ -160,65 +159,181 @@ private struct ReportView: View {
 
 private func levelColor(_ l: Int) -> Color { l >= 2 ? .red : l == 1 ? .orange : .green }
 
-/// Kopf eines Mitschnitts: Name, Eckdaten, Export.
-private struct CaptureHeader: View {
+private func lossPercent(_ s: AnalysisReport.Stream) -> Double {
+    let total = s.packets + s.lost
+    return total > 0 ? Double(s.lost) / Double(total) * 100 : 0
+}
+
+private func kindShort(_ k: String) -> String {
+    ["video": "Video", "audio": "Audio", "anc": "Zusatzdaten"][k] ?? "RTP"
+}
+
+private func kindIcon(_ k: String) -> String {
+    ["video": "film", "audio": "waveform", "anc": "text.alignleft"][k] ?? "questionmark"
+}
+
+private func kindTint(_ k: String) -> Color {
+    ["video": Color.blue, "audio": Color.pink, "anc": Color.teal][k] ?? .gray
+}
+
+/// Symbol in einer farbigen Kachel, wie in den Systemeinstellungen.
+private struct IconTile: View {
+    let symbol: String
+    let tint: Color
+    var size: CGFloat = 32
+
+    var body: some View {
+        Image(systemName: symbol)
+            .font(.system(size: size * 0.45, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: size, height: size)
+            .background(tint.gradient, in: RoundedRectangle(cornerRadius: size * 0.24, style: .continuous))
+            .accessibilityHidden(true)
+    }
+}
+
+// MARK: Übersicht eines Mitschnitts
+
+private struct CaptureOverview: View {
     @Environment(AppModel.self) private var model
     let entry: AnalysisModel.Entry
     let report: AnalysisReport
-
-    var body: some View {
-        let c = report.capture
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(tr(entry.url.lastPathComponent)).font(.title2.weight(.semibold)).lineLimit(1).truncationMode(.middle)
-                Spacer()
-                if entry.url.isFileURL && FileManager.default.fileExists(atPath: entry.url.path) {
-                    Button { model.analysis.exportJSON(entry) } label: { Label("JSON", systemImage: "square.and.arrow.up") }
-                        .controlButtonStyle()
-                        .help("Bericht als JSON exportieren")
-                }
-            }
-            HStack(spacing: 6) {
-                Text(tr(captureLine(c))).font(.callout.monospacedDigit()).foregroundStyle(.secondary)
-                if c.software_capture {
-                    InfoButton(text: "Software-Mitschnitt: Die Zeitstempel stammen vom Betriebssystem. Cinst, VRX und Paketabstände sind daher Richtwerte.")
-                }
-            }
-            ForEach(c.findings ?? [], id: \.self) { f in FindingRow(finding: f) }
-        }
-    }
-}
-
-/// Kopf der Live-Analyse: Quelle, pulsierendes „Live“, Abschnitt, Beenden.
-private struct LiveHeader: View {
-    @Environment(AppModel.self) private var model
-    let report: AnalysisReport
+    let live: Bool
 
     var body: some View {
         let a = model.analysis
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center, spacing: 10) {
-                Text(tr(a.liveName)).font(.title2.weight(.semibold)).lineLimit(1)
-                HStack(spacing: 5) {
-                    Image(systemName: "circle.fill").font(.system(size: 7)).foregroundStyle(.red)
-                        .symbolEffect(.pulse, options: .repeating)
-                    Text("Live").font(.caption.weight(.semibold))
+        let c = report.capture
+        VStack(alignment: .leading, spacing: 22) {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 10) {
+                        Text(tr(live ? a.liveName : entry.url.deletingPathExtension().lastPathComponent))
+                            .font(.title.weight(.semibold)).lineLimit(1).truncationMode(.middle)
+                        if live { LiveBadge() }
+                    }
+                    HStack(spacing: 4) {
+                        Text(tr(live ? "Abschnitt \(a.liveRounds), alle 3 s neu" : overviewLine(c)))
+                            .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+                            .contentTransition(.numericText())
+                        InfoButton(text: live ? "Die App zeichnet den Empfang in Abschnitten von 3 Sekunden auf und prüft jeden sofort. Fehlt ein Strom in einem Abschnitt, bleibt sein letzter Stand stehen." : captureInfo(c))
+                    }
                 }
-                .padding(.horizontal, 9).padding(.vertical, 4)
-                .background(Color.red.opacity(0.12), in: Capsule())
-                Text(tr("Abschnitt \(a.liveRounds)"))
-                    .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
-                    .contentTransition(.numericText())
-                InfoButton(text: "Die App zeichnet den Empfang in Abschnitten von 3 Sekunden auf und analysiert jeden sofort. Die Diagramme zeigen den Verlauf über die Abschnitte. Fehlt ein Strom in einem Abschnitt, bleibt sein letzter Stand stehen. Es ist ein Software-Mitschnitt, Zeitwerte wie Cinst und VRX sind daher Richtwerte.")
                 Spacer()
-                Button { a.stopLive() } label: { Label("Beenden", systemImage: "stop.fill") }
-                    .controlButtonStyle(prominent: true)
+                if live {
+                    Button { a.stopLive() } label: { Label("Beenden", systemImage: "stop.fill") }
+                        .controlButtonStyle(prominent: true)
+                } else if entry.url.isFileURL && FileManager.default.fileExists(atPath: entry.url.path) {
+                    Button { a.exportJSON(entry) } label: { Image(systemName: "square.and.arrow.up") }
+                        .iconButtonStyle()
+                        .help("Bericht als JSON exportieren")
+                }
             }
-            let problems = (report.capture.findings ?? []).filter { $0.level >= 1 }
-            ForEach(problems, id: \.self) { FindingRow(finding: $0) }
+
+            let problems = (c.findings ?? []).filter { $0.level >= 1 && !$0.text.hasPrefix("Software-Mitschnitt") }
+            if !problems.isEmpty {
+                VStack(alignment: .leading, spacing: 8) { ForEach(problems, id: \.self) { FindingRow(finding: $0) } }
+            }
+
+            VStack(spacing: 0) {
+                ForEach(Array(report.orderedStreams.enumerated()), id: \.element.key) { i, s in
+                    if i > 0 { Divider().padding(.leading, 60) }
+                    OverviewRow(symbol: kindIcon(s.kind), tint: kindTint(s.kind), title: s.summary,
+                                subtitle: kindShort(s.kind) + ", " + s.destination,
+                                values: [(String(format: "%.0f", locale: .current, s.rate_mbps ?? 0), "Mbit/s"),
+                                         (String(format: "%.2f %%", locale: .current, lossPercent(s)), "Verlust")],
+                                level: s.worstLevel, missing: live && a.liveMissing.contains(s.key)) {
+                        a.selectedStream = s.key
+                    }
+                }
+                Divider().padding(.leading, 60)
+                OverviewRow(symbol: "clock.arrow.2.circlepath", tint: .indigo, title: "PTP und IGMP",
+                            subtitle: networkSummary(report), values: [], level: networkLevel(report), missing: false) {
+                    a.selectedStream = AnalysisModel.network
+                }
+            }
+            .cardBackground()
         }
     }
 }
+
+private struct LiveBadge: View {
+    var body: some View {
+        HStack(spacing: 5) {
+            Image(systemName: "circle.fill").font(.system(size: 7)).foregroundStyle(.red)
+                .symbolEffect(.pulse, options: .repeating)
+            Text("Live").font(.caption.weight(.semibold))
+        }
+        .padding(.horizontal, 9).padding(.vertical, 4)
+        .background(Color.red.opacity(0.12), in: Capsule())
+    }
+}
+
+/// Zeile der Übersicht: anklickbar, mit Kennzahlen und Zustand.
+private struct OverviewRow: View {
+    let symbol: String
+    let tint: Color
+    let title: String
+    let subtitle: String
+    let values: [(String, String)]
+    let level: Int
+    let missing: Bool
+    let action: () -> Void
+    @State private var hover = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                IconTile(symbol: symbol, tint: tint)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(tr(title)).font(.body.weight(.medium))
+                    Text(tr(subtitle)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 12)
+                ForEach(Array(values.enumerated()), id: \.offset) { _, v in
+                    VStack(alignment: .trailing, spacing: 1) {
+                        Text(v.0).font(.callout.weight(.semibold).monospacedDigit())
+                        Text(tr(v.1)).font(.caption2).foregroundStyle(.secondary)
+                    }
+                    .frame(minWidth: 64, alignment: .trailing)
+                }
+                Circle().fill(missing ? Color.secondary.opacity(0.4) : levelColor(level)).frame(width: 8, height: 8)
+                    .padding(.leading, 6)
+                Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 11)
+            .contentShape(Rectangle())
+            .background(hover ? Color.primary.opacity(0.04) : Color.clear)
+        }
+        .buttonStyle(.plain)
+        .onHover { hover = $0 }
+        .accessibilityLabel(tr(title + ", " + subtitle))
+    }
+}
+
+private func overviewLine(_ c: AnalysisReport.Capture) -> String {
+    tr(String(format: "%.1f s", locale: .current, c.duration_s) + ", " + c.packets.formatted() + " Pakete")
+}
+
+private func captureInfo(_ c: AnalysisReport.Capture) -> String {
+    var t = tr("Format \(c.format), Zeitauflösung \(c.timestamp_resolution_ns) ns.")
+    if c.software_capture {
+        t += " " + tr("Software-Mitschnitt: Die Zeitstempel stammen vom Betriebssystem. Cinst, VRX und Paketabstände sind daher Richtwerte.")
+    }
+    return t
+}
+
+private func networkSummary(_ r: AnalysisReport) -> String {
+    let ptp = r.ptp.isEmpty ? tr("Kein PTP") : tr("PTP-Domain \(r.ptp.map { String($0.domain) }.joined(separator: ", "))")
+    let igmp = r.igmp.queries > 0 ? tr("Querier vorhanden") : tr("kein Querier")
+    return ptp + ", " + igmp
+}
+
+private func networkLevel(_ r: AnalysisReport) -> Int {
+    if r.ptp.contains(where: { $0.masters > 1 }) { return 2 }
+    return r.ptp.isEmpty || r.igmp.queries == 0 ? 1 : 0
+}
+
+// MARK: Ein Strom
 
 private struct FindingRow: View {
     let finding: AnalysisReport.Finding
@@ -236,209 +351,251 @@ private struct FindingRow: View {
     }
 }
 
-private struct StatTile: View {
+/// Eine Kennzahl der Faktenleiste.
+private struct Fact {
     let label: String
     let value: String
     var note: String?
     var info: String?
+    var trend: LiveSeries?
+    var warn = false
+}
+
+/// Kennzahlen in einer Leiste über die volle Breite, getrennt durch Linien.
+private struct FactsBar: View {
+    let facts: [Fact]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 4) {
-                Text(tr(label)).font(.caption).foregroundStyle(.secondary)
-                if let info { InfoButton(text: info) }
+        HStack(alignment: .top, spacing: 0) {
+            ForEach(Array(facts.enumerated()), id: \.offset) { i, f in
+                if i > 0 { Divider().padding(.vertical, 12) }
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 4) {
+                        Text(tr(f.label)).font(.caption).foregroundStyle(.secondary)
+                        if let info = f.info { InfoButton(text: info) }
+                    }
+                    Text(tr(f.value))
+                        .font(.system(size: 22, weight: .semibold, design: .rounded).monospacedDigit())
+                        .foregroundStyle(f.warn ? Color.orange : Color.primary)
+                        .lineLimit(1).minimumScaleFactor(0.6)
+                        .contentTransition(.numericText())
+                    if let t = f.trend, t.values.count > 1 {
+                        Sparkline(values: t.values, color: f.warn ? .orange : .accentColor).frame(height: 22)
+                    } else {
+                        Text(tr(f.note ?? " ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    }
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            Text(tr(value)).font(.system(size: 24, weight: .semibold, design: .rounded).monospacedDigit())
-                .lineLimit(1).minimumScaleFactor(0.7)
-                .contentTransition(.numericText())
-            Text(tr(note ?? " ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
         .cardBackground()
-        .accessibilityElement(children: .combine)
     }
 }
 
-/// Karte mit Überschrift (und optionalem Info-Knopf).
-private struct Card<Content: View, Accessory: View>: View {
+/// Messgröße mit eigenem Verlauf; die Reiter wählen das große Diagramm.
+private struct Metric: Identifiable {
+    let id: String
     let title: String
-    var info: String?
-    @ViewBuilder var accessory: Accessory
-    @ViewBuilder var content: Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 6) {
-                Text(tr(title)).font(.headline)
-                if let info { InfoButton(text: info) }
-                Spacer(minLength: 8)
-                accessory
-            }
-            content
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardBackground()
-    }
+    let info: String
+    let value: String
+    let series: AnalysisReport.Series?
+    let unit: String
+    var limits: [(String, Double)] = []
 }
 
-extension Card where Accessory == EmptyView {
-    init(title: String, info: String? = nil, @ViewBuilder content: () -> Content) {
-        self.title = title; self.info = info; self.accessory = EmptyView(); self.content = content()
-    }
-}
-
-private struct StreamReport: View {
+private struct StreamDetail: View {
     let stream: AnalysisReport.Stream
     let thumbnail: NSImage?
-    let duration: Double
     var trend: AnalysisModel.LiveTrend?
     var missing = false
-    @State private var chart = "cinst"
-
-    private var isVideo: Bool { stream.kind == "video" }
-    private var isAudio: Bool { stream.kind == "audio" }
+    @State private var selected = ""
 
     var body: some View {
         let s = stream
-        VStack(alignment: .leading, spacing: 16) {
-            // Kopf: Vorschaubild, Format, Ziel, Zustand
-            HStack(alignment: .center, spacing: 16) {
+        let ms = metrics
+        let current = ms.first { $0.id == selected } ?? ms.first
+        VStack(alignment: .leading, spacing: 20) {
+            HStack(alignment: .center, spacing: 14) {
                 if let thumbnail {
-                    Image(nsImage: thumbnail).resizable().aspectRatio(contentMode: .fit)
-                        .frame(width: 176)
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    Image(nsImage: thumbnail).resizable().aspectRatio(contentMode: .fill)
+                        .frame(width: 96, height: 54)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         .accessibilityLabel("Vorschaubild des Videostroms")
                 } else {
-                    Image(systemName: isVideo ? "film" : isAudio ? "waveform" : "text.alignleft")
-                        .font(.system(size: 30, weight: .light))
-                        .foregroundStyle(Color.accentColor)
-                        .frame(width: 64, height: 64)
-                        .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    IconTile(symbol: kindIcon(s.kind), tint: kindTint(s.kind), size: 44)
                 }
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(tr(s.kindTitle)).font(.caption.weight(.semibold)).foregroundStyle(.secondary).textCase(.uppercase)
-                    Text(tr(s.summary)).font(.system(size: 26, weight: .semibold, design: .rounded))
-                    Text(tr(streamLine(s))).font(.callout.monospacedDigit()).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(tr(s.summary)).font(.title.weight(.semibold))
+                    HStack(spacing: 4) {
+                        Text(tr(kindShort(s.kind) + ", " + s.destination)).font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+                        InfoButton(text: tr(s.kindTitle) + ". " + streamLine(s) + ".")
+                    }
                 }
-                Spacer(minLength: 8)
+                Spacer()
                 StatusPill(level: s.worstLevel, missing: missing)
             }
-            .padding(16)
-            .cardBackground()
 
-            // Kennzahlen: live als Verlauf, sonst als Werte
-            if let t = trend {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 12)], spacing: 12) {
-                    LiveChartTile(title: "Datenrate", unit: "Mbit/s", series: t.rate)
-                    LiveChartTile(title: "Verluste", unit: "Pakete", series: t.lost, warnAbove: 0.5,
-                                  info: "Fehlende RTP-Pakete je Abschnitt von 3 Sekunden, erkannt an Lücken in der Sequenznummer.")
-                    if isVideo {
-                        LiveChartTile(title: "Bildrate", unit: "fps", series: t.fps, format: "%.2f", tint: .purple)
-                        LiveChartTile(title: "Cinst max.", unit: "Pakete", series: t.timing, tint: .teal,
-                                      warnAbove: s.video?.limits["cmax_wide"].flatMap { $0 },
-                                      info: "Höchster Stau im Modell-Netzpuffer nach ST 2110-21 je Abschnitt. Orange, wenn die Grenze für Wide überschritten wird.")
-                    } else if isAudio {
-                        LiveChartTile(title: "TS-DF max.", unit: "µs", series: t.timing, tint: .teal,
-                                      info: "Größte Laufzeitschwankung der Audiopakete je Abschnitt. Der Empfänger muss mindestens so viel puffern.")
-                    }
-                }
-            } else {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 12)], spacing: 12) {
-                    StatTile(label: "Datenrate", value: String(format: "%.0f Mbit/s", locale: .current, s.rate_mbps ?? 0))
-                    StatTile(label: "Verluste", value: s.lost.formatted(), note: lossNote)
-                    if let v = s.video {
-                        StatTile(label: "Bildrate", value: String(format: "%.3f", locale: .current, v.fps ?? 0), note: "\(v.frames.formatted()) Bilder")
-                        StatTile(label: "ST 2110-21", value: senderClass(v.st2110_21_class),
-                                 note: String(format: "Cmax %.0f, VRX %.0f", locale: .current, v.cinst.max, v.vrx.max),
-                                 info: "Senderklasse nach ST 2110-21: Narrow ist sehr gleichmäßig, Wide erlaubt mehr Bursts.")
-                    } else if let au = s.audio {
-                        StatTile(label: "Paketzeit", value: String(format: "%g ms", locale: .current, au.ptime_ms ?? 0), note: String(au.channels) + (au.channels_from_sdp ? " Kanäle" : " Kanäle (geschätzt)"))
-                        StatTile(label: "TS-DF max.", value: String(format: "%.0f µs", locale: .current, au.tsdf_us.max), note: "1-s-Fenster")
-                    }
-                }
-            }
+            FactsBar(facts: facts)
 
-            // Hauptdiagramm: Auswahl hängt nur von der Art des Stroms ab und bleibt daher stehen
-            if isVideo || isAudio {
-                Card(title: "Verlauf", info: explanation) {
-                    Picker("Diagramm", selection: $chart) {
-                        ForEach(chartChoices, id: \.0) { Text(tr($0.1)).tag($0.0) }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .fixedSize()
-                } content: {
-                    MainChart(series: series, limits: limits, unit: unit)
-                        .frame(height: trend == nil ? 260 : 200)
-                }
-                .onAppear { normalizeChart() }
-                .onChange(of: stream.key) { _, _ in normalizeChart() }
-            }
-
-            HStack(alignment: .top, spacing: 16) {
-                Card(title: "Befunde") {
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(s.findings, id: \.self) { FindingRow(finding: $0) }
-                        if let anc = s.anc, !anc.did_sdid.isEmpty {
-                            Text(tr("DID/SDID: " + anc.did_sdid.map { String(format: "%02X/%02X (%d)", locale: .current, $0.did, $0.sdid, $0.count) }.joined(separator: ", ")))
-                                .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+            if !ms.isEmpty, let current {
+                VStack(spacing: 0) {
+                    HStack(spacing: 0) {
+                        ForEach(Array(ms.enumerated()), id: \.element.id) { i, m in
+                            if i > 0 { Divider().padding(.vertical, 10) }
+                            MetricTab(metric: m, selected: m.id == current.id) { selected = m.id }
                         }
                     }
+                    Divider()
+                    Group {
+                        if current.id == "iat_us" {
+                            IATHistogram(bins: s.iat_histogram)
+                        } else {
+                            MainChart(series: current.series, limits: current.limits, unit: current.unit)
+                        }
+                    }
+                    .frame(height: 240)
+                    .padding(16)
                 }
-                Card(title: "Paketabstände", info: "Verteilung der Abstände zwischen aufeinanderfolgenden Paketen in Mikrosekunden.") {
-                    IATHistogram(bins: s.iat_histogram).frame(height: 120)
+                .cardBackground()
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Befunde").font(.headline)
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(s.findings, id: \.self) { FindingRow(finding: $0) }
+                    if let anc = s.anc, !anc.did_sdid.isEmpty {
+                        Text(tr("DID/SDID: " + anc.did_sdid.map { String(format: "%02X/%02X (%d)", locale: .current, $0.did, $0.sdid, $0.count) }.joined(separator: ", ")))
+                            .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+                    }
                 }
-                .frame(width: 340)
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .cardBackground()
             }
         }
     }
 
-    private func normalizeChart() {
-        if !chartChoices.contains(where: { $0.0 == chart }) { chart = chartChoices.first?.0 ?? "iat_us" }
-    }
-
-    private var lossNote: String? {
-        let total = stream.packets + stream.lost
-        guard total > 0 else { return nil }
-        return String(format: "%.4f %% von %@", locale: .current, Double(stream.lost) / Double(total) * 100, total.formatted())
-    }
-
-    private var chartChoices: [(String, String)] {
-        if isVideo {
-            return [("cinst", "Cinst"), ("vrx", "VRX"), ("packets_per_frame", "Pakete je Bild"), ("rtp_latency_ms", "RTP-Latenz"), ("iat_us", "Paketabstand")]
+    private var facts: [Fact] {
+        let s = stream
+        var f: [Fact] = [
+            Fact(label: "Datenrate", value: String(format: "%.0f Mbit/s", locale: .current, s.rate_mbps ?? 0), trend: trend?.rate),
+            Fact(label: "Verluste", value: String(format: "%.2f %%", locale: .current, lossPercent(s)),
+                 note: tr("\(s.lost.formatted()) von \((s.packets + s.lost).formatted()) Paketen"),
+                 info: "Fehlende RTP-Pakete, erkannt an Lücken in der Sequenznummer.", trend: trend?.lost, warn: s.lost > 0),
+        ]
+        if let v = s.video {
+            f.append(Fact(label: "Bildrate", value: String(format: "%.2f", locale: .current, v.fps ?? 0),
+                          note: tr("\(v.frames.formatted()) Bilder"), trend: trend?.fps))
+            f.append(Fact(label: "Senderklasse", value: senderClass(v.st2110_21_class),
+                          note: "ST 2110-21",
+                          info: "Wie gleichmäßig der Sender seine Pakete verteilt. Narrow: sehr gleichmäßig, für alle Empfänger geeignet. Wide: mehr Bursts, nur für Empfänger mit größerem Puffer.",
+                          warn: v.st2110_21_class == "nicht konform"))
+        } else if let au = s.audio {
+            f.append(Fact(label: "Paketzeit", value: String(format: "%g ms", locale: .current, au.ptime_ms ?? 0),
+                          note: tr("\(au.samples_per_packet) Samples je Paket")))
+            f.append(Fact(label: "Kanäle", value: String(au.channels),
+                          note: au.channels_from_sdp ? "aus SDP" : "geschätzt"))
+        } else {
+            f.append(Fact(label: "Pakete", value: s.packets.formatted()))
         }
-        return [("tsdf_us", "TS-DF"), ("iat_us", "Paketabstand")]
+        return f
     }
 
-    private var series: AnalysisReport.Series? { stream.video?.series[chart] ?? stream.audio?.series[chart] }
-
-    private var limits: [(String, Double)] {
-        guard let v = stream.video else { return [] }
-        switch chart {
-        case "cinst": return [("Narrow", v.limits["cmax_narrow"].flatMap { $0 } ?? 0), ("Wide", v.limits["cmax_wide"].flatMap { $0 } ?? 0)]
-        case "vrx": return [("Narrow", v.limits["vrx_narrow"].flatMap { $0 } ?? 0)]
-        default: return []
+    private var metrics: [Metric] {
+        let s = stream
+        if let v = s.video {
+            return [
+                Metric(id: "cinst", title: "Cinst", info: "Wie viele Pakete sich im Modell-Netzpuffer stauen, je Bild (ST 2110-21). Unter der Linie „Narrow“ ist der Sender so gleichmäßig, wie es empfindliche Empfänger erwarten.",
+                       value: String(format: "max. %.0f", locale: .current, v.cinst.max), series: v.series["cinst"], unit: "Pakete",
+                       limits: [("Narrow", v.limits["cmax_narrow"].flatMap { $0 } ?? 0), ("Wide", v.limits["cmax_wide"].flatMap { $0 } ?? 0)]),
+                Metric(id: "vrx", title: "VRX", info: "Füllstand eines gedachten Empfängerpuffers, der ab dem ersten Paket eines Bildes gleichmäßig liest. Hohe Werte bedeuten Bursts.",
+                       value: String(format: "max. %.0f", locale: .current, v.vrx.max), series: v.series["vrx"], unit: "Pakete",
+                       limits: [("Narrow", v.limits["vrx_narrow"].flatMap { $0 } ?? 0)]),
+                Metric(id: "packets_per_frame", title: "Pakete je Bild", info: "Schwankungen deuten auf Verluste oder Formatwechsel hin.",
+                       value: String(format: "%.0f", locale: .current, v.packets_per_frame.avg), series: v.series["packets_per_frame"], unit: "Pakete"),
+                Metric(id: "rtp_latency_ms", title: "RTP-Latenz", info: "Abstand zwischen Ankunft des ersten Pakets und der Bildzeit im RTP-Zeitstempel. Aussagekräftig, wenn der aufzeichnende Rechner PTP-synchron war.",
+                       value: String(format: "%.1f ms", locale: .current, v.rtp_latency_ms.avg), series: v.series["rtp_latency_ms"], unit: "ms"),
+                Metric(id: "iat_us", title: "Paketabstand", info: "Abstand zwischen aufeinanderfolgenden Paketen. Das Diagramm zeigt die Verteilung in Mikrosekunden.",
+                       value: String(format: "%.1f µs", locale: .current, s.iat_us.avg), series: v.series["iat_us"], unit: "µs"),
+            ]
         }
-    }
-
-    private var unit: String {
-        switch chart {
-        case "rtp_latency_ms": return "ms"
-        case "iat_us", "tsdf_us": return "µs"
-        default: return "Pakete"
+        if let au = s.audio {
+            return [
+                Metric(id: "tsdf_us", title: "TS-DF", info: "Timestamped Delay Factor: Schwankung der Laufzeit der Audiopakete gegenüber ihren Zeitstempeln. Der Empfänger muss mindestens so viel puffern.",
+                       value: String(format: "max. %.0f µs", locale: .current, au.tsdf_us.max), series: au.series["tsdf_us"], unit: "µs"),
+                Metric(id: "iat_us", title: "Paketabstand", info: "Abstand zwischen aufeinanderfolgenden Paketen. Das Diagramm zeigt die Verteilung in Mikrosekunden.",
+                       value: String(format: "%.1f µs", locale: .current, s.iat_us.avg), series: au.series["iat_us"], unit: "µs"),
+            ]
         }
+        return []
+    }
+}
+
+/// Reiter einer Messgröße: Name, Wert, kleiner Verlauf.
+private struct MetricTab: View {
+    let metric: Metric
+    let selected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 4) {
+                    Text(tr(metric.title)).font(.caption.weight(.medium))
+                        .foregroundStyle(selected ? Color.accentColor : Color.secondary)
+                    InfoButton(text: metric.info)
+                }
+                Text(tr(metric.value)).font(.system(size: 16, weight: .semibold, design: .rounded).monospacedDigit())
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                if let s = metric.series {
+                    Sparkline(values: s.v.compactMap { $0 }, color: selected ? .accentColor : .secondary).frame(height: 20)
+                } else {
+                    Color.clear.frame(height: 20)
+                }
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(selected ? Color.accentColor.opacity(0.08) : Color.clear)
+            .overlay(alignment: .bottom) {
+                if selected { Rectangle().fill(Color.accentColor).frame(height: 2) }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+/// Kleiner Verlauf ohne Achsen.
+private struct Sparkline: View {
+    let values: [Double]
+    let color: Color
+
+    var body: some View {
+        let pts = Self.downsample(values, to: 120)
+        let lo = pts.min() ?? 0, hi = pts.max() ?? 1
+        Chart {
+            ForEach(Array(pts.enumerated()), id: \.offset) { i, v in
+                LineMark(x: .value("t", i), y: .value("v", v))
+                    .foregroundStyle(color)
+                    .lineStyle(StrokeStyle(lineWidth: 1.2))
+                    .interpolationMethod(.monotone)
+            }
+        }
+        .chartXAxis(.hidden)
+        .chartYAxis(.hidden)
+        .chartYScale(domain: lo...(hi > lo ? hi : lo + 1))
+        .clipped()
+        .accessibilityHidden(true)
     }
 
-    private var explanation: String {
-        switch chart {
-        case "cinst": return "Cinst zeigt je Bild, wie viele Pakete sich im Modell-Netzpuffer stauen (ST 2110-21, Network Compatibility Model). Unter der Linie „Narrow“ ist der Sender so gleichmäßig, wie es empfindliche Empfänger erwarten. Bei Software-Mitschnitten sind die Werte nur Richtwerte."
-        case "vrx": return "VRX ist die Füllung eines gedachten Empfängerpuffers, der ab dem ersten Paket eines Bildes gleichmäßig liest. Hohe Werte bedeuten Bursts."
-        case "packets_per_frame": return "Pakete je Bild. Schwankungen deuten auf Verluste oder Formatwechsel hin."
-        case "rtp_latency_ms": return "Abstand zwischen Ankunft des ersten Pakets und der Bildzeit im RTP-Zeitstempel. Aussagekräftig, wenn der aufzeichnende Rechner PTP-synchron war; sonst zeigt die Kurve nur Schwankungen."
-        case "tsdf_us": return "TS-DF (Timestamped Delay Factor): Schwankung der Laufzeit der Audiopakete gegenüber ihren Zeitstempeln je Sekunde. Der Empfänger muss mindestens so viel puffern."
-        default: return "Abstand zwischen aufeinanderfolgenden Paketen dieses Stroms."
+    static func downsample(_ v: [Double], to n: Int) -> [Double] {
+        guard v.count > n else { return v }
+        let step = Double(v.count) / Double(n)
+        return (0..<n).map { i in
+            let a = Int(Double(i) * step), b = min(v.count, Int(Double(i + 1) * step))
+            return v[a..<max(b, a + 1)].max() ?? 0
         }
     }
 }
@@ -521,35 +678,66 @@ private struct NetworkReport: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("PTP").font(.title3.weight(.medium))
-            if report.ptp.isEmpty {
-                Text("Keine PTP-Nachrichten im Mitschnitt.").foregroundStyle(.secondary)
-            }
-            ForEach(report.ptp) { p in
-                Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 6) {
-                    GridRow { Text("Domain").foregroundStyle(.secondary); Text(tr("\(p.domain)")) }
-                    GridRow { Text("Grandmaster").foregroundStyle(.secondary); Text(tr(p.grandmaster.isEmpty ? "–" : p.grandmaster)).monospacedDigit() }
-                    GridRow { Text("Sendende Master").foregroundStyle(.secondary); Text(tr("\(p.masters)")).foregroundStyle(p.masters > 1 ? .red : .primary) }
-                    GridRow { Text("Priorität 1 / 2, Klasse").foregroundStyle(.secondary); Text(tr("\(p.priority1) / \(p.priority2), Clock Class \(p.clock_class)")) }
-                    GridRow { Text("Sync / Announce je s").foregroundStyle(.secondary); Text(tr(String(format: "%.2f / %.2f%@", locale: .current, p.sync_rate ?? 0, p.announce_rate ?? 0, p.two_step ? " (Two-Step)" : ""))).monospacedDigit() }
-                    GridRow { Text("Delay-Req / -Resp").foregroundStyle(.secondary); Text(tr("\(p.delay_req) / \(p.delay_resp)")).monospacedDigit() }
-                    GridRow { Text("UTC-Versatz").foregroundStyle(.secondary); Text(tr("\(p.utc_offset) s")) }
+            HStack(spacing: 14) {
+                IconTile(symbol: "clock.arrow.2.circlepath", tint: .indigo, size: 44)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("PTP und IGMP").font(.title.weight(.semibold))
+                    Text(tr(networkSummary(report))).font(.callout).foregroundStyle(.secondary)
                 }
+                Spacer()
+                StatusPill(level: networkLevel(report), missing: false)
+            }
+
+            section("PTP", info: "Precision Time Protocol: der Grandmaster gibt allen Geräten die Zeit vor. Es sollte genau einen sendenden Master je Domain geben.") {
+                if report.ptp.isEmpty {
+                    Text("Keine PTP-Nachrichten im Mitschnitt.").foregroundStyle(.secondary)
+                }
+                ForEach(report.ptp) { p in
+                    Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 7) {
+                        row("Domain", "\(p.domain)")
+                        row("Grandmaster", p.grandmaster.isEmpty ? "–" : p.grandmaster)
+                        row("Sendende Master", "\(p.masters)", warn: p.masters > 1)
+                        row("Priorität 1 / 2", "\(p.priority1) / \(p.priority2)")
+                        row("Clock Class", "\(p.clock_class)")
+                        row("Sync / Announce je s", String(format: "%.2f / %.2f", locale: .current, p.sync_rate ?? 0, p.announce_rate ?? 0) + (p.two_step ? " (Two-Step)" : ""))
+                        row("Delay-Req / -Resp", "\(p.delay_req) / \(p.delay_resp)")
+                        row("UTC-Versatz", "\(p.utc_offset) s")
+                    }
+                }
+            }
+
+            section("IGMP", info: "Über IGMP melden Empfänger, welche Multicast-Gruppen sie wollen. Ohne Querier kann der Switch Multicast nach einiger Zeit abschalten.") {
+                Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 7) {
+                    row("Querier", report.igmp.queries > 0 ? report.igmp.querier : "keiner gesehen", warn: report.igmp.queries == 0)
+                    if report.igmp.queries > 0 {
+                        row("Abfragen", "\(report.igmp.queries), davon \(report.igmp.v3_queries) IGMPv3")
+                    }
+                    ForEach(report.igmp.groups, id: \.self) { g in
+                        row(g.group, "\(g.joins) Beitritte, \(g.leaves) Austritte")
+                    }
+                }
+            }
+        }
+    }
+
+    private func section<C: View>(_ title: String, info: String, @ViewBuilder _ content: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 4) {
+                Text(tr(title)).font(.headline)
+                InfoButton(text: info)
+            }
+            VStack(alignment: .leading, spacing: 14) { content() }
                 .font(.callout)
                 .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .cardBackground()
-            }
-            Text("IGMP").font(.title3.weight(.medium))
-            HStack(spacing: 4) {
-                Text(tr(report.igmp.queries > 0 ? "Querier: \(report.igmp.querier) (\(report.igmp.queries) Abfragen, davon \(report.igmp.v3_queries) IGMPv3)" : "Kein IGMP-Querier gesehen"))
-                    .font(.callout).foregroundStyle(report.igmp.queries > 0 ? .primary : .secondary)
-                if report.igmp.queries == 0 {
-                    InfoButton(text: "Ohne Querier kann der Switch Multicast nach einiger Zeit abschalten.")
-                }
-            }
-            ForEach(report.igmp.groups, id: \.self) { g in
-                Text(tr("\(g.group): \(g.joins) Beitritte, \(g.leaves) Austritte")).font(.callout.monospacedDigit())
-            }
+        }
+    }
+
+    private func row(_ k: String, _ v: String, warn: Bool = false) -> some View {
+        GridRow {
+            Text(tr(k)).foregroundStyle(.secondary)
+            Text(tr(v)).monospacedDigit().foregroundStyle(warn ? Color.orange : Color.primary).textSelection(.enabled)
         }
     }
 }

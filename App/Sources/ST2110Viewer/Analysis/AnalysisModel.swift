@@ -257,13 +257,10 @@ final class AnalysisModel {
                 if let i = self.entries.firstIndex(where: { $0.id == id }) {
                     // Ein unlesbarer Abschnitt ersetzt keinen guten Stand
                     if e.report != nil || self.entries[i].report == nil { self.entries[i] = e }
-                    if self.selectedID == id, self.selectedStream == nil {
-                        self.selectedStream = e.report?.defaultSelection
-                    }
                 } else {
                     self.entries.insert(e, at: 0)
                     self.selectedID = id
-                    self.selectedStream = e.report?.defaultSelection
+                    self.selectedStream = nil
                 }
                 self.liveRounds += 1
             }
@@ -303,7 +300,7 @@ final class AnalysisModel {
                 }
                 self.entries.insert(e, at: 0)
                 self.selectedID = e.id
-                self.selectedStream = e.report?.defaultSelection
+                self.selectedStream = nil
                 self.progress = nil
                 self.busyFile = nil
             }

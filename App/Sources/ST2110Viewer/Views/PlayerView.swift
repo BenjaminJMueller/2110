@@ -46,10 +46,6 @@ struct PlayerView: View {
             model.togglePlay()
             return .handled
         }
-        .onKeyPress(.escape) {
-            if model.isFullScreen { NSApp.keyWindow?.toggleFullScreen(nil); return .handled }
-            return .ignored
-        }
         .onKeyPress(characters: CharacterSet(charactersIn: "mM")) { _ in
             model.settings.muted.toggle()
             model.player.setMute(model.settings.muted)

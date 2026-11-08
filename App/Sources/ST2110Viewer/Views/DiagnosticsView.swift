@@ -198,7 +198,7 @@ struct DiagnosticsView: View {
     private func lossPct(_ lost: UInt64, _ got: UInt64) -> String {
         let total = lost + got
         guard total > 0, lost > 0 else { return "" }
-        return String(format: " (%.4f %%)", locale: .current, Double(lost) / Double(total) * 100)
+        return String(format: " (%.2f %%)", locale: .current, Double(lost) / Double(total) * 100)
     }
 
     private func syncExplanation(_ m: st_sync_mode) -> String {

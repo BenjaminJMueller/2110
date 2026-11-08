@@ -64,6 +64,8 @@ final class AppModel {
     let updates = Updates()
     let output: ExternalOutput
 
+    @ObservationIgnored private var keyMonitor: Any?
+
     var appVersion: String {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
         let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
@@ -86,11 +88,64 @@ final class AppModel {
         sender.interfacesProvider = { [weak self] in self?.interfaces.interfaces ?? [] }
         sender.settingsProvider = { [weak self] in self?.settings ?? AppSettings() }
         applyAppearance()
+        // Esc beendet Vollbild und Bildschirmausgabe, egal wo der Fokus liegt
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] e in
+            guard e.keyCode == 53 else { return e }
+            return MainActor.assumeIsolated {
+                guard let self else { return e }
+                if self.output.isActive { self.output.hide(); return nil }
+                if self.isFullScreen { (NSApp.keyWindow ?? NSApp.mainWindow)?.toggleFullScreen(nil); return nil }
+                return e
+            }
+        }
         if let e = GStreamerEnvironment.initError {
             alert = "Die Medienkomponente (GStreamer) konnte nicht gestartet werden: \(e)"
         } else if !GStreamerEnvironment.missingPlugins.isEmpty {
             alert = "Es fehlen Bestandteile der Medienkomponente: \(GStreamerEnvironment.missingPlugins). Bitte die App neu installieren."
         }
+    }
+
+    // MARK: Vollbild und Bildschirmausgabe
+
+    /// Vollbild ein/aus; vor dem ersten Mal ein Hinweis, wie man es wieder verlässt.
+    func toggleFullScreen() {
+        guard let w = NSApp.keyWindow ?? NSApp.mainWindow else { return }
+        if !isFullScreen, !confirmHint(key: "hint.fullscreen", title: "Vollbild",
+                                       text: "Beenden mit Esc oder ⌃⌘F. Die Bedienleiste erscheint, sobald Sie die Maus bewegen.",
+                                       ok: "Vollbild starten") { return }
+        w.toggleFullScreen(nil)
+    }
+
+    func toggleOutput() {
+        if output.isActive { output.hide(); return }
+        if confirmOutputHint() { output.toggle() }
+    }
+
+    func showOutput(on id: CGDirectDisplayID) {
+        if !output.isActive, !confirmOutputHint() { return }
+        output.show(on: id)
+    }
+
+    private func confirmOutputHint() -> Bool {
+        confirmHint(key: "hint.output", title: "Ausgabe auf Bildschirm",
+                    text: "Beenden mit Esc oder ⌘⇧B. Das Bild füllt den gewählten Bildschirm ohne Bedienelemente.",
+                    ok: "Ausgabe starten")
+    }
+
+    /// Hinweis wie in MadMapper: einmal zeigen, abschaltbar.
+    private func confirmHint(key: String, title: String, text: String, ok: String) -> Bool {
+        if SnapshotRunner.outputDir != nil || UserDefaults.standard.bool(forKey: key) { return true }
+        let a = NSAlert()
+        a.messageText = tr(title)
+        a.informativeText = tr(text)
+        a.icon = NSImage(systemSymbolName: "escape", accessibilityDescription: nil) ?? a.icon
+        a.addButton(withTitle: tr(ok))
+        a.addButton(withTitle: tr("Abbrechen"))
+        a.showsSuppressionButton = true
+        a.suppressionButton?.title = tr("Nicht mehr anzeigen")
+        let r = a.runModal()
+        if a.suppressionButton?.state == .on { UserDefaults.standard.set(true, forKey: key) }
+        return r == .alertFirstButtonReturn
     }
 
     func applyAppearance() {

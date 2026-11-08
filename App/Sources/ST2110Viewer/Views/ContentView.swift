@@ -32,6 +32,8 @@ struct ContentView: View {
                     .inspectorColumnWidth(min: 320, ideal: 360, max: 560)
             }
         }
+        .onChange(of: model.inspectorShown) { _, shown in if shown && model.mode == .receive { makeRoomForInspector() } }
+        .onChange(of: model.mode) { _, mode in if mode == .receive && model.inspectorShown { makeRoomForInspector() } }
         .navigationTitle(tr(title))
         .navigationSubtitle(tr(subtitle))
         .toolbar {
@@ -194,7 +196,7 @@ struct AnalysisSidebar: View {
         if parts.count == 3 {
             a.selectedStream = parts[2]
         } else {
-            a.selectedStream = a.entries.first(where: { $0.id == id })?.report?.defaultSelection
+            a.selectedStream = nil
         }
         expanded.insert(id)
     }
@@ -246,6 +248,21 @@ private struct StreamRow: View {
 }
 
 extension ContentView {
+    /// Wie Xcode: Reicht die Fensterbreite für Seitenleiste, Bild und Diagnose
+    /// nicht, wird das Fenster breiter. Nur wenn auch der Bildschirm zu schmal
+    /// ist, weicht die Seitenleiste.
+    func makeRoomForInspector() {
+        guard !model.isFullScreen, let w = NSApp.keyWindow ?? NSApp.mainWindow, let screen = w.screen else { return }
+        let needed: CGFloat = (columns == .detailOnly ? 0 : 260) + 600 + 380
+        guard w.frame.width < needed else { return }
+        let vis = screen.visibleFrame
+        var f = w.frame
+        f.size.width = min(needed, vis.width)
+        if f.maxX > vis.maxX { f.origin.x = max(vis.minX, vis.maxX - f.width) }
+        w.setFrame(f, display: true, animate: true)
+        if f.width < needed { columns = .detailOnly }
+    }
+
     /// Untertitel nur, wenn er etwas anderes sagt als der Titel.
     var subtitle: String {
         guard model.mode == .receive, model.player.isDemo else { return "" }
