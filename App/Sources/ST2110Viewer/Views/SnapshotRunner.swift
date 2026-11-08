@@ -29,7 +29,7 @@ enum SnapshotRunner {
             model.showOnboarding = false
             await wait(0.6)
         }
-        model.settings.onboardingDone = true
+        model.finishOnboarding()
 
         // Empfang: Demo
         for (ap, name) in [(2, "dunkel"), (1, "hell")] {

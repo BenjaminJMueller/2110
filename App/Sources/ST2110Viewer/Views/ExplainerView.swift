@@ -29,7 +29,7 @@ struct ExplainerView: View {
                 case 2: MulticastPage()
                 case 3: PTPPage()
                 case 4: NMOSPage()
-                default: ReadyPage(start: { finish() }, demo: { model.selection = .demo; finish() })
+                default: ReadyPage(start: { finish() })
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -76,7 +76,7 @@ struct ExplainerView: View {
     }
 
     private func finish() {
-        model.settings.onboardingDone = true
+        model.finishOnboarding()
         dismiss()
     }
 }
@@ -151,12 +151,12 @@ private struct WelcomePage: View {
                 .resizable().frame(width: 112, height: 112)
                 .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
                 .accessibilityHidden(true)
-            Headline(title: "Willkommen bei 2110 Viewer",
-                     lead: "Bild und Ton von ST-2110-Geräten direkt auf dem Mac. Entstanden für die Lehre.")
+            Headline(title: "Willkommen",
+                     lead: "2110 Viewer empfängt, sendet und analysiert ST 2110 auf dem Mac. Entstanden für die Lehre.")
             HStack(spacing: 16) {
-                Tile(icon: "play.rectangle.fill", title: "Empfangen", text: "Geräte finden, Bild ansehen, Ton hören")
-                Tile(icon: "dot.radiowaves.up.forward", title: "Senden", text: "Testbild, Datei oder Kamera ins Netz")
-                Tile(icon: "waveform.path.ecg.rectangle.fill", title: "Analysieren", text: "Mitschnitte auf Fehler prüfen")
+                Tile(icon: "play.rectangle.fill", title: "Empfangen", text: "Quellen im Netz ansehen und abhören")
+                Tile(icon: "dot.radiowaves.up.forward", title: "Senden", text: "Testbild, Video oder Kamera ins Netz senden")
+                Tile(icon: "waveform.path.ecg.rectangle.fill", title: "Analysieren", text: "Mitschnitte und Empfang prüfen")
             }
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: 680)
@@ -169,8 +169,8 @@ private struct EssencesPage: View {
     var body: some View {
         VStack(spacing: 24) {
             Spacer(minLength: 0)
-            Headline(title: "Aus einem Kabel werden drei Ströme",
-                     lead: "ST 2110 trennt Bild, Ton und Daten. Jeder Strom hat seine eigene Adresse im Netz.")
+            Headline(title: "Getrennte Ströme",
+                     lead: "Ein SDI-Signal wird in Video, Audio und Zusatzdaten aufgeteilt. Jeder Strom hat eine eigene Zieladresse, meist eine eigene Multicast-Gruppe.")
             FlowDiagram(nodes: [
                 .init(id: "sdi", title: "Kamera", subtitle: "SDI", icon: "video", x: 0.08, y: 0.5),
                 .init(id: "conv", title: "Converter", subtitle: "SDI zu IP", icon: "arrow.left.arrow.right.square", x: 0.4, y: 0.5),
@@ -184,7 +184,7 @@ private struct EssencesPage: View {
                 .init(from: "conv", to: "d", style: .normal, density: 1),
             ])
             .frame(height: 260)
-            Chips(items: [("speedometer", "Unkomprimiert, bis 2,6 Gbit/s"), ("cable.connector", "Braucht 10-GbE")])
+            Chips(items: [("speedometer", "Video unkomprimiert, 1 bis 2,6 Gbit/s je HD-Strom"), ("cable.connector", "Mehr als Gigabit nötig, üblich ist 10 GbE")])
             Spacer(minLength: 0)
         }
     }
@@ -194,14 +194,14 @@ private struct MulticastPage: View {
     var body: some View {
         VStack(spacing: 24) {
             Spacer(minLength: 0)
-            Headline(title: "Einmal senden, viele empfangen",
-                     lead: "Der Switch gibt jeden Strom nur an die Geräte weiter, die ihn angefordert haben.")
+            Headline(title: "Multicast",
+                     lead: "Ein Sender, beliebig viele Empfänger. Empfänger melden sich per IGMP für einen Strom an; mit IGMP-Snooping leitet der Switch ihn nur dorthin weiter.")
             FlowDiagram(nodes: [
                 .init(id: "s", title: "Sender", subtitle: "Multicast", icon: "dot.radiowaves.up.forward", x: 0.08, y: 0.5),
                 .init(id: "sw", title: "Switch", subtitle: "IGMP", icon: "rectangle.connected.to.line.below", x: 0.42, y: 0.5),
-                .init(id: "r1", title: "Monitor", subtitle: "beigetreten", icon: "display", x: 0.86, y: 0.14),
-                .init(id: "r2", title: "2110 Viewer", subtitle: "beigetreten", icon: "laptopcomputer", x: 0.86, y: 0.5),
-                .init(id: "r3", title: "Recorder", subtitle: "nicht beigetreten", icon: "externaldrive", x: 0.86, y: 0.86),
+                .init(id: "r1", title: "Monitor", subtitle: "angemeldet", icon: "display", x: 0.86, y: 0.14),
+                .init(id: "r2", title: "2110 Viewer", subtitle: "angemeldet", icon: "laptopcomputer", x: 0.86, y: 0.5),
+                .init(id: "r3", title: "Recorder", subtitle: "nicht angemeldet", icon: "externaldrive", x: 0.86, y: 0.86),
             ], links: [
                 .init(from: "s", to: "sw", style: .accent, density: 8),
                 .init(from: "sw", to: "r1", style: .accent, density: 8),
@@ -209,7 +209,7 @@ private struct MulticastPage: View {
                 .init(from: "sw", to: "r3", style: .idle, density: 0),
             ])
             .frame(height: 260)
-            Chips(items: [("questionmark.circle", "Kein Bild? Oft fehlt am Switch der IGMP-Querier")])
+            Chips(items: [("questionmark.circle", "Bild bricht nach Minuten ab? IGMP-Querier am Switch prüfen")])
             Spacer(minLength: 0)
         }
     }
@@ -219,8 +219,8 @@ private struct PTPPage: View {
     var body: some View {
         VStack(spacing: 22) {
             Spacer(minLength: 0)
-            Headline(title: "Eine Uhr für alle",
-                     lead: "Jedes Paket trägt die Zeit des Grandmasters. So passen Bild und Ton genau zusammen.")
+            Headline(title: "PTP",
+                     lead: "Alle Geräte richten ihre Uhr nach einem Grandmaster. Daraus entstehen die RTP-Zeitstempel, über die Bild und Ton synchron bleiben.")
             FlowDiagram(nodes: [
                 .init(id: "gm", title: "Grandmaster", subtitle: "PTP", icon: "clock", x: 0.5, y: 0.12),
                 .init(id: "c", title: "Converter", subtitle: "Follower", icon: "arrow.left.arrow.right.square", x: 0.16, y: 0.84),
@@ -235,7 +235,7 @@ private struct PTPPage: View {
             TimestampStrip()
                 .frame(height: 86)
                 .accessibilityLabel("Zeitachse: Videobilder alle 20 Millisekunden und Audiopakete jede Millisekunde tragen Zeitstempel derselben Uhr")
-            Chips(items: [("ear", "Die App hört nur zu und wird nie Master")])
+            Chips(items: [("ear", "2110 Viewer ist nur Follower, nie Master")])
             Spacer(minLength: 0)
         }
     }
@@ -245,8 +245,8 @@ private struct NMOSPage: View {
     var body: some View {
         VStack(spacing: 24) {
             Spacer(minLength: 0)
-            Headline(title: "Geräte finden sich selbst",
-                     lead: "Per NMOS kündigen Geräte ihre Ströme an. 2110 Viewer zeigt sie links in der Seitenleiste.")
+            Headline(title: "NMOS",
+                     lead: "Über NMOS IS-04 machen Geräte ihre Ströme bekannt, per Registry oder direkt per mDNS. 2110 Viewer listet sie links unter „Im Netzwerk“.")
             FlowDiagram(nodes: [
                 .init(id: "c", title: "Converter", subtitle: "„SDI 1“", icon: "arrow.left.arrow.right.square", x: 0.16, y: 0.5),
                 .init(id: "e", title: "2110 Viewer", subtitle: "zeigt die Quelle an", icon: "laptopcomputer", x: 0.84, y: 0.5),
@@ -254,7 +254,7 @@ private struct NMOSPage: View {
                 .init(from: "c", to: "e", style: .accent, density: 3, label: "Ich sende „SDI 1“"),
             ])
             .frame(height: 180)
-            Chips(items: [("plus.circle", "Nichts gefunden? Gerät per Adresse hinzufügen"), ("doc", "Oder eine SDP-Datei ins Fenster ziehen")])
+            Chips(items: [("plus.circle", "Gerät per IP-Adresse hinzufügen"), ("doc", "SDP-Datei ins Fenster ziehen")])
             Spacer(minLength: 0)
         }
     }
@@ -262,9 +262,8 @@ private struct NMOSPage: View {
 
 private struct ReadyPage: View {
     let start: () -> Void
-    let demo: () -> Void
     var body: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: 26) {
             Spacer(minLength: 0)
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 64))
@@ -272,23 +271,67 @@ private struct ReadyPage: View {
                 .foregroundStyle(Color.accentColor)
                 .accessibilityHidden(true)
             Headline(title: "Alles bereit",
-                     lead: "Wenn macOS nach dem lokalen Netzwerk fragt, bitte erlauben. Ohne Netzwerk können Sie das Testbild ausprobieren.")
+                     lead: "Fragt macOS, ob die App das lokale Netzwerk nutzen darf, bitte „Erlauben“ wählen. Ohne diese Erlaubnis findet sie keine Geräte und empfängt kein Bild.")
             HStack(spacing: 16) {
-                Tile(icon: "network", title: "Lokales Netzwerk", text: "Erlauben, damit die App Geräte findet")
-                Tile(icon: "tv", title: "Ohne Netzwerk", text: "Testbild und Testton ansehen", tint: .orange)
+                AllowTile()
+                Tile(icon: "hand.raised.fill", title: "Ohne Erlaubnis", text: "Keine Geräte, kein Bild, kein Ton", tint: .orange)
+                Tile(icon: "gearshape.fill", title: "Später ändern", text: "Systemeinstellungen › Datenschutz & Sicherheit › Lokales Netzwerk", tint: .gray)
             }
             .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: 520)
-            HStack(spacing: 12) {
-                Button { demo() } label: { Label("Testbild ansehen", systemImage: "tv").frame(minWidth: 150) }
-                    .controlButtonStyle()
-                    .controlSize(.large)
-                Button { start() } label: { Text("Los geht’s").frame(minWidth: 150) }
+            .frame(maxWidth: 700)
+            VStack(spacing: 10) {
+                Button { start() } label: { Text("Los geht’s").frame(minWidth: 180) }
                     .keyboardShortcut(.defaultAction)
                     .controlButtonStyle(prominent: true)
                     .controlSize(.large)
+                Button("Datenschutz-Einstellungen öffnen") {
+                    if let u = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_LocalNetwork") {
+                        NSWorkspace.shared.open(u)
+                    }
+                }
+                .buttonStyle(.link)
+                .font(.callout)
             }
             Spacer(minLength: 0)
+        }
+    }
+}
+
+/// Kachel mit nachgebildeten macOS-Knöpfen; „Erlauben“ ist hervorgehoben.
+private struct AllowTile: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pulse = false
+
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 6) {
+                Text("Nicht erlauben")
+                    .font(.caption)
+                    .padding(.horizontal, 8).padding(.vertical, 5)
+                    .background(Color.primary.opacity(0.08), in: Capsule())
+                Text("Erlauben")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .background(Color.accentColor, in: Capsule())
+                    .shadow(color: Color.accentColor.opacity(pulse ? 0.6 : 0), radius: pulse ? 8 : 0)
+                    .scaleEffect(pulse ? 1.06 : 1)
+            }
+            .lineLimit(1)
+            .fixedSize()
+            .frame(height: 44)
+            Text("Erlauben").font(.headline)
+            Text("Im Dialog von macOS auf „Erlauben“ klicken").font(.callout).foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.vertical, 24).padding(.horizontal, 16)
+        .cardBackground(cornerRadius: 18)
+        .accessibilityElement(children: .combine)
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) { pulse = true }
         }
     }
 }

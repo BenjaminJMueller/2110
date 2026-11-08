@@ -37,7 +37,9 @@ final class AppModel {
             if oldValue.appearance != settings.appearance { applyAppearance() }
             if oldValue.mdnsDiscovery != settings.mdnsDiscovery || oldValue.registryURL != settings.registryURL
                 || oldValue.manualNodes != settings.manualNodes {
-                discovery.start(settings: settings)
+                // Erst nach der Einführung suchen: Dann fragt macOS nach dem lokalen Netzwerk,
+        // wenn die Einführung es gerade erklärt hat.
+        if settings.onboardingDone { discovery.start(settings: settings) }
             }
         }
     }
@@ -109,6 +111,13 @@ final class AppModel {
         } else if !GStreamerEnvironment.missingPlugins.isEmpty {
             alert = "Es fehlen Bestandteile der Medienkomponente: \(GStreamerEnvironment.missingPlugins). Bitte die App neu installieren."
         }
+    }
+
+    /// Ende der Einführung; beim ersten Mal startet hier die Gerätesuche.
+    func finishOnboarding() {
+        let first = !settings.onboardingDone
+        settings.onboardingDone = true
+        if first { discovery.start(settings: settings) }
     }
 
     // MARK: Manuell gewählte Geräte überwachen
