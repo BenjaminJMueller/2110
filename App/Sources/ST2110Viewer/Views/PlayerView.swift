@@ -180,12 +180,23 @@ private struct HintBanner: View {
     var body: some View {
         let p = model.player
         let warnings = (p.formatProblem.map { [$0] } ?? []) + p.mediaWarnings
-        if let w = warnings.first {
+        if let n = model.deviceNotice {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange).accessibilityHidden(true)
+                Text(tr(n)).font(.callout).fixedSize(horizontal: false, vertical: true)
+                Spacer()
+                Button { model.deviceNotice = nil } label: { Image(systemName: "xmark") }
+                    .buttonStyle(.borderless)
+                    .help("Hinweis schließen")
+            }
+            .padding(10)
+            .background(Color.orange.opacity(0.10), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        } else if let w = warnings.first {
             banner(icon: "exclamationmark.triangle.fill", color: .orange, title: "Format", text: w)
         } else if let h = p.hints.first, h.severity >= .warning, p.isActive {
             banner(icon: h.severity == .error ? "xmark.octagon.fill" : "exclamationmark.triangle.fill",
                    color: h.severity == .error ? .red : .orange,
-                   title: h.title + (h.certainty == .suspected ? " (vermutet)" : ""), text: h.detail)
+                   title: h.title, text: h.detail)
         }
     }
 

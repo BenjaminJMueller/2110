@@ -99,7 +99,11 @@ struct ContentView: View {
         .onChange(of: model.selection) { _, new in
             model.activate(new)
         }
-        .onAppear { model.applyAppearance() }
+        .onAppear { model.applyAppearance(); model.checkDevices() }
+        .onChange(of: model.audioDevices.devices.map(\.uid)) { _, _ in model.checkDevices() }
+        .onChange(of: model.interfaces.changeCounter) { _, _ in model.checkDevices() }
+        .onChange(of: model.settings.audioDeviceUID) { _, _ in model.deviceNotice = nil; model.checkDevices() }
+        .onChange(of: model.settings.interfaceName) { _, _ in model.deviceNotice = nil; model.checkDevices() }
         .buttonBorderShape(.capsule)
         .task {
             if let dir = SnapshotRunner.outputDir { await SnapshotRunner.run(model: model, dir: dir) }

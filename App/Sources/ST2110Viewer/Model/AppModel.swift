@@ -66,6 +66,12 @@ final class AppModel {
 
     @ObservationIgnored private var keyMonitor: Any?
 
+    /// Hinweis, wenn ein manuell gewähltes Gerät (Schnittstelle, Tonausgang) wegfällt oder zurückkommt.
+    var deviceNotice: String?
+    @ObservationIgnored private var audioNames: [String: String] = [:]
+    @ObservationIgnored private var audioMissing = false
+    @ObservationIgnored private var interfaceMissing = false
+
     var appVersion: String {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
         let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
@@ -103,6 +109,55 @@ final class AppModel {
         } else if !GStreamerEnvironment.missingPlugins.isEmpty {
             alert = "Es fehlen Bestandteile der Medienkomponente: \(GStreamerEnvironment.missingPlugins). Bitte die App neu installieren."
         }
+    }
+
+    // MARK: Manuell gewählte Geräte überwachen
+
+    /// Aufruf bei jeder Änderung der Audio- oder Netzwerkgeräte. Fällt ein manuell
+    /// gewähltes Gerät weg, sagt die App das und weicht aus; kommt es zurück, wird es wieder benutzt.
+    func checkDevices() {
+        for d in audioDevices.devices { audioNames[d.uid] = d.name }
+
+        let uid = settings.audioDeviceUID
+        if !uid.isEmpty {
+            let present = audioDevices.device(uid: uid) != nil
+            let name = audioNames[uid] ?? tr("Das gewählte Gerät")
+            if !present && !audioMissing {
+                audioMissing = true
+                deviceNotice = tr("„\(name)“ ist nicht mehr verfügbar. Der Ton läuft über den Systemausgang.")
+                player.addLog(.warning, "Tonausgang \(name) getrennt, weiter über den Systemausgang")
+                restartPlayback()
+            } else if present && audioMissing {
+                audioMissing = false
+                deviceNotice = tr("„\(name)“ ist wieder verbunden und wird benutzt.")
+                player.addLog(.info, "Tonausgang \(name) wieder verbunden")
+                restartPlayback()
+            }
+        } else {
+            audioMissing = false
+        }
+
+        let ifName = settings.interfaceName
+        if !ifName.isEmpty {
+            let present = interfaces.interface(named: ifName)?.ipv4 != nil
+            if !present && !interfaceMissing {
+                interfaceMissing = true
+                deviceNotice = tr("Die Schnittstelle „\(ifName)“ ist nicht mehr verbunden. Kabel oder Adapter prüfen, oder unter Erweitert › Netzwerk „Automatisch“ wählen.")
+                player.addLog(.warning, "Schnittstelle \(ifName) getrennt")
+            } else if present && interfaceMissing {
+                interfaceMissing = false
+                deviceNotice = tr("Die Schnittstelle „\(ifName)“ ist wieder verbunden.")
+                player.addLog(.info, "Schnittstelle \(ifName) wieder verbunden, Empfang neu gestartet")
+                restartPlayback()
+            }
+        } else {
+            interfaceMissing = false
+        }
+    }
+
+    private func restartPlayback() {
+        guard player.isActive, let c = player.current else { return }
+        if player.isDemo { player.playDemo(settings: settings) } else { player.play(c, settings: settings) }
     }
 
     // MARK: Vollbild und Bildschirmausgabe
