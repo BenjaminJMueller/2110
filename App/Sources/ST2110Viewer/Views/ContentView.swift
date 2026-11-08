@@ -21,23 +21,27 @@ struct ContentView: View {
         } detail: {
             Group {
                 switch model.mode {
-                case .receive:
-                    PlayerView()
-                        .inspector(isPresented: $model.inspectorShown) {
-                            DiagnosticsView()
-                                .inspectorColumnWidth(min: 320, ideal: 360, max: 560)
-                        }
+                case .receive: PlayerView()
                 case .send: SendView()
                 case .analyze: AnalysisView()
                 }
             }
+            .transition(.opacity)
+            // Die Diagnose bleibt am selben Platz und fährt beim Moduswechsel weich ein und aus
+            .inspector(isPresented: Binding(get: { model.inspectorShown && model.mode == .receive },
+                                            set: { model.inspectorShown = $0 })) {
+                DiagnosticsView()
+                    .inspectorColumnWidth(min: 320, ideal: 360, max: 560)
+            }
         }
+        .animation(.smooth(duration: 0.25), value: model.mode)
         .navigationTitle(tr(title))
         .navigationSubtitle(tr(subtitle))
-        .onChange(of: model.inspectorShown) { _, shown in fitInspector(shown) }
+        .onChange(of: model.inspectorShown) { _, shown in fitInspector(shown && model.mode == .receive) }
+        .onChange(of: model.mode) { _, mode in fitInspector(model.inspectorShown && mode == .receive) }
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Picker("Modus", selection: $model.mode) {
+                Picker("Modus", selection: $model.mode.animation(.smooth(duration: 0.25))) {
                     ForEach(AppMode.allCases) { m in Label(tr(m.rawValue), systemImage: m.icon).tag(m) }
                 }
                 .pickerStyle(.segmented)
@@ -45,13 +49,6 @@ struct ContentView: View {
                 .help("Empfangen (⌘1), Senden (⌘2), Analysieren (⌘3)")
             }
             ToolbarItemGroup(placement: .primaryAction) {
-                Button {
-                    model.explainerPage = 1
-                    model.showOnboarding = true
-                } label: {
-                    Label("So funktioniert ST 2110", systemImage: "questionmark.circle")
-                }
-                .help("Erklärung: Essenzen, Multicast, PTP, NMOS")
                 SettingsLink {
                     Label("Erweitert", systemImage: "slider.horizontal.3")
                 }
@@ -183,11 +180,11 @@ extension ContentView {
     /// Seitenleiste, solange die Diagnose offen ist (statt den Inhalt abzuschneiden).
     func fitInspector(_ shown: Bool) {
         let width = NSApp.keyWindow?.frame.width ?? NSApp.windows.first?.frame.width ?? 0
-        if shown, columns != .detailOnly, width > 0, width < 1500 {
-            withAnimation { columns = .detailOnly }
+        if shown, columns != .detailOnly, !sidebarAutoHidden, width > 0, width < 1500 {
+            withAnimation(.smooth(duration: 0.25)) { columns = .detailOnly }
             sidebarAutoHidden = true
         } else if !shown, sidebarAutoHidden {
-            withAnimation { columns = .all }
+            withAnimation(.smooth(duration: 0.25)) { columns = .all }
             sidebarAutoHidden = false
         }
     }

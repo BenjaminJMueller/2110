@@ -10,9 +10,9 @@ struct AppSettings: Codable, Equatable {
         var id: Int { rawValue }
         var title: String {
             switch self {
-            case .automatic: return "Automatisch (PTP, sonst RTP-Zeitstempel)"
-            case .rtpAligned: return "Zeitlich abgestimmt über RTP-Zeitstempel (ohne PTP)"
-            case .preview: return "Einfache Vorschau (nicht lippensynchron)"
+            case .automatic: return "Automatisch"
+            case .rtpAligned: return "Über RTP-Zeitstempel"
+            case .preview: return "Einfache Vorschau"
             }
         }
     }

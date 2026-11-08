@@ -61,6 +61,7 @@ final class AppModel {
     let audioDevices = AudioDeviceList()
     let sender = SenderController()
     let analysis = AnalysisModel()
+    let updates = Updates()
     let output: ExternalOutput
 
     var appVersion: String {

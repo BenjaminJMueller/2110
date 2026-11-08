@@ -1,3 +1,4 @@
+import AppKit
 import Charts
 import SwiftUI
 
@@ -94,9 +95,21 @@ struct InfoButton: View {
         .popover(isPresented: $shown, arrowEdge: .bottom) {
             Text(tr(text))
                 .font(.callout)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(width: 300, alignment: .leading)
+                .lineLimit(nil)
+                .frame(width: Self.width, height: Self.height(for: tr(text)), alignment: .topLeading)
                 .padding(14)
         }
+    }
+
+    private static let width: CGFloat = 300
+
+    /// Popover messen ihren Inhalt unter macOS nicht zuverlässig, längere Texte
+    /// würden mit „…“ abgeschnitten. Daher die Höhe vorab ausrechnen.
+    private static func height(for text: String) -> CGFloat {
+        let font = NSFont.preferredFont(forTextStyle: .callout)
+        let r = (text as NSString).boundingRect(with: NSSize(width: width, height: .greatestFiniteMagnitude),
+                                                 options: [.usesLineFragmentOrigin, .usesFontLeading],
+                                                 attributes: [.font: font])
+        return ceil(r.height) + 4
     }
 }

@@ -12,11 +12,14 @@ struct AnalysisView: View {
         let a = model.analysis
         Group {
             if let busy = a.busyFile {
-                VStack(spacing: 12) {
-                    ProgressView(value: a.progress ?? 0) { Text(tr("Analysiere \(busy)")) }
-                        .frame(width: 360)
-                    Text("Große Mitschnitte brauchen etwas Zeit; die App bleibt bedienbar.")
-                        .font(.callout).foregroundStyle(.secondary)
+                ProgressView(value: a.progress ?? 0) { Text(tr("Analysiere \(busy)")) }
+                    .frame(width: 360)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if a.liveRunning && a.selected == nil {
+                VStack(spacing: 14) {
+                    ProgressView().controlSize(.large)
+                    Text("Erster Abschnitt wird aufgezeichnet …").foregroundStyle(.secondary)
+                    Button("Abbrechen") { a.stopLive() }.controlButtonStyle()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let e = a.selected {
@@ -55,28 +58,22 @@ private struct AnalysisEmptyView: View {
                 .font(.system(size: 56, weight: .thin))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(Color.accentColor)
-            Text("Mitschnitt analysieren").font(.title.weight(.semibold))
-            Text("Eine pcap- oder pcapng-Datei hierher ziehen. Die App findet die ST-2110-Ströme und prüft Verluste, Zeitverhalten, PTP und IGMP.")
-                .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: 460)
+            HStack(spacing: 6) {
+                Text("Mitschnitt analysieren").font(.title.weight(.semibold))
+                InfoButton(text: "Die App findet die ST-2110-Ströme in einer pcap- oder pcapng-Datei und prüft Verluste, Zeitverhalten nach ST 2110-21, PTP und IGMP. Aufnehmen lässt sich ein Mitschnitt direkt beim Empfang unter Diagnose › Mitschnitt. Die genauesten Zeitwerte liefert ein Hardware-Mitschnitt, etwa über den Spiegelport des Switches.")
+            }
+            Text("Datei hierher ziehen oder den Empfang live prüfen.")
+                .multilineTextAlignment(.center).foregroundStyle(.secondary)
             HStack(spacing: 12) {
                 Button { importing = true } label: { Label("Mitschnitt öffnen …", systemImage: "folder") }
                     .controlButtonStyle(prominent: true)
                 Button { model.analysis.startLive(model: model) } label: { Label("Empfang live analysieren", systemImage: "waveform.path.ecg") }
                     .controlButtonStyle()
                     .disabled(!model.player.isActive || model.player.isDemo)
-                    .help("Analysiert die laufende Quelle fortlaufend in Abschnitten von 3 Sekunden")
+                    .help(tr(model.player.isActive && !model.player.isDemo ? "Prüft die laufende Quelle alle 3 Sekunden" : "Zuerst eine Quelle empfangen"))
             }
             .controlSize(.large)
             .padding(.top, 4)
-            VStack(alignment: .leading, spacing: 10) {
-                Label("Aufnehmen direkt beim Empfang: Diagnose › Mitschnitt", systemImage: "record.circle")
-                Label("Genaueste Zeitwerte liefert ein Hardware-Mitschnitt, etwa über den Spiegelport des Switches.", systemImage: "network")
-            }
-            .font(.callout).foregroundStyle(.secondary)
-            .frame(maxWidth: 460, alignment: .leading)
-            .padding(16)
-            .cardBackground()
-            .padding(.top, 12)
         }
         .padding(32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -89,42 +86,71 @@ private struct ReportView: View {
     let report: AnalysisReport
 
     var body: some View {
-        @Bindable var a = model.analysis
-        HStack(spacing: 0) {
-            List(selection: $a.selectedStream) {
-                Section("Ströme") {
-                    ForEach(report.streams) { s in
-                        HStack(spacing: 8) {
-                            Circle().fill(levelColor(s.worstLevel)).frame(width: 8, height: 8).accessibilityHidden(true)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(tr(s.summary)).font(.callout.weight(.medium))
-                                Text(tr(s.destination)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                            }
-                        }
-                        .tag(s.index)
-                        .accessibilityLabel(tr("\(s.kindTitle), \(s.summary), \(s.destination)"))
-                    }
-                }
-                Section("Netz") {
-                    Label("PTP und IGMP", systemImage: "clock.arrow.2.circlepath").tag(-1)
-                }
-            }
-            .listStyle(.sidebar)
-            .frame(width: 250)
-            Divider()
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
+        let a = model.analysis
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                if a.isLive(entry) {
+                    LiveHeader(report: report)
+                } else {
                     CaptureHeader(entry: entry, report: report)
-                    if a.selectedStream == -1 {
-                        NetworkReport(report: report)
-                    } else if let s = report.streams.first(where: { $0.index == a.selectedStream }) {
-                        StreamReport(stream: s, thumbnail: entry.thumbnails[s.index], duration: report.capture.duration_s)
-                    }
                 }
-                .padding(24)
-                .frame(maxWidth: 1200, alignment: .leading)
+                StreamBar(report: report)
+                if a.selectedStream == -1 {
+                    NetworkReport(report: report)
+                } else if let s = report.streams.first(where: { $0.index == a.selectedStream }) {
+                    StreamReport(stream: s, thumbnail: entry.thumbnails[s.index], duration: report.capture.duration_s,
+                                 trend: a.isLive(entry) ? a.liveTrends[AnalysisModel.trendKey(s)] : nil)
+                }
             }
+            .padding(24)
+            .frame(maxWidth: 1200, alignment: .leading)
         }
+    }
+}
+
+/// Auswahl der Ströme als Leiste über dem Bericht (statt einer zweiten Seitenleiste).
+private struct StreamBar: View {
+    @Environment(AppModel.self) private var model
+    let report: AnalysisReport
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(report.streams) { s in
+                    chip(tag: s.index, color: levelColor(s.worstLevel), title: s.summary, detail: s.destination,
+                         icon: s.kind == "video" ? "film" : s.kind == "audio" ? "waveform" : "text.alignleft")
+                        .accessibilityLabel(tr("\(s.kindTitle), \(s.summary), \(s.destination)"))
+                }
+                chip(tag: -1, color: nil, title: "PTP und IGMP", detail: "Netz", icon: "clock.arrow.2.circlepath")
+            }
+            .padding(.vertical, 2)
+        }
+    }
+
+    private func chip(tag: Int, color: Color?, title: String, detail: String, icon: String) -> some View {
+        let selected = model.analysis.selectedStream == tag
+        return Button {
+            withAnimation(.smooth(duration: 0.2)) { model.analysis.selectedStream = tag }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .foregroundStyle(selected ? Color.white : Color.accentColor)
+                    .frame(width: 18)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(tr(title)).font(.callout.weight(.medium)).lineLimit(1)
+                    Text(tr(detail)).font(.caption.monospacedDigit()).lineLimit(1)
+                        .foregroundStyle(selected ? Color.white.opacity(0.8) : Color.secondary)
+                }
+                if let color {
+                    Circle().fill(color).frame(width: 7, height: 7).accessibilityHidden(true)
+                }
+            }
+            .padding(.horizontal, 12).padding(.vertical, 7)
+            .foregroundStyle(selected ? Color.white : Color.primary)
+            .background(selected ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.quaternary), in: Capsule())
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -140,26 +166,45 @@ private struct CaptureHeader: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {
                 Text(tr(entry.url.lastPathComponent)).font(.title2.weight(.medium))
-                if model.analysis.isLive(entry) {
-                    HStack(spacing: 5) {
-                        Image(systemName: "circle.fill").font(.system(size: 8)).foregroundStyle(.red)
-                            .symbolEffect(.pulse, options: .repeating)
-                        Text("Live").font(.caption.weight(.semibold))
-                    }
-                    .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(Color.red.opacity(0.12), in: Capsule())
-                }
                 Spacer()
-                if model.analysis.isLive(entry) {
-                    Button { model.analysis.stopLive() } label: { Label("Live beenden", systemImage: "stop.fill") }
-                        .controlButtonStyle()
-                } else if entry.url.isFileURL && FileManager.default.fileExists(atPath: entry.url.path) {
+                if entry.url.isFileURL && FileManager.default.fileExists(atPath: entry.url.path) {
                     Button("Als JSON exportieren …") { model.analysis.exportJSON(entry) }.controlSize(.small)
                 }
             }
             Text(tr(captureLine(c)))
                 .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
             ForEach(c.findings ?? [], id: \.self) { f in FindingRow(finding: f) }
+        }
+    }
+}
+
+/// Kopf der Live-Analyse: Quelle, pulsierendes „Live“, Abschnitt, Beenden.
+private struct LiveHeader: View {
+    @Environment(AppModel.self) private var model
+    let report: AnalysisReport
+
+    var body: some View {
+        let a = model.analysis
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
+                Text(tr(a.liveName)).font(.title2.weight(.semibold)).lineLimit(1)
+                HStack(spacing: 5) {
+                    Image(systemName: "circle.fill").font(.system(size: 7)).foregroundStyle(.red)
+                        .symbolEffect(.pulse, options: .repeating)
+                    Text("Live").font(.caption.weight(.semibold))
+                }
+                .padding(.horizontal, 9).padding(.vertical, 4)
+                .background(Color.red.opacity(0.12), in: Capsule())
+                Text(tr("Abschnitt \(a.liveRounds)"))
+                    .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+                    .contentTransition(.numericText())
+                InfoButton(text: "Die App zeichnet den Empfang in Abschnitten von 3 Sekunden auf und analysiert jeden sofort. Die Diagramme zeigen den Verlauf über die Abschnitte. Es ist ein Software-Mitschnitt, Zeitwerte wie Cinst und VRX sind daher Richtwerte.")
+                Spacer()
+                Button { a.stopLive() } label: { Label("Beenden", systemImage: "stop.fill") }
+                    .controlButtonStyle(prominent: true)
+            }
+            let problems = (report.capture.findings ?? []).filter { $0.level >= 1 }
+            ForEach(problems, id: \.self) { FindingRow(finding: $0) }
         }
     }
 }
@@ -203,6 +248,7 @@ private struct StreamReport: View {
     let stream: AnalysisReport.Stream
     let thumbnail: NSImage?
     let duration: Double
+    var trend: AnalysisModel.LiveTrend?
     @State private var chart = "cinst"
 
     var body: some View {
@@ -213,6 +259,22 @@ private struct StreamReport: View {
                 Text(tr(streamLine(s)))
                     .font(.callout.monospacedDigit()).foregroundStyle(.secondary)
             }
+            if let t = trend {
+                HStack(spacing: 12) {
+                    LiveChartTile(title: "Datenrate", unit: "Mbit/s", series: t.rate)
+                    LiveChartTile(title: "Verluste", unit: "Pakete", series: t.lost, warnAbove: 0.5,
+                                  info: "Fehlende RTP-Pakete je Abschnitt von 3 Sekunden, erkannt an Lücken in der Sequenznummer.")
+                    if s.video != nil {
+                        LiveChartTile(title: "Bildrate", unit: "fps", series: t.fps, format: "%.2f", tint: .purple)
+                        LiveChartTile(title: "Cinst max.", unit: "Pakete", series: t.timing, tint: .teal,
+                                      warnAbove: s.video?.limits["cmax_wide"].flatMap { $0 },
+                                      info: "Höchster Stau im Modell-Netzpuffer nach ST 2110-21 je Abschnitt. Orange, wenn die Grenze für Wide überschritten wird.")
+                    } else if s.audio != nil {
+                        LiveChartTile(title: "TS-DF max.", unit: "µs", series: t.timing, tint: .teal,
+                                      info: "Größte Laufzeitschwankung der Audiopakete je Abschnitt. Der Empfänger muss mindestens so viel puffern.")
+                    }
+                }
+            } else {
             HStack(spacing: 12) {
                 StatTile(label: "Datenrate", value: String(format: "%.0f Mbit/s", locale: .current, s.rate_mbps ?? 0))
                 StatTile(label: "Verluste", value: s.lost.formatted(), note: lossNote)
@@ -225,6 +287,7 @@ private struct StreamReport: View {
                     StatTile(label: "TS-DF max.", value: String(format: "%.0f µs", locale: .current, au.tsdf_us.max), note: "1-s-Fenster")
                 }
             }
+            }
             if s.video != nil || s.audio != nil {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
@@ -234,11 +297,11 @@ private struct StreamReport: View {
                         .pickerStyle(.segmented)
                         .labelsHidden()
                         .frame(maxWidth: 560)
+                        InfoButton(text: explanation)
                         Spacer()
                     }
                     MainChart(series: series, limits: limits, unit: unit)
-                        .frame(height: 300)
-                    Text(tr(explanation)).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        .frame(height: trend == nil ? 300 : 220)
                 }
                 .onAppear { if !chartChoices.contains(where: { $0.0 == chart }) { chart = chartChoices.first?.0 ?? "iat_us" } }
                 .onChange(of: stream.index) { _, _ in chart = chartChoices.first?.0 ?? "iat_us" }
@@ -391,8 +454,13 @@ private struct NetworkReport: View {
                 .cardBackground()
             }
             Text("IGMP").font(.title3.weight(.medium))
-            Text(tr(report.igmp.queries > 0 ? "Querier: \(report.igmp.querier) (\(report.igmp.queries) Abfragen, davon \(report.igmp.v3_queries) IGMPv3)" : "Keine IGMP-Abfragen gesehen. Ohne Querier kann der Switch Multicast nach einiger Zeit abschalten."))
-                .font(.callout).foregroundStyle(report.igmp.queries > 0 ? .primary : .secondary)
+            HStack(spacing: 4) {
+                Text(tr(report.igmp.queries > 0 ? "Querier: \(report.igmp.querier) (\(report.igmp.queries) Abfragen, davon \(report.igmp.v3_queries) IGMPv3)" : "Kein IGMP-Querier gesehen"))
+                    .font(.callout).foregroundStyle(report.igmp.queries > 0 ? .primary : .secondary)
+                if report.igmp.queries == 0 {
+                    InfoButton(text: "Ohne Querier kann der Switch Multicast nach einiger Zeit abschalten.")
+                }
+            }
             ForEach(report.igmp.groups, id: \.self) { g in
                 Text(tr("\(g.group): \(g.joins) Beitritte, \(g.leaves) Austritte")).font(.callout.monospacedDigit())
             }

@@ -76,7 +76,9 @@ jobs:
           APP="dist/2110 Viewer.app"
           codesign -dv --verbose=2 "$APP" 2>&1 | head -12
           du -sh "$APP" dist/*.dmg
-          ! find "$APP" -type f \( -name "*.dylib" -o -perm -u+x \) -exec otool -L {} \; | grep -E "/(opt|usr/local|Library/Frameworks)/"
+          if find "$APP" -type f \( -name "*.dylib" -o -perm -u+x \) -exec otool -L {} \; 2>/dev/null | grep -E "^[[:space:]]+/(opt|usr/local|Library/Frameworks)/"; then
+            echo "Abhängigkeit außerhalb des Bundles"; exit 1
+          fi
           spctl -a -vv "$APP" || echo "Erwartet: Gatekeeper lehnt ad-hoc-signierte Apps ab (keine Developer ID)."
       - name: Artefakte hochladen
         uses: actions/upload-artifact@v4
@@ -101,6 +103,18 @@ jobs:
           cp "dist/2110-Viewer-$V.dmg" dist/release/2110-Viewer.dmg
           cp "dist/2110-Viewer-$V.dmg" dist/*third-party-sources.tar.gz dist/license-audit-*.txt dist/release/
           echo "TAG=v$V" >> "$GITHUB_ENV"
+      - name: Update-Feed für Sparkle
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.release
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
+            echo "::warning::Secret SPARKLE_PRIVATE_KEY fehlt, Release ohne Update-Feed"; exit 0
+          fi
+          V=$(cat VERSION)
+          B=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "dist/2110 Viewer.app/Contents/Info.plist")
+          ./scripts/make-appcast.sh "dist/release/2110-Viewer-$V.dmg" "$V" "$B" dist/release/appcast.xml
+          cat dist/release/appcast.xml
       - name: GitHub-Release veröffentlichen
         if: startsWith(github.ref, 'refs/tags/v') || inputs.release
         uses: softprops/action-gh-release@v2
@@ -110,7 +124,7 @@ jobs:
           name: 2110 Viewer ${{ env.TAG }}
           make_latest: true
           body: |
-            DMG öffnen, „2110 Viewer“ in „Programme“ ziehen. Die App ist ad hoc signiert, nicht notarisiert: beim ersten Start einmal Systemeinstellungen › Datenschutz & Sicherheit › „Dennoch öffnen“.
+            DMG öffnen, „2110 Viewer“ in „Programme“ ziehen. Ab Version 1.2 meldet die App neue Versionen selbst. Die App ist ad hoc signiert, nicht notarisiert: beim ersten Start einmal Systemeinstellungen › Datenschutz & Sicherheit › „Dennoch öffnen“.
 
             Enthält GStreamer und weitere Bibliotheken (LGPL-2.1, BSD, MIT, zlib). Den vollständigen Quellcode dieser Bibliotheken enthält das Archiv *third-party-sources.tar.gz*, die Lizenzprüfberichte liegen bei.
           files: dist/release/*

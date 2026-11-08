@@ -39,6 +39,13 @@ struct ViewerApp: App {
         .defaultSize(width: 1400, height: 860)
         .commands { AppCommands(model: model) }
 
+        Window("Über 2110 Viewer", id: "about") {
+            AboutView().environment(model)
+        }
+        .windowResizability(.contentSize)
+        .windowStyle(.hiddenTitleBar)
+        .defaultPosition(.center)
+
         Settings {
             AdvancedSettingsView()
                 .environment(model)
@@ -56,8 +63,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 struct AppCommands: Commands {
     let model: AppModel
+    @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
+        CommandGroup(replacing: .appInfo) {
+            Button("Über 2110 Viewer") { openWindow(id: "about") }
+            Button("Nach Updates suchen …") { model.updates.checkNow() }
+                .disabled(!model.updates.available)
+        }
         CommandGroup(replacing: .newItem) {
             Button("Neue Quelle …") { model.newSource() }
                 .keyboardShortcut("n")

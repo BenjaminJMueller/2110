@@ -35,7 +35,8 @@ echo "== App-Bundle zusammenstellen"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Frameworks"
 cp "$BIN_DIR/$EXEC" "$APP/Contents/MacOS/$EXEC"
-sed -e "s/@VERSION@/$VERSION/" -e "s/@BUILD@/$BUILD/" -e "s/@BUNDLE_ID@/$BUNDLE_ID/" \
+SPARKLE_KEY="$(tr -d '[:space:]' < packaging/sparkle-public-key.txt)"
+sed -e "s/@VERSION@/$VERSION/" -e "s/@BUILD@/$BUILD/" -e "s/@BUNDLE_ID@/$BUNDLE_ID/" -e "s|@SPARKLE_KEY@|$SPARKLE_KEY|" \
     packaging/Info.plist > "$APP/Contents/Info.plist"
 plutil -lint "$APP/Contents/Info.plist"
 
@@ -69,6 +70,18 @@ for f in "$APP/Contents/PlugIns/"*.dylib; do
   install_name_tool -add_rpath "@loader_path/../Frameworks" "$f"
 done
 
+echo "== Sparkle (Updates) einbetten"
+SPARKLE_SRC="$BIN_DIR/Sparkle.framework"
+[ -d "$SPARKLE_SRC" ] || SPARKLE_SRC="$(find "$ROOT/.build/artifacts" -type d -path "*macos-arm64_x86_64/Sparkle.framework" | head -1)"
+[ -d "$SPARKLE_SRC" ] || { echo "Sparkle.framework nicht gefunden"; exit 1; }
+SPARKLE="$APP/Contents/Frameworks/Sparkle.framework"
+ditto "$SPARKLE_SRC" "$SPARKLE"
+# Die XPC-Dienste braucht nur eine App in der Sandbox
+rm -rf "$SPARKLE/Versions/B/XPCServices" "$SPARKLE/XPCServices"
+for f in "$SPARKLE/Versions/B/Sparkle" "$SPARKLE/Versions/B/Autoupdate" "$SPARKLE/Versions/B/Updater.app/Contents/MacOS/Updater"; do
+  lipo "$f" -thin arm64 -output "$f.thin" && mv "$f.thin" "$f"
+done
+
 echo "== Lizenzen"
 mkdir -p "$APP/Contents/Resources/Licenses"
 cp packaging/licenses/* "$APP/Contents/Resources/Licenses/"
@@ -85,7 +98,11 @@ fi
 # Von innen nach außen: Bibliotheken, Plugins, Hilfsprogramme, dann die App
 while IFS= read -r -d '' f; do
   codesign "${SIGN_ARGS[@]}" "$f"
-done < <(find "$APP/Contents/Frameworks" "$APP/Contents/PlugIns" "$APP/Contents/Helpers" -type f \( -name "*.dylib" -o -perm -u+x \) -print0)
+done < <(find "$APP/Contents/Frameworks" "$APP/Contents/PlugIns" "$APP/Contents/Helpers" -path "*/Sparkle.framework" -prune -o -type f \( -name "*.dylib" -o -perm -u+x \) -print0)
+# Sparkle wie dokumentiert von innen nach außen
+codesign "${SIGN_ARGS[@]}" "$SPARKLE/Versions/B/Autoupdate"
+codesign "${SIGN_ARGS[@]}" "$SPARKLE/Versions/B/Updater.app"
+codesign "${SIGN_ARGS[@]}" "$SPARKLE"
 codesign "${SIGN_ARGS[@]}" --entitlements packaging/entitlements.plist "$APP"
 codesign --verify --deep --strict --verbose=2 "$APP"
 

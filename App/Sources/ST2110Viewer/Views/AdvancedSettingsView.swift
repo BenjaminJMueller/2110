@@ -13,8 +13,9 @@ struct AdvancedSettingsView: View {
             NMOSTab().tabItem { Label("NMOS & Adressen", systemImage: "point.3.connected.trianglepath.dotted") }
             AboutTab().tabItem { Label("Info", systemImage: "info.circle") }
         }
-        .frame(width: 640, height: 500)
+        .frame(width: 600, height: 480)
         .buttonBorderShape(.capsule)
+        .toggleStyle(.switch)
     }
 }
 
@@ -24,14 +25,15 @@ private struct GeneralTab: View {
     var body: some View {
         @Bindable var model = model
         Form {
-            Picker("Darstellung", selection: $model.settings.appearance) {
+            Picker(selection: $model.settings.appearance) {
                 Text("Wie System").tag(0)
                 Text("Hell").tag(1)
                 Text("Dunkel").tag(2)
+            } label: {
+                InfoLabel("Darstellung", info: "Das Videobild selbst bleibt in jeder Darstellung unverändert.")
             }
             .pickerStyle(.segmented)
-            Text("Das Videobild selbst bleibt in jeder Darstellung unverändert.").font(.caption).foregroundStyle(.secondary)
-            Button("Erklärung „So funktioniert ST 2110“ zeigen") { model.explainerPage = 1; model.showOnboarding = true }
+            Button("So funktioniert ST 2110") { model.explainerPage = 1; model.showOnboarding = true }
         }
         .formStyle(.grouped)
     }
@@ -43,19 +45,24 @@ private struct NetworkTab: View {
     var body: some View {
         @Bindable var model = model
         Form {
-            Picker("Netzwerkschnittstelle", selection: $model.settings.interfaceName) {
-                Text("Automatisch (empfohlen)").tag("")
+            Picker(selection: $model.settings.interfaceName) {
+                Text("Automatisch").tag("")
                 ForEach(model.interfaces.interfaces, id: \.name) { i in
                     Text(tr(i.menuTitle)).tag(i.name)
                 }
+            } label: {
+                InfoLabel("Schnittstelle", info: "„Automatisch“ wählt die Schnittstelle im Netz des Senders, sonst die schnellste kabelgebundene. Gilt ab dem nächsten Start einer Quelle.")
             }
-            InfoRow("Gilt ab dem nächsten Start einer Quelle.", info: "„Automatisch“ wählt die Schnittstelle im Netz des Senders, sonst die schnellste kabelgebundene.")
-            Toggle("Quellfilter (Source-Specific Multicast) verwenden, wenn die SDP eine Sender-IP nennt", isOn: $model.settings.useSourceFilter)
-            Picker("Empfangspuffer", selection: $model.settings.socketBufferMB) {
-                Text("Automatisch (so groß wie macOS erlaubt)").tag(0)
+            Toggle(isOn: $model.settings.useSourceFilter) {
+                InfoLabel("Quellfilter (SSM)", info: "Source-Specific Multicast: empfängt nur Pakete der Sender-IP, wenn die SDP eine nennt.")
+            }
+            Picker(selection: $model.settings.socketBufferMB) {
+                Text("Automatisch").tag(0)
                 Text("4 MB").tag(4)
                 Text("8 MB").tag(8)
                 Text("32 MB").tag(32)
+            } label: {
+                InfoLabel("Empfangspuffer", info: "„Automatisch“ nutzt so viel, wie macOS erlaubt.")
             }
             Button("Schnittstellen neu einlesen") { model.interfaces.refresh() }
         }
@@ -69,21 +76,26 @@ private struct SyncTab: View {
     var body: some View {
         @Bindable var model = model
         Form {
-            Picker("Wiedergabe", selection: $model.settings.sync) {
+            Picker(selection: $model.settings.sync) {
                 ForEach(AppSettings.SyncChoice.allCases) { Text(tr($0.title)).tag($0) }
+            } label: {
+                InfoLabel("Wiedergabe", info: "Automatisch: Der Mac lauscht als passiver PTP-Follower (nur Slave, wird nie Master) und richtet Bild und Ton an der PTP-Zeit aus. Ohne Grandmaster werden Bild und Ton über ihre RTP-Zeitstempel zueinander ausgerichtet. „Einfache Vorschau“ gibt jeden Strom bei Ankunft wieder und ist nicht lippensynchron.")
             }
             .pickerStyle(.radioGroup)
-            InfoRow("„Automatisch“ passt fast immer.", info: "Automatisch: Der Mac lauscht als passiver PTP-Follower (nur Slave, wird nie Master) und richtet Bild und Ton an der PTP-Zeit aus. Ohne Grandmaster werden Bild und Ton über ihre RTP-Zeitstempel zueinander ausgerichtet. „Einfache Vorschau“ gibt jeden Strom bei Ankunft wieder und ist nicht lippensynchron.")
-            Picker("PTP-Domain", selection: $model.settings.ptpDomain) {
-                Text("Aus SDP (sonst 127)").tag(-1)
+            Picker(selection: $model.settings.ptpDomain) {
+                Text("Aus SDP").tag(-1)
                 ForEach([0, 1, 127], id: \.self) { Text(tr("\($0)")).tag($0) }
+            } label: {
+                InfoLabel("PTP-Domain", info: "Nennt die SDP keine Domain, gilt 127.")
             }
             Stepper(tr("Wartezeit auf PTP: \(model.settings.ptpTimeoutSeconds) s"), value: $model.settings.ptpTimeoutSeconds, in: 1...20)
             HStack {
-                Text(tr("Wiedergabepuffer: \(model.settings.latencyMs) ms"))
+                Text(tr("Puffer: \(model.settings.latencyMs) ms"))
                 Slider(value: Binding(get: { Double(model.settings.latencyMs) }, set: { model.settings.latencyMs = Int($0) }), in: 40...1000, step: 10)
             }
-            Toggle("Puffer bei verspäteten Daten automatisch erhöhen", isOn: $model.settings.autoLatency)
+            Toggle(isOn: $model.settings.autoLatency) {
+                InfoLabel("Puffer automatisch erhöhen", info: "Erhöht den Puffer, wenn Daten verspätet ankommen.")
+            }
         }
         .formStyle(.grouped)
     }
@@ -100,17 +112,17 @@ private struct AudioTab: View {
                 ForEach(model.audioDevices.devices) { Text(tr($0.name)).tag($0.uid) }
             }
             HStack {
-                Text(tr("Manueller Tonversatz: \(model.settings.audioDelayMs) ms"))
+                InfoLabel(tr("Tonversatz: \(model.settings.audioDelayMs) ms"), info: "Gleicht z. B. die Verzögerung eines Bildschirms aus. Ersetzt keine korrekte Synchronisation; die Lippensynchron-Messung in der Diagnose erfolgt ohne diesen Versatz.")
                 Slider(value: Binding(get: { Double(model.settings.audioDelayMs) }, set: {
                     model.settings.audioDelayMs = Int($0)
                     model.player.setAudioDelay(Int($0))
                 }), in: 0...500, step: 5)
             }
-            InfoRow("Gleicht verzögernde Bildschirme aus.", info: "Gleicht z. B. die Verzögerung eines Bildschirms aus. Ersetzt keine korrekte Synchronisation; die Lippensynchron-Messung in der Diagnose erfolgt ohne diesen Versatz.")
-            Button("Versatz zurücksetzen") {
+            Button("Zurücksetzen") {
                 model.settings.audioDelayMs = 0
                 model.player.setAudioDelay(0)
             }
+            .disabled(model.settings.audioDelayMs == 0)
         }
         .formStyle(.grouped)
     }
@@ -125,8 +137,12 @@ private struct NMOSTab: View {
         @Bindable var model = model
         Form {
             Section("Erkennung") {
-                Toggle("Automatisch per mDNS/DNS-SD suchen (Peer-to-Peer, ohne Registry)", isOn: $model.settings.mdnsDiscovery)
-                TextField("NMOS-Registry (optional, z. B. 192.168.10.5 oder URL)", text: $model.settings.registryURL)
+                Toggle(isOn: $model.settings.mdnsDiscovery) {
+                    InfoLabel("Automatisch suchen", info: "Findet NMOS-Geräte per mDNS/DNS-SD im lokalen Netz, Peer-to-Peer und ohne Registry.")
+                }
+                TextField(text: $model.settings.registryURL, prompt: Text("Optional")) {
+                    InfoLabel("Registry", info: "Adresse einer NMOS-Registry, z. B. 192.168.10.5 oder eine vollständige URL.")
+                }
             }
             Section("Geräteadressen") {
                 ForEach(model.settings.manualNodes, id: \.self) { n in
@@ -146,7 +162,9 @@ private struct NMOSTab: View {
                 }
             }
             Section("Adressbereich durchsuchen") {
-                TextField("Bereiche, z. B. 192.168.10.1-254, 10.0.0.0/24", text: $model.settings.scanRanges)
+                TextField(text: $model.settings.scanRanges, prompt: Text(tr("192.168.10.1-254"))) {
+                    InfoLabel("Bereiche", info: "Einzelne Bereiche oder Netze, durch Komma getrennt, z. B. 192.168.10.1-254, 10.0.0.0/24")
+                }
                 TextField("Ports", text: $model.settings.scanPorts)
                 HStack {
                     Button("Jetzt durchsuchen") {
@@ -158,11 +176,12 @@ private struct NMOSTab: View {
                 }
             }
             Section("Multicast") {
-                TextField("Erlaubter Multicast-Bereich", text: $model.settings.multicastRange)
-                InfoRow("Gilt für manuelle Eingabe und IS-05.", info: "Wird bei manueller Eingabe und beim Setzen von Zieladressen über IS-05 geprüft.")
-                Toggle("Sender über NMOS IS-05 verändern dürfen (aktivieren, Zieladresse setzen)", isOn: $model.settings.allowSenderControl)
-                Text("Wirkt auf das Gerät und damit auf alle Empfänger.")
-                    .font(.caption).foregroundStyle(.orange)
+                TextField(text: $model.settings.multicastRange) {
+                    InfoLabel("Erlaubter Bereich", info: "Wird bei manueller Eingabe und beim Setzen von Zieladressen über IS-05 geprüft.")
+                }
+                Toggle(isOn: $model.settings.allowSenderControl) {
+                    InfoLabel("Sender per IS-05 steuern", info: "Erlaubt, Sender zu aktivieren und ihre Zieladresse zu setzen. Das wirkt auf das Gerät und damit auf alle Empfänger.")
+                }
             }
             Section("Status") {
                 Text(tr("mDNS: \(model.discovery.browserState)")).font(.caption)
@@ -178,10 +197,16 @@ private struct NMOSTab: View {
 
 private struct AboutTab: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
+        @Bindable var updates = model.updates
         Form {
             LabeledContent("App-Version", value: model.appVersion)
+            if model.updates.available {
+                Toggle("Updates automatisch suchen", isOn: $updates.automaticChecks)
+                Button("Nach Updates suchen …") { model.updates.checkNow() }
+            }
             LabeledContent("GStreamer", value: GStreamerEnvironment.version + (GStreamerEnvironment.bundled ? " (in der App enthalten)" : " (Entwicklungsumgebung)"))
             if !GStreamerEnvironment.missingPlugins.isEmpty {
                 LabeledContent("Fehlende Komponenten", value: GStreamerEnvironment.missingPlugins)
@@ -195,15 +220,19 @@ private struct AboutTab: View {
                 LicenseLink(name: "libffi", license: "MIT", url: "https://github.com/libffi/libffi/blob/master/LICENSE")
                 LicenseLink(name: "PCRE2", license: "BSD", url: "https://github.com/PCRE2Project/pcre2/blob/master/LICENCE.md")
                 LicenseLink(name: "zlib", license: "zlib", url: "https://zlib.net/zlib_license.html")
+                LicenseLink(name: "Sparkle (Updates)", license: "MIT", url: "https://github.com/sparkle-project/Sparkle/blob/2.x/LICENSE")
                 LicenseLink(name: "GNU LGPL 2.1 (Volltext)", license: "", url: "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html")
-                LicenseLink(name: "Alle Drittanbieter-Hinweise", license: "", url: "https://github.com/BenjaminJMueller/2110/blob/main/THIRD_PARTY_NOTICES.md")
-                LicenseLink(name: "Quellcode der eingebetteten Bibliotheken", license: "", url: "https://github.com/BenjaminJMueller/2110/releases/latest")
+                LicenseLink(name: "Drittanbieter-Hinweise", license: "", url: "https://github.com/BenjaminJMueller/2110/blob/main/THIRD_PARTY_NOTICES.md")
+                LicenseLink(name: "Quellcode der Bibliotheken", license: "", url: "https://github.com/BenjaminJMueller/2110/releases/latest")
                 Button("Lizenztexte in der App zeigen") {
                     let dir = Bundle.main.resourceURL?.appendingPathComponent("Licenses")
                     if let dir, FileManager.default.fileExists(atPath: dir.path) { NSWorkspace.shared.open(dir) }
                 }
             }
-            Button("Einführung erneut anzeigen") { model.showOnboarding = true }
+            HStack {
+                Button("Über 2110 Viewer") { openWindow(id: "about") }
+                Button("Einführung erneut anzeigen") { model.showOnboarding = true }
+            }
         }
         .formStyle(.grouped)
     }
@@ -224,6 +253,19 @@ private struct LicenseLink: View {
                 Link(destination: u) { Image(systemName: "arrow.up.right.square") }
                     .help(url)
             }
+        }
+    }
+}
+
+/// Beschriftung mit Info-Knopf; die Erklärung steht nur im Popover.
+struct InfoLabel: View {
+    let title: String
+    let info: String
+    init(_ title: String, info: String) { self.title = title; self.info = info }
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(tr(title))
+            InfoButton(text: info)
         }
     }
 }

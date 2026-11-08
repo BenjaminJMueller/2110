@@ -33,6 +33,7 @@ usage_en = {
     "NSCameraUsageDescription": "2110 Viewer sends the camera picture to the network as an ST 2110 video stream when you choose a camera as the source for sending.",
     "NSMicrophoneUsageDescription": "2110 Viewer sends the microphone sound as an ST 2110 audio stream when you choose a camera with sound as the source for sending.",
     "CFBundleGetInfoString": "Made for teaching. Includes GStreamer (LGPL).",
+    "NSHumanReadableCopyright": "Prof. Dr. Benjamin Müller, Ansbach University of Applied Sciences. Made for teaching.",
 }
 write_strings(os.path.join(res, "en.lproj/InfoPlist.strings"), sorted(usage_en.items()))
 info = plistlib.load(open(os.path.join(root, "packaging/Info.plist"), "rb"))

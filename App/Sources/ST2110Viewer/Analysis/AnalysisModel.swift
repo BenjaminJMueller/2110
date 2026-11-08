@@ -132,6 +132,30 @@ final class AnalysisModel {
     /// Läuft gerade eine fortlaufende Analyse des Empfangs?
     private(set) var liveRunning = false
     private(set) var liveRounds = 0
+    private(set) var liveName = ""
+    /// Verlauf je Strom über die Abschnitte der Live-Analyse.
+    private(set) var liveTrends: [String: LiveTrend] = [:]
+
+    struct LiveTrend: Equatable {
+        var rate = LiveSeries()
+        var lost = LiveSeries()
+        var fps = LiveSeries()
+        /// Video: Cinst max., Audio: TS-DF max.
+        var timing = LiveSeries()
+    }
+
+    static func trendKey(_ s: AnalysisReport.Stream) -> String { "\(s.kind) \(s.destination)" }
+
+    private func recordTrends(_ r: AnalysisReport) {
+        for st in r.streams {
+            var t = liveTrends[Self.trendKey(st)] ?? LiveTrend()
+            t.rate.append(st.rate_mbps ?? 0)
+            t.lost.append(Double(st.lost))
+            if let v = st.video { t.fps.append(v.fps ?? 0); t.timing.append(v.cinst.max) }
+            if let a = st.audio { t.timing.append(a.tsdf_us.max) }
+            liveTrends[Self.trendKey(st)] = t
+        }
+    }
     private var liveID: UUID?
     private var liveTask: Task<Void, Never>?
 
@@ -141,6 +165,9 @@ final class AnalysisModel {
         guard !liveRunning, model.player.isActive, !model.player.isDemo else { return }
         liveRunning = true
         liveRounds = 0
+        liveTrends = [:]
+        liveName = model.player.current?.name ?? tr("Empfang")
+        selectedID = nil
         let id = UUID()
         liveID = id
         let sdps = [model.player.current?.videoSDP, model.player.current?.audioSDP].compactMap { $0 }
@@ -163,7 +190,7 @@ final class AnalysisModel {
                 var e = Entry(url: URL(fileURLWithPath: name + " (Live)"), date: Date())
                 e.id = id
                 switch result {
-                case .success(let (r, thumbs)): e.report = r; e.thumbnails = thumbs
+                case .success(let (r, thumbs)): e.report = r; e.thumbnails = thumbs; self.recordTrends(r)
                 case .failure(let err): e.error = err.localizedDescription
                 }
                 if let i = self.entries.firstIndex(where: { $0.id == id }) {

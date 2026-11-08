@@ -101,7 +101,8 @@ def main():
                 name = os.path.basename(d)
             else:
                 name = os.path.basename(d)
-            if name.startswith("GStreamer.framework") or name in copied:
+            # Sparkle bettet build-app.sh selbst ein
+            if name.startswith(("GStreamer.framework", "Sparkle.framework")) or name in copied:
                 continue
             src = os.path.join(lib_src, name)
             if not os.path.exists(src):

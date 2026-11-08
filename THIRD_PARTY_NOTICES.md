@@ -23,6 +23,7 @@ Video und Audio aus Dateien und von der Kamera dekodiert macOS selbst (AVFoundat
 | libffi (GStreamer-meson-Port) | 3.2.9999.5 | `Frameworks/libffi.7.dylib` | MIT | `libffi-MIT.txt` |
 | PCRE2 | 10.42 (+ cerbero-Patch) | `Frameworks/libpcre2-8.0.dylib` | BSD-3-Clause mit Bibliotheksausnahme | `pcre2-BSD.txt` |
 | zlib | 1.3.1 (laut cerbero-Rezept) | `Frameworks/libz.1.dylib` | zlib | `zlib.txt` |
+| Sparkle (Updates; offizielles Paket von github.com/sparkle-project/Sparkle, ohne XPC-Dienste, nur arm64) | 2.10.1 | `Frameworks/Sparkle.framework` | MIT; enthält bsdiff (BSD-2-Clause), sais-lite (MIT), ed25519 (zlib) | `Sparkle-LICENSE.txt` |
 
 ### LGPL: Quellcode und Austauschbarkeit
 
