@@ -104,6 +104,13 @@ enum SnapshotRunner {
                 log("Ausgabe: " + model.output.debugSummary)
                 if let n = model.output.windowNumber {
                     log(String(format: "Helligkeit Ausgabefenster: %.3f", brightness(args: ["-x", "-o", "-l", String(n)])))
+                    model.output.debugSetLevelNormal()
+                    await wait(2)
+                    log(String(format: "Helligkeit Ausgabefenster, Ebene normal: %.3f", brightness(args: ["-x", "-o", "-l", String(n)])))
+                    log("Ausgabe (Ebene normal): " + model.output.debugSummary)
+                    model.output.debugShowRed()
+                    await wait(1)
+                    log(String(format: "Helligkeit Ausgabefenster mit roter Fläche: %.3f", brightness(args: ["-x", "-o", "-l", String(n)])))
                 }
                 log("Hauptbild: " + model.player.renderer.debugSummary)
                 saveScreen(d.id, "ausgabe")

@@ -25,6 +25,17 @@ final class ExternalOutput {
     var activeName: String? { displays.first { $0.id == activeDisplay }?.name }
     func dismissMessage() { message = nil }
     var windowNumber: Int? { window?.windowNumber }
+
+    /// Nur für den CI-Durchlauf: Varianten, um die schwarze Ausgabe einzugrenzen.
+    func debugSetLevelNormal() { window?.level = .normal; window?.orderFrontRegardless() }
+    func debugShowRed() {
+        guard let w = window else { return }
+        let v = NSView(frame: w.contentView?.bounds ?? .zero)
+        v.wantsLayer = true
+        v.layer?.backgroundColor = NSColor.red.cgColor
+        v.autoresizingMask = [.width, .height]
+        w.contentView?.addSubview(v)
+    }
     var debugSummary: String {
         guard let window, let renderer else { return "keine Ausgabe" }
         let v = window.contentView
