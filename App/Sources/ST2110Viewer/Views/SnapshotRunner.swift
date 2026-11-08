@@ -102,7 +102,7 @@ enum SnapshotRunner {
         } else {
             log("Analyse: \(model.analysis.selected?.error ?? "kein Ergebnis")")
         }
-        model.analysis.selectedStream = -1
+        model.analysis.selectedStream = AnalysisModel.network
         await wait(0.8)
         shot("analysieren-netz-hell")
 

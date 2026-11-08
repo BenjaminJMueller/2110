@@ -79,6 +79,9 @@ struct AnalysisReport: Decodable {
             return kindTitle
         }
         var worstLevel: Int { findings.map(\.level).max() ?? 0 }
+        /// Bleibt über Abschnitte und Mitschnitte gleich (anders als „index“).
+        var key: String { "\(kind) \(destination)" }
+        var kindOrder: Int { ["video": 0, "audio": 1, "anc": 2][kind] ?? 3 }
     }
     struct PTP: Decodable, Identifiable {
         let domain: Int, grandmaster: String, masters: Int
@@ -96,6 +99,12 @@ struct AnalysisReport: Decodable {
     let streams: [Stream]
     let ptp: [PTP]
     let igmp: IGMP
+
+    /// Video zuerst, dann Audio, Zusatzdaten, Unbekanntes.
+    var orderedStreams: [Stream] {
+        streams.sorted { ($0.kindOrder, $0.destination) < ($1.kindOrder, $1.destination) }
+    }
+    var defaultSelection: String? { orderedStreams.first?.key }
 }
 
 struct AnalysisError: LocalizedError { let errorDescription: String? }
@@ -114,13 +123,15 @@ final class AnalysisModel {
         let url: URL
         let date: Date
         var report: AnalysisReport?
-        var thumbnails: [Int: NSImage] = [:]
+        var thumbnails: [String: NSImage] = [:]
         var error: String?
     }
 
     private(set) var entries: [Entry] = []
     var selectedID: UUID?
-    var selectedStream: Int?
+    /// Schlüssel des gewählten Stroms (Stream.key) oder `AnalysisModel.network`.
+    var selectedStream: String?
+    static let network = "netz"
     private(set) var progress: Double?
     private(set) var busyFile: String?
     var sdpTexts: [String] = []
@@ -131,10 +142,37 @@ final class AnalysisModel {
 
     /// Läuft gerade eine fortlaufende Analyse des Empfangs?
     private(set) var liveRunning = false
+    /// Quelle wird für die Live-Analyse gerade gestartet.
+    private(set) var liveStarting = false
     private(set) var liveRounds = 0
     private(set) var liveName = ""
     /// Verlauf je Strom über die Abschnitte der Live-Analyse.
     private(set) var liveTrends: [String: LiveTrend] = [:]
+    /// Letzter brauchbarer Stand je Strom; fehlt ein Strom in einem Abschnitt
+    /// (z. B. wegen Paketverlust), bleibt er stehen statt zu verschwinden.
+    private var liveStreams: [String: AnalysisReport.Stream] = [:]
+    private var liveThumbs: [String: NSImage] = [:]
+    private var livePTP: [AnalysisReport.PTP] = []
+    /// Ströme, die im letzten Abschnitt nicht vorkamen.
+    private(set) var liveMissing: Set<String> = []
+
+    /// Führt einen neuen Abschnitt mit dem bisherigen Stand zusammen.
+    private func mergeLive(_ r: AnalysisReport, thumbs: [String: NSImage]) -> AnalysisReport {
+        let known = Set(liveStreams.values.filter { $0.kind != "unknown" }.map(\.destination))
+        var seen = Set<String>()
+        for st in r.streams {
+            // Ein durch Verluste nicht erkannter Strom ersetzt keinen bekannten
+            if st.kind == "unknown", known.contains(st.destination) { continue }
+            // Zu wenige Pakete für eine Aussage: alten Stand behalten
+            if st.packets < 10, liveStreams[st.key] != nil { seen.insert(st.key); continue }
+            liveStreams[st.key] = st
+            seen.insert(st.key)
+            if let t = thumbs[st.key] { liveThumbs[st.key] = t }
+        }
+        liveMissing = Set(liveStreams.keys).subtracting(seen)
+        if !r.ptp.isEmpty { livePTP = r.ptp }
+        return AnalysisReport(capture: r.capture, streams: Array(liveStreams.values), ptp: livePTP, igmp: r.igmp)
+    }
 
     struct LiveTrend: Equatable {
         var rate = LiveSeries()
@@ -147,7 +185,7 @@ final class AnalysisModel {
     static func trendKey(_ s: AnalysisReport.Stream) -> String { "\(s.kind) \(s.destination)" }
 
     private func recordTrends(_ r: AnalysisReport) {
-        for st in r.streams {
+        for st in r.streams where st.kind != "unknown" && st.packets >= 10 {
             var t = liveTrends[Self.trendKey(st)] ?? LiveTrend()
             t.rate.append(st.rate_mbps ?? 0)
             t.lost.append(Double(st.lost))
@@ -161,11 +199,32 @@ final class AnalysisModel {
 
     /// Zeichnet den Empfang in kurzen Abschnitten auf und analysiert jeden sofort;
     /// der Eintrag „Live“ zeigt immer den neuesten Stand.
-    func startLive(model: AppModel) {
-        guard !liveRunning, model.player.isActive, !model.player.isDemo else { return }
+    /// Startet die Live-Analyse; mit `source` wird diese Quelle zuerst empfangen.
+    func startLive(model: AppModel, source: SidebarItem? = nil) {
+        guard !liveRunning else { return }
+        if let source {
+            liveStarting = true
+            if model.selection == source { model.activate(source) } else { model.selection = source }
+            Task { [weak self] in
+                // Warten, bis der Empfang läuft (NMOS-Abfrage, Pipeline-Start)
+                for _ in 0..<60 {
+                    try? await Task.sleep(nanoseconds: 250_000_000)
+                    if model.player.isActive, !model.player.isDemo, model.player.current != nil { break }
+                }
+                guard let self else { return }
+                self.liveStarting = false
+                self.startLive(model: model)
+            }
+            return
+        }
+        guard model.player.isActive, !model.player.isDemo else { return }
         liveRunning = true
         liveRounds = 0
         liveTrends = [:]
+        liveStreams = [:]
+        liveThumbs = [:]
+        livePTP = []
+        liveMissing = []
         liveName = model.player.current?.name ?? tr("Empfang")
         selectedID = nil
         let id = UUID()
@@ -190,7 +249,9 @@ final class AnalysisModel {
                 var e = Entry(url: URL(fileURLWithPath: name + " (Live)"), date: Date())
                 e.id = id
                 switch result {
-                case .success(let (r, thumbs)): e.report = r; e.thumbnails = thumbs; self.recordTrends(r)
+                case .success(let (r, thumbs)):
+                    let merged = self.mergeLive(r, thumbs: thumbs)
+                    e.report = merged; e.thumbnails = self.liveThumbs; self.recordTrends(r)
                 case .failure(let err): e.error = err.localizedDescription
                 }
                 if let i = self.entries.firstIndex(where: { $0.id == id }) {
@@ -198,7 +259,9 @@ final class AnalysisModel {
                 } else {
                     self.entries.insert(e, at: 0)
                     self.selectedID = id
-                    self.selectedStream = e.report?.streams.first(where: { $0.kind == "video" })?.index ?? e.report?.streams.first?.index
+                    self.selectedStream = e.report?.defaultSelection
+                } else if self.selectedID == id, self.selectedStream == nil {
+                    self.selectedStream = e.report?.defaultSelection
                 }
                 self.liveRounds += 1
             }
@@ -238,14 +301,14 @@ final class AnalysisModel {
                 }
                 self.entries.insert(e, at: 0)
                 self.selectedID = e.id
-                self.selectedStream = e.report?.streams.first(where: { $0.kind == "video" })?.index ?? e.report?.streams.first?.index
+                self.selectedStream = e.report?.defaultSelection
                 self.progress = nil
                 self.busyFile = nil
             }
         }
     }
 
-    nonisolated static func analyze(url: URL, sdps: [String], progress: @escaping (Double) -> Void) -> Result<(AnalysisReport, [Int: NSImage]), Error> {
+    nonisolated static func analyze(url: URL, sdps: [String], progress: @escaping (Double) -> Void) -> Result<(AnalysisReport, [String: NSImage]), Error> {
         var cStrings = sdps.map { strdup($0) }
         cStrings.append(nil)
         defer { cStrings.forEach { free($0) } }
@@ -267,7 +330,7 @@ final class AnalysisModel {
         let data = Data(String(cString: js).utf8)
         do {
             let r = try JSONDecoder().decode(AnalysisReport.self, from: data)
-            var thumbs: [Int: NSImage] = [:]
+            var thumbs: [String: NSImage] = [:]
             for s in r.streams where s.video?.thumbnail == true {
                 let w = 640, h = s.video!.height > 0 ? 640 * s.video!.height / max(1, s.video!.width) : 360
                 var px = [UInt8](repeating: 0, count: w * h * 4)
@@ -277,7 +340,7 @@ final class AnalysisModel {
                                     space: CGColorSpace(name: CGColorSpace.itur_709) ?? CGColorSpaceCreateDeviceRGB(),
                                     bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue),
                                     provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent) {
-                    thumbs[s.index] = NSImage(cgImage: cg, size: NSSize(width: w, height: h))
+                    thumbs[s.key] = NSImage(cgImage: cg, size: NSSize(width: w, height: h))
                 }
             }
             return .success((r, thumbs))

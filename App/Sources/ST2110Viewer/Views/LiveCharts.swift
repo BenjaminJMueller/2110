@@ -65,8 +65,9 @@ struct LiveChartTile: View {
             .chartXAxis(.hidden)
             .chartYAxis(.hidden)
             .chartXScale(domain: 0...max(LiveSeries.capacity - 1, series.values.count - 1))
-            .chartYScale(domain: 0...max(series.maxValue * 1.15, minimumScale))
+            .chartYScale(domain: yDomain)
             .frame(height: 44)
+            .clipped()
             .accessibilityHidden(true)
         }
         .padding(12)
@@ -77,7 +78,15 @@ struct LiveChartTile: View {
         .accessibilityValue(series.last.map { String(format: format, locale: .current, $0) + " " + tr(unit) } ?? "–")
     }
 
-    private var minimumScale: Double { warnAbove.map { $0 * 2 } ?? 1 }
+    private var minimumScale: Double { warnAbove.map { max($0 * 2, 1) } ?? 1 }
+
+    /// Auch negative Werte (z. B. Laufzeit) bleiben im Kasten.
+    private var yDomain: ClosedRange<Double> {
+        let lo = min(0, series.values.min() ?? 0)
+        let hi = max(series.maxValue, 0)
+        let span = max(hi - lo, minimumScale)
+        return (lo < 0 ? lo - span * 0.1 : 0)...(lo + span * 1.15)
+    }
 }
 
 /// Kleines „i“ neben einer Überschrift; die Erklärung erscheint als Popover.
