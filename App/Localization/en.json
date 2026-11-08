@@ -19,6 +19,7 @@
  "%@ Kanäle, %@ ms": "%@ channels, %@ ms",
  "%@ NMOS-Knoten gefunden.": "%@ NMOS nodes found.",
  "%@ Pakete": "%@ packets",
+ "%@ Pakete fehlen (%@ %).": "%@ packets missing (%@ %).",
  "%@ Prozent": "%@ percent",
  "%@ Prüfen Sie Adresse, Netzwerkschnittstelle und ob das Gerät eingeschaltet ist.": "%@ Check the address, the network interface and whether the device is switched on.",
  "%@ Samples je Paket": "%@ samples per packet",
