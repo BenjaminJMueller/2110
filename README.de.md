@@ -6,7 +6,7 @@
 
 **ST 2110 am Mac empfangen, senden und analysieren.** Entstanden für die Lehre.
 
-**[DMG laden](https://github.com/BenjaminJMueller/2110/releases/latest/download/2110-Viewer.dmg)** (macOS 14 oder neuer, Apple Silicon)
+**[DMG laden](https://github.com/BenjaminJMueller/2110/releases/latest/download/2110-Viewer.dmg)** (macOS 14 oder neuer, Apple Silicon) | **[Webseite](https://benjaminjmueller.github.io/2110/)**
 
 | Empfangen | Senden | Analysieren |
 |---|---|---|
@@ -15,7 +15,7 @@
 | Lippensynchron über RTP-Zeitstempel bzw. als passiver PTP-Slave | Zeitstempel vom PTP-Grandmaster, Pakete gleichmäßig verteilt | Audio-TS-DF, PTP-Domains und Grandmaster, IGMP-Querier, Vorschaubild |
 | Einzelkanal oder freies Stereopaar abhören, Ausgabegerät wählbar; Bild randlos auf zweitem Bildschirm oder Beamer | Dateien dekodiert macOS selbst (H.264, HEVC, ProRes, AAC) | Mitschnitt direkt aus dem Empfang aufzeichnen |
 
-Projektseite: `site/` (GitHub Pages, Einrichtung siehe unten).
+Projektseite: https://benjaminjmueller.github.io/2110/
 
 ## Installation
 

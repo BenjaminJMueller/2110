@@ -6,7 +6,7 @@
 
 **Receive, send and analyze ST 2110 on the Mac.** Made for teaching.
 
-**[Download DMG](https://github.com/BenjaminJMueller/2110/releases/latest/download/2110-Viewer.dmg)** (macOS 14 or later, Apple Silicon)
+**[Download DMG](https://github.com/BenjaminJMueller/2110/releases/latest/download/2110-Viewer.dmg)** (macOS 14 or later, Apple Silicon) | **[Website](https://benjaminjmueller.github.io/2110/en/)**
 
 | Receive | Send | Analyze |
 |---|---|---|
