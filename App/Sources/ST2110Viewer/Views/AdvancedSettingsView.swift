@@ -1,3 +1,4 @@
+import AppKit
 import ST2110Kit
 import SwiftUI
 
@@ -192,11 +193,43 @@ private struct AboutTab: View {
                 LabeledContent("Fehlende Komponenten", value: GStreamerEnvironment.missingPlugins)
             }
             LabeledContent("macOS", value: ProcessInfo.processInfo.operatingSystemVersionString)
-            Text("Diese App enthält GStreamer (LGPL 2.1) und weitere Open-Source-Bibliotheken. Lizenztexte: App-Paket › Contents › Resources › Licenses.")
-                .font(.caption).foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            Section("Lizenzen") {
+                LicenseLink(name: "2110 Viewer", license: "MIT", url: "https://github.com/BenjaminJMueller/2110/blob/main/LICENSE")
+                LicenseLink(name: "GStreamer 1.28", license: "LGPL-2.1", url: "https://gstreamer.freedesktop.org/documentation/frequently-asked-questions/licensing.html")
+                LicenseLink(name: "GLib", license: "LGPL-2.1", url: "https://gitlab.gnome.org/GNOME/glib/-/blob/main/COPYING")
+                LicenseLink(name: "ORC", license: "BSD", url: "https://gitlab.freedesktop.org/gstreamer/orc/-/blob/main/COPYING")
+                LicenseLink(name: "libffi", license: "MIT", url: "https://github.com/libffi/libffi/blob/master/LICENSE")
+                LicenseLink(name: "PCRE2", license: "BSD", url: "https://github.com/PCRE2Project/pcre2/blob/master/LICENCE.md")
+                LicenseLink(name: "zlib", license: "zlib", url: "https://zlib.net/zlib_license.html")
+                LicenseLink(name: "GNU LGPL 2.1 (Volltext)", license: "", url: "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html")
+                LicenseLink(name: "Alle Drittanbieter-Hinweise", license: "", url: "https://github.com/BenjaminJMueller/2110/blob/main/THIRD_PARTY_NOTICES.md")
+                LicenseLink(name: "Quellcode der eingebetteten Bibliotheken", license: "", url: "https://github.com/BenjaminJMueller/2110/releases/latest")
+                Button("Lizenztexte in der App zeigen") {
+                    let dir = Bundle.main.resourceURL?.appendingPathComponent("Licenses")
+                    if let dir, FileManager.default.fileExists(atPath: dir.path) { NSWorkspace.shared.open(dir) }
+                }
+            }
             Button("Einführung erneut anzeigen") { model.showOnboarding = true }
         }
         .formStyle(.grouped)
+    }
+}
+
+/// Zeile mit Name, Lizenz und Link.
+private struct LicenseLink: View {
+    let name: String
+    let license: String
+    let url: String
+
+    var body: some View {
+        HStack {
+            Text(tr(name))
+            Spacer()
+            if !license.isEmpty { Text(license).foregroundStyle(.secondary) }
+            if let u = URL(string: url) {
+                Link(destination: u) { Image(systemName: "arrow.up.right.square") }
+                    .help(url)
+            }
+        }
     }
 }

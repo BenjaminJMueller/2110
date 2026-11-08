@@ -57,7 +57,7 @@ Light, Dark or System: Settings (⌘,) › General. The video picture stays the 
 * Or drag an **SDP file** into the window. Separate video and audio SDPs can be dragged in together, or assigned to the **Video SDP** and **Audio SDP** fields in the “New Source” window.
 * Under **Advanced › NMOS & Addresses** you can scan an address range (for example `192.168.10.1-254`).
 
-Saved sources appear under “Saved” the next time you start the app.
+Recently used sources appear under “Recently Used” the next time you start the app; the × next to them removes them.
 
 ## If there is no picture
 

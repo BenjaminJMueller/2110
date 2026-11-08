@@ -1,0 +1,102 @@
+import Charts
+import SwiftUI
+
+/// Messwerte über die Zeit für die Live-Diagramme (letzte zwei Minuten, ein Wert je Sekunde).
+struct LiveSeries: Equatable {
+    private(set) var values: [Double] = []
+    static let capacity = 120
+
+    mutating func append(_ v: Double) {
+        values.append(v.isFinite ? v : 0)
+        if values.count > Self.capacity { values.removeFirst(values.count - Self.capacity) }
+    }
+
+    mutating func reset() { values.removeAll() }
+
+    var last: Double? { values.last }
+    var maxValue: Double { values.max() ?? 0 }
+    var average: Double { values.isEmpty ? 0 : values.reduce(0, +) / Double(values.count) }
+}
+
+/// Kompakte Kachel: aktueller Wert groß, darunter der Verlauf als Fläche.
+struct LiveChartTile: View {
+    let title: String
+    let unit: String
+    let series: LiveSeries
+    var format: String = "%.0f"
+    var tint: Color = .accentColor
+    /// Ab diesem Wert wird der Verlauf orange (z. B. Paketverlust).
+    var warnAbove: Double?
+    var info: String?
+
+    private var warn: Bool {
+        guard let w = warnAbove, let l = series.last else { return false }
+        return l > w
+    }
+
+    var body: some View {
+        let color = warn ? Color.orange : tint
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 4) {
+                Text(tr(title)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                if let info { InfoButton(text: info) }
+                Spacer(minLength: 0)
+            }
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(series.last.map { String(format: format, locale: .current, $0) } ?? "–")
+                    .font(.system(size: 22, weight: .semibold, design: .rounded).monospacedDigit())
+                    .contentTransition(.numericText())
+                    .foregroundStyle(warn ? Color.orange : Color.primary)
+                Text(tr(unit)).font(.caption).foregroundStyle(.secondary)
+            }
+            Chart {
+                ForEach(Array(series.values.enumerated()), id: \.offset) { i, v in
+                    AreaMark(x: .value("t", i), y: .value("v", v))
+                        .foregroundStyle(LinearGradient(colors: [color.opacity(0.35), color.opacity(0.02)],
+                                                        startPoint: .top, endPoint: .bottom))
+                        .interpolationMethod(.monotone)
+                    LineMark(x: .value("t", i), y: .value("v", v))
+                        .foregroundStyle(color)
+                        .lineStyle(StrokeStyle(lineWidth: 1.5))
+                        .interpolationMethod(.monotone)
+                }
+            }
+            .chartXAxis(.hidden)
+            .chartYAxis(.hidden)
+            .chartXScale(domain: 0...max(LiveSeries.capacity - 1, series.values.count - 1))
+            .chartYScale(domain: 0...max(series.maxValue * 1.15, minimumScale))
+            .frame(height: 44)
+            .accessibilityHidden(true)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardBackground()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(tr(title))
+        .accessibilityValue(series.last.map { String(format: format, locale: .current, $0) + " " + tr(unit) } ?? "–")
+    }
+
+    private var minimumScale: Double { warnAbove.map { $0 * 2 } ?? 1 }
+}
+
+/// Kleines „i“ neben einer Überschrift; die Erklärung erscheint als Popover.
+struct InfoButton: View {
+    let text: String
+    @State private var shown = false
+
+    var body: some View {
+        Button { shown.toggle() } label: {
+            Image(systemName: "info.circle").font(.caption).foregroundStyle(.secondary)
+        }
+        .buttonStyle(.plain)
+        .help(tr(text))
+        .accessibilityLabel(tr("Erklärung"))
+        .popover(isPresented: $shown, arrowEdge: .bottom) {
+            Text(tr(text))
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(width: 300, alignment: .leading)
+                .padding(14)
+        }
+    }
+}

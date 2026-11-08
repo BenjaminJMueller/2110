@@ -55,7 +55,7 @@ Hell, Dunkel oder wie das System: Einstellungen (⌘,) › Allgemein. Das Videob
 * Oder eine **SDP-Datei** ins Fenster ziehen. Getrennte Video- und Audio-SDPs lassen sich zusammen ziehen bzw. im Fenster „Neue Quelle“ den Feldern **Video-SDP** und **Audio-SDP** zuordnen.
 * Unter **Erweitert › NMOS & Adressen** kann ein Adressbereich (z. B. `192.168.10.1-254`) durchsucht werden.
 
-Gespeicherte Quellen erscheinen beim nächsten Start unter „Gespeichert“.
+Zuletzt verwendete Quellen erscheinen beim nächsten Start unter „Zuletzt verwendet“; das × daneben entfernt sie.
 
 ## Wenn kein Bild kommt
 

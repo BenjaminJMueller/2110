@@ -61,7 +61,7 @@ struct ContentView: View {
                     Button {
                         model.inspectorShown.toggle()
                     } label: {
-                        Label("Diagnose", systemImage: "sidebar.trailing")
+                        Label("Diagnose", systemImage: "gauge.with.dots.needle.50percent")
                     }
                     .help("Diagnose ein-/ausblenden (⌘I)")
                 }
@@ -156,9 +156,6 @@ struct AnalysisSidebar: View {
         @Bindable var a = model.analysis
         List(selection: $a.selectedID) {
             Section("Mitschnitte") {
-                if a.entries.isEmpty {
-                    Text("pcap- oder pcapng-Dateien hierher ziehen.").font(.callout).foregroundStyle(.secondary)
-                }
                 ForEach(a.entries) { e in
                     VStack(alignment: .leading, spacing: 2) {
                         Text(tr(e.url.lastPathComponent)).lineLimit(1)

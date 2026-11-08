@@ -110,7 +110,7 @@ private final class ProgressBox: @unchecked Sendable {
 @Observable
 final class AnalysisModel {
     struct Entry: Identifiable {
-        let id = UUID()
+        var id = UUID()
         let url: URL
         let date: Date
         var report: AnalysisReport?
@@ -126,6 +126,66 @@ final class AnalysisModel {
     var sdpTexts: [String] = []
 
     var selected: Entry? { entries.first { $0.id == selectedID } }
+
+    // MARK: Live-Analyse
+
+    /// Läuft gerade eine fortlaufende Analyse des Empfangs?
+    private(set) var liveRunning = false
+    private(set) var liveRounds = 0
+    private var liveID: UUID?
+    private var liveTask: Task<Void, Never>?
+
+    /// Zeichnet den Empfang in kurzen Abschnitten auf und analysiert jeden sofort;
+    /// der Eintrag „Live“ zeigt immer den neuesten Stand.
+    func startLive(model: AppModel) {
+        guard !liveRunning, model.player.isActive, !model.player.isDemo else { return }
+        liveRunning = true
+        liveRounds = 0
+        let id = UUID()
+        liveID = id
+        let sdps = [model.player.current?.videoSDP, model.player.current?.audioSDP].compactMap { $0 }
+        let name = (model.player.current?.name ?? "Empfang")
+        liveTask = Task { [weak self] in
+            let dir = FileManager.default.temporaryDirectory.appendingPathComponent("2110-Viewer-Live", isDirectory: true)
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            var n = 0
+            while let self, self.liveRunning, model.player.isActive, !Task.isCancelled {
+                n += 1
+                let url = dir.appendingPathComponent("live-\(n % 2).pcapng")
+                try? FileManager.default.removeItem(at: url)
+                guard model.player.startRecording(to: url, seconds: 3) else { break }
+                try? await Task.sleep(nanoseconds: 3_200_000_000)
+                model.player.stopRecordingQuietly()
+                let result = await Task.detached(priority: .userInitiated) {
+                    AnalysisModel.analyze(url: url, sdps: sdps) { _ in }
+                }.value
+                guard self.liveRunning else { break }
+                var e = Entry(url: URL(fileURLWithPath: name + " (Live)"), date: Date())
+                e.id = id
+                switch result {
+                case .success(let (r, thumbs)): e.report = r; e.thumbnails = thumbs
+                case .failure(let err): e.error = err.localizedDescription
+                }
+                if let i = self.entries.firstIndex(where: { $0.id == id }) {
+                    self.entries[i] = e
+                } else {
+                    self.entries.insert(e, at: 0)
+                    self.selectedID = id
+                    self.selectedStream = e.report?.streams.first(where: { $0.kind == "video" })?.index ?? e.report?.streams.first?.index
+                }
+                self.liveRounds += 1
+            }
+            self?.liveRunning = false
+        }
+    }
+
+    func stopLive() {
+        liveRunning = false
+        liveTask?.cancel()
+        liveTask = nil
+    }
+
+    func isLive(_ e: Entry) -> Bool { e.id == liveID && liveRunning }
 
     func open(_ url: URL) {
         let access = url.startAccessingSecurityScopedResource()

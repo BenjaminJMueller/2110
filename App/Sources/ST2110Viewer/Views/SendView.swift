@@ -10,63 +10,63 @@ struct SendView: View {
     @Environment(AppModel.self) private var model
     @State private var importing = false
     @State private var confirmTarget: DiscoveredDestination?
+    @State private var showNetwork = false
 
     var body: some View {
         @Bindable var s = model.sender
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 22) {
                 header(s)
 
-                sourcePicker(s)
+                // Signalweg: Quelle → Format → Ziel
+                HStack(spacing: 0) {
+                    Menu {
+                        Button { sourceBinding.wrappedValue = "bars" } label: { Label("Testbild mit 1-kHz-Ton", systemImage: "chart.bar.fill") }
+                        Button { sourceBinding.wrappedValue = "sync" } label: { Label("Lippensynchron-Test", systemImage: "bolt.fill") }
+                        Button { importing = true } label: { Label("Videodatei …", systemImage: "film.fill") }
+                        if !CaptureFeeder.cameras.isEmpty {
+                            Divider()
+                            ForEach(CaptureFeeder.cameras, id: \.uniqueID) { c in
+                                Button { sourceBinding.wrappedValue = "cam:" + c.uniqueID } label: { Label(tr(c.localizedName), systemImage: "video.fill") }
+                            }
+                        }
+                    } label: {
+                        PathCard(step: "Quelle", icon: sourceIcon(s), value: sourceTitle(s), detail: sourceDetail(s), active: s.isSending)
+                    }
+                    .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden)
+                    .disabled(s.isSending)
 
-                HStack(alignment: .top, spacing: 20) {
-                    card("Format") {
-                        SettingRow("Video") {
-                            Picker("Video", selection: $s.format) {
-                                ForEach(SenderController.Format.allCases) { f in Text(f.rawValue).tag(f) }
-                            }
-                            .labelsHidden().fixedSize()
+                    PathConnector(active: s.isSending)
+
+                    Menu {
+                        Picker("Video", selection: $s.format) {
+                            ForEach(SenderController.Format.allCases) { f in Text(f.rawValue).tag(f) }
                         }
+                        .pickerStyle(.inline)
                         Divider()
-                        SettingRow("Audiokanäle") {
-                            Stepper(value: $s.audioChannels, in: 0...16) {
-                                Text(tr(s.audioChannels == 0 ? "aus" : String(s.audioChannels))).monospacedDigit().foregroundStyle(.secondary)
-                            }
+                        Picker("Audiokanäle", selection: $s.audioChannels) {
+                            Text("aus").tag(0)
+                            ForEach([2, 4, 8, 16], id: \.self) { n in Text(tr("\(n) Kanäle")).tag(n) }
                         }
-                        Divider()
-                        SwitchRow("Paketzeit 0,125 ms", isOn: ptimeBinding)
+                        Toggle("Paketzeit 0,125 ms", isOn: ptimeBinding)
                             .disabled(s.audioChannels > 8 || s.audioChannels == 0)
-                            .help("Ab 9 Kanälen vorgeschrieben")
-                        Label(tr(rateText), systemImage: rateWarning ? "exclamationmark.triangle.fill" : "speedometer")
-                            .font(.caption).foregroundStyle(rateWarning ? .orange : .secondary)
+                    } label: {
+                        PathCard(step: "Format", icon: "rectangle.on.rectangle", value: s.format.rawValue,
+                                 detail: formatDetail(s), active: s.isSending, warn: rateWarning)
                     }
-                    card("Netzwerk") {
-                        SettingRow("Video an") {
-                            TextField("Multicast-Adresse", text: $s.videoAddress).frame(width: 140).monospacedDigit().multilineTextAlignment(.trailing)
-                        }
-                        Divider()
-                        SettingRow("Audio an") {
-                            TextField("Multicast-Adresse", text: $s.audioAddress).frame(width: 140).monospacedDigit().multilineTextAlignment(.trailing)
-                        }
-                        Divider()
-                        SettingRow("Port") {
-                            TextField("Port", value: $s.port, format: .number.grouping(.never)).frame(width: 70).multilineTextAlignment(.trailing)
-                        }
-                        Divider()
-                        SwitchRow("Zeit vom PTP-Grandmaster", isOn: $s.usePTP)
-                            .help("Übernimmt die Zeit passiv; die App wird nie Master")
-                        Divider()
-                        SwitchRow("Als NMOS-Quelle anbieten", isOn: $s.announceNMOS)
-                        HStack {
-                            TextField("Name im Netz", text: $s.label).textFieldStyle(.roundedBorder)
-                            Button("Adressen vorschlagen") {
-                                s.suggestAddresses(range: model.settings.multicastRange, interface: chosenInterface)
-                            }
-                            .controlSize(.small)
-                        }
+                    .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden)
+                    .disabled(s.isSending)
+
+                    PathConnector(active: s.isSending)
+
+                    Button { showNetwork = true } label: {
+                        PathCard(step: "Ziel", icon: "network", value: s.videoAddress.isEmpty ? "–" : s.videoAddress,
+                                 detail: destinationSummary(s), active: s.isSending)
                     }
+                    .buttonStyle(.plain)
+                    .disabled(s.isSending)
+                    .popover(isPresented: $showNetwork, arrowEdge: .bottom) { networkForm(s).frame(width: 340).padding(16) }
                 }
-                .disabled(s.isSending)
 
                 if let m = s.message {
                     Label(tr(m), systemImage: "exclamationmark.triangle.fill").font(.callout)
@@ -74,48 +74,51 @@ struct SendView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                if let st = s.stats, s.isSending {
+                if s.isSending {
                     HStack(spacing: 12) {
-                        Metric(label: "Bilder", value: st.frames_sent.formatted(), note: st.frames_from_source > 0 ? "aus Quelle" : "Testbild")
-                        Metric(label: "Datenrate Video", value: String(format: "%.0f Mbit/s", locale: .current, st.video_mbps), note: nil)
-                        Metric(label: "Zeitbezug", value: st.ptp_locked != 0 ? "PTP" : "Systemzeit", note: st.ptp_locked != 0 ? cString(st.ptp_grandmaster) : "kein PTP")
-                        Metric(label: "Verspätet gesendet", value: st.late_packets.formatted(), note: String(format: "max. %.0f µs", locale: .current, st.max_late_us))
+                        LiveChartTile(title: "Datenrate", unit: "Mbit/s", series: s.live.rate)
+                        LiveChartTile(title: "Verspätet", unit: "Pakete/s", series: s.live.late, warnAbove: 100,
+                                      info: "Pakete, die nicht zum geplanten Zeitpunkt hinausgingen. Gelegentliche Werte sind normal, dauerhaft hohe deuten auf einen ausgelasteten Mac hin.")
+                        if s.audioChannels > 0 {
+                            LiveChartTile(title: "Audiopuffer", unit: "ms", series: s.live.audioBuffer, tint: .green)
+                        }
                     }
                     .transition(.opacity)
                 }
 
-                card("Ziel") {
-                    Button { model.receiveOwnStream() } label: {
-                        Label("Auf diesem Mac empfangen", systemImage: "laptopcomputer.and.arrow.down")
-                    }
-                    .controlButtonStyle()
-                    .disabled(!s.isSending)
-                    .help("Öffnet den eigenen Strom im Modus Empfangen, über das Netzwerk dieses Macs")
-                    Divider()
-                    if model.discovery.destinations.isEmpty {
-                        Label("Keine NMOS-Empfänger gefunden. Am Blackmagic-Gerät den Strom im LCD-Menü unter „Outputs“ wählen.", systemImage: "info.circle")
-                            .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                card("Empfänger") {
+                    HStack {
+                        Label("Dieser Mac", systemImage: "laptopcomputer").font(.callout)
+                        Spacer()
+                        Button("Empfangen") { model.receiveOwnStream() }
+                            .controlSize(.small)
+                            .disabled(!s.isSending)
+                            .help("Öffnet den eigenen Strom im Modus Empfangen")
                     }
                     ForEach(model.discovery.destinations) { d in
+                        Divider()
                         HStack {
-                            Image(systemName: "rectangle.connected.to.line.below").foregroundStyle(Color.accentColor).frame(width: 22)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(tr(d.deviceLabel + " – " + d.title)).font(.callout)
-                                Text(tr(destinationDetail(d))).font(.caption).foregroundStyle(.secondary)
-                            }
+                            Label(tr(d.deviceLabel + " – " + d.title), systemImage: "rectangle.connected.to.line.below").font(.callout)
+                                .lineLimit(1)
                             Spacer()
+                            if s.connectedDestination == d.deviceLabel + " – " + d.title {
+                                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                            }
                             Button("Verbinden") { confirmTarget = d }
                                 .controlSize(.small)
                                 .disabled(!s.isSending)
                         }
                     }
-                    if let c = s.connectedDestination {
-                        Label(tr("Verbunden mit \(c)"), systemImage: "link").font(.callout).foregroundStyle(.green)
+                    if model.discovery.destinations.isEmpty {
+                        HStack(spacing: 4) {
+                            Text("Keine NMOS-Empfänger gefunden").font(.caption).foregroundStyle(.secondary)
+                            InfoButton(text: "Ohne NMOS den Strom am Blackmagic-Gerät im LCD-Menü unter „Outputs“ oder in Converters Setup wählen, sobald 2110 Viewer sendet. Alternativ die SDP-Datei weitergeben.")
+                        }
                     }
                 }
 
                 if let v = s.videoSDP {
-                    DisclosureGroup("SDP") {
+                    DisclosureGroup {
                         VStack(alignment: .leading, spacing: 8) {
                             Text(([v] + (s.audioSDP.map { [$0] } ?? [])).joined(separator: "\n"))
                                 .font(.system(.caption, design: .monospaced))
@@ -127,23 +130,23 @@ struct SendView: View {
                             }
                         }
                         .padding(.top, 8)
-                    }
+                    } label: { Label("SDP", systemImage: "doc.text").font(.callout) }
                     .padding(14)
                     .cardBackground()
                 }
                 if !s.log.isEmpty {
-                    DisclosureGroup("Ereignisse") {
+                    DisclosureGroup {
                         VStack(alignment: .leading, spacing: 4) {
-                            ForEach(s.log.suffix(8).reversed(), id: \.self) { Text(tr($0)).font(.caption.monospacedDigit()) }
+                            ForEach(s.log.suffix(8).reversed(), id: \.self) { Text(tr($0)).font(.caption.monospacedDigit()).lineLimit(2) }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 8)
-                    }
+                    } label: { Label("Ereignisse", systemImage: "list.bullet").font(.callout) }
                     .padding(14)
                     .cardBackground()
                 }
             }
-            .frame(maxWidth: 860)
+            .frame(maxWidth: 900)
             .padding(28)
             .frame(maxWidth: .infinity)
             .animation(.smooth, value: s.isSending)
@@ -161,6 +164,79 @@ struct SendView: View {
         }
         .onAppear {
             if s.videoAddress.isEmpty { s.suggestAddresses(range: model.settings.multicastRange, interface: chosenInterface) }
+        }
+    }
+
+    private func sourceIcon(_ s: SenderController) -> String {
+        switch s.source {
+        case .bars: return "chart.bar.fill"
+        case .syncTest: return "bolt.fill"
+        case .file: return "film.fill"
+        case .camera: return "video.fill"
+        }
+    }
+
+    private func sourceTitle(_ s: SenderController) -> String {
+        switch s.source {
+        case .bars: return "Testbild"
+        case .syncTest: return "Lippensynchron"
+        case .file(let u): return u.deletingPathExtension().lastPathComponent
+        case .camera: return cameraName(s) ?? "Kamera"
+        }
+    }
+
+    private func sourceDetail(_ s: SenderController) -> String {
+        switch s.source {
+        case .bars: return "Farbbalken, 1 kHz"
+        case .syncTest: return "Blitz und Piep"
+        case .file: return "Videodatei in Schleife"
+        case .camera: return "Kamera und Mikrofon"
+        }
+    }
+
+    private func formatDetail(_ s: SenderController) -> String {
+        let audio = s.audioChannels == 0 ? "ohne Ton" : "\(s.audioChannels) Kanäle"
+        return audio + String(format: ", %.1f Gbit/s", locale: .current, s.format.gbps)
+    }
+
+    private func destinationSummary(_ s: SenderController) -> String {
+        var parts = ["Port \(s.port)"]
+        if s.usePTP { parts.append("PTP") }
+        if s.announceNMOS { parts.append("NMOS") }
+        return parts.joined(separator: ", ")
+    }
+
+    @ViewBuilder
+    private func networkForm(_ sender: SenderController) -> some View {
+        @Bindable var s = sender
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Ziel").font(.headline)
+            SettingRow("Video an") {
+                TextField("Multicast-Adresse", text: $s.videoAddress).frame(width: 150).monospacedDigit().multilineTextAlignment(.trailing)
+            }
+            SettingRow("Audio an") {
+                TextField("Multicast-Adresse", text: $s.audioAddress).frame(width: 150).monospacedDigit().multilineTextAlignment(.trailing)
+            }
+            SettingRow("Port") {
+                TextField("Port", value: $s.port, format: .number.grouping(.never)).frame(width: 70).multilineTextAlignment(.trailing)
+            }
+            Button("Adressen vorschlagen") { s.suggestAddresses(range: model.settings.multicastRange, interface: chosenInterface) }
+                .controlSize(.small)
+            Divider()
+            SwitchRow("Zeit vom PTP-Grandmaster", isOn: $s.usePTP)
+            SwitchRow("Als NMOS-Quelle anbieten", isOn: $s.announceNMOS)
+            SettingRow("Name im Netz") {
+                TextField("Name", text: $s.label).frame(width: 170)
+            }
+            if case .camera = s.source {
+                Divider()
+                Picker("Mikrofon", selection: sMicrophone) {
+                    Text("Standard").tag(String?.none)
+                    ForEach(CaptureFeeder.microphones, id: \.uniqueID) { m in Text(tr(m.localizedName)).tag(Optional(m.uniqueID)) }
+                }
+            }
+            Label(tr(rateText), systemImage: rateWarning ? "exclamationmark.triangle.fill" : "speedometer")
+                .font(.caption).foregroundStyle(rateWarning ? .orange : .secondary)
         }
     }
 
@@ -353,5 +429,81 @@ private struct Metric: View {
         .padding(14)
         .cardBackground()
         .accessibilityElement(children: .combine)
+    }
+}
+
+
+/// Station im Signalweg (Quelle, Format, Ziel).
+private struct PathCard: View {
+    let step: String
+    let icon: String
+    let value: String
+    let detail: String
+    let active: Bool
+    var warn: Bool = false
+    @State private var hovering = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(tr(step)).font(.caption.weight(.semibold)).foregroundStyle(.secondary).textCase(.uppercase)
+                Spacer()
+                Image(systemName: "chevron.down").font(.caption2.weight(.semibold)).foregroundStyle(.tertiary)
+                    .opacity(hovering ? 1 : 0.6)
+            }
+            ZStack {
+                Circle().fill((active ? Color.accentColor : Color.secondary).opacity(0.14))
+                Image(systemName: icon)
+                    .font(.system(size: 22, weight: .medium))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(active ? Color.accentColor : Color.primary)
+            }
+            .frame(width: 48, height: 48)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(tr(value)).font(.title3.weight(.semibold)).lineLimit(1).truncationMode(.middle)
+                HStack(spacing: 4) {
+                    if warn { Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange) }
+                    Text(tr(detail)).lineLimit(1)
+                }
+                .font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(Color(nsColor: .quaternarySystemFill).opacity(hovering ? 1.6 : 1),
+                    in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .strokeBorder(active ? Color.accentColor.opacity(0.5) : Color(nsColor: .separatorColor).opacity(0.5), lineWidth: active ? 1.5 : 0.5))
+        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .onHover { hovering = $0 }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Verbindung zwischen zwei Stationen; beim Senden laufen Punkte darauf.
+private struct PathConnector: View {
+    let active: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        TimelineView(.animation(paused: !active || reduceMotion)) { ctx in
+            Canvas { g, size in
+                let y = size.height / 2
+                var line = Path()
+                line.move(to: CGPoint(x: 0, y: y))
+                line.addLine(to: CGPoint(x: size.width, y: y))
+                g.stroke(line, with: .color(active ? .accentColor : .secondary.opacity(0.4)), lineWidth: 2)
+                if active && !reduceMotion {
+                    let t = ctx.date.timeIntervalSinceReferenceDate
+                    for i in 0..<3 {
+                        let f = (t * 0.8 + Double(i) / 3).truncatingRemainder(dividingBy: 1)
+                        let x = size.width * f
+                        g.fill(Path(ellipseIn: CGRect(x: x - 3, y: y - 3, width: 6, height: 6)), with: .color(.accentColor))
+                    }
+                }
+            }
+        }
+        .frame(width: 36, height: 20)
+        .accessibilityHidden(true)
     }
 }
