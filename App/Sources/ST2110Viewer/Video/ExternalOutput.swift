@@ -76,9 +76,11 @@ final class ExternalOutput {
             return
         }
         message = nil
-        let w = window ?? makeWindow()
+        let w = window ?? makeWindow(on: screen)
         w.setFrame(screen.frame, display: true)
         w.orderFrontRegardless()
+        w.contentView?.needsDisplay = true
+        w.displayIfNeeded()
         activeDisplay = id
         UserDefaults.standard.set(screen.localizedName, forKey: Self.lastKey)
         if displays.first(where: { $0.id == id })?.isMain == true {
@@ -117,9 +119,12 @@ final class ExternalOutput {
         }
     }
 
-    private func makeWindow() -> NSWindow {
+    private func makeWindow(on screen: NSScreen) -> NSWindow {
         let r = VideoRenderer(sink: sink)
-        let w = OutputWindow(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: false)
+        // Gleich in voller Größe auf dem Zielbildschirm anlegen: Ein mit Größe null
+        // angelegtes Fenster zeigte seinen Inhalt nie an (nur Schwarz).
+        let w = OutputWindow(contentRect: NSRect(origin: .zero, size: screen.frame.size), styleMask: [.borderless],
+                             backing: .buffered, defer: false, screen: screen)
         w.onEscape = { [weak self] in self?.hide() }
         w.isReleasedWhenClosed = false
         w.backgroundColor = .black
@@ -132,6 +137,8 @@ final class ExternalOutput {
         // Gleicher Aufbau wie das Bild im Hauptfenster (SwiftUI um eine MTKView);
         // eine nackte MTKView als contentView blieb auf manchen Macs schwarz.
         let host = NSHostingView(rootView: OutputContent(renderer: r))
+        host.frame = NSRect(origin: .zero, size: screen.frame.size)
+        host.wantsLayer = true
         host.setAccessibilityLabel("Videoausgabe auf zweitem Bildschirm")
         w.contentView = host
         renderer = r
