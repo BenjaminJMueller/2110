@@ -82,11 +82,18 @@ private struct SyncTab: View {
                 InfoLabel("Wiedergabe", info: "Automatisch: Der Mac lauscht als passiver PTP-Follower (nur Slave, wird nie Master) und richtet Bild und Ton an der PTP-Zeit aus. Ohne Grandmaster werden Bild und Ton über ihre RTP-Zeitstempel zueinander ausgerichtet. „Einfache Vorschau“ gibt jeden Strom bei Ankunft wieder und ist nicht lippensynchron.")
             }
             .pickerStyle(.radioGroup)
-            Picker(selection: $model.settings.ptpDomain) {
-                Text("Aus SDP").tag(-1)
-                ForEach([0, 1, 127], id: \.self) { Text(tr("\($0)")).tag($0) }
+            Picker(selection: Binding(get: { model.settings.ptpDomain < 0 ? -1 : 1 },
+                                      set: { model.settings.ptpDomain = $0 < 0 ? -1 : max(0, model.settings.ptpDomain < 0 ? 127 : model.settings.ptpDomain) })) {
+                Text("Automatisch").tag(-1)
+                Text("Fest").tag(1)
             } label: {
-                InfoLabel("PTP-Domain", info: "Nennt die SDP keine Domain, gilt 127.")
+                InfoLabel("PTP-Domain", info: "Automatisch: beim Empfang aus der SDP der Quelle, beim Senden aus den Geräten im Netz, sonst 127. Blackmagic-Geräte nutzen oft 127, ab Werk teils andere Werte (z. B. 123).")
+            }
+            .pickerStyle(.segmented)
+            if model.settings.ptpDomain >= 0 {
+                Stepper(value: $model.settings.ptpDomain, in: 0...127) {
+                    Text(tr("Domain \(model.settings.ptpDomain)")).monospacedDigit()
+                }
             }
             Stepper(tr("Wartezeit auf PTP: \(model.settings.ptpTimeoutSeconds) s"), value: $model.settings.ptpTimeoutSeconds, in: 1...20)
             HStack {

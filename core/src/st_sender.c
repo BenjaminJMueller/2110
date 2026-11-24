@@ -550,7 +550,7 @@ st_sender *st_sender_new(const st_sender_config *cfg, char *err, size_t len)
         if (!c.audio_pt) c.audio_pt = 97;
         if (!c.audio_dscp) c.audio_dscp = 46;
     }
-    if (c.ptp_domain <= 0) c.ptp_domain = 127;
+    if (c.ptp_domain < 0 || c.ptp_domain > 127) c.ptp_domain = 127;
     st_sender *s = calloc(1, sizeof *s);
     s->cfg = c;
     s->vfd = s->afd = -1;

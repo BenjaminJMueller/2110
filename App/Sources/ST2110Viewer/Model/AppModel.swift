@@ -95,6 +95,7 @@ final class AppModel {
         discovery.start(settings: settings)
         sender.interfacesProvider = { [weak self] in self?.interfaces.interfaces ?? [] }
         sender.settingsProvider = { [weak self] in self?.settings ?? AppSettings() }
+        sender.domainProvider = { [weak self] in await self?.ptpDomainHint() }
         applyAppearance()
         // Esc beendet Vollbild und Bildschirmausgabe, egal wo der Fokus liegt
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] e in
@@ -118,6 +119,30 @@ final class AppModel {
         let first = !settings.onboardingDone
         settings.onboardingDone = true
         if first { discovery.start(settings: settings) }
+    }
+
+    // MARK: PTP-Domain erkennen
+
+    /// Domain aus einer SDP (a=ts-refclk:ptp=IEEE1588-2008:<GM>:<Domain>).
+    nonisolated static func ptpDomain(inSDP sdp: String?) -> Int? {
+        guard let sdp, let rx = try? NSRegularExpression(pattern: #"ts-refclk:ptp=IEEE1588-20(?:08|19):[0-9A-Fa-f-]+:(\d{1,3})"#),
+              let m = rx.firstMatch(in: sdp, range: NSRange(sdp.startIndex..., in: sdp)),
+              let r = Range(m.range(at: 1), in: sdp), let d = Int(sdp[r]), (0...127).contains(d) else { return nil }
+        return d
+    }
+
+    /// Für „Automatisch“ beim Senden: die Domain, in der die Geräte im Netz laufen.
+    /// Reihenfolge: laufender Empfang, zuletzt verwendete Quellen, SDP eines gefundenen Geräts.
+    func ptpDomainHint() async -> Int? {
+        let known = [player.current?.videoSDP, player.current?.audioSDP]
+            + saved.sorted { ($0.lastUsed ?? $0.createdAt) > ($1.lastUsed ?? $1.createdAt) }.flatMap { [$0.videoSDP, $0.audioSDP] }
+        for s in known { if let d = Self.ptpDomain(inSDP: s) { return d } }
+        for d in discovery.sources.prefix(4) {
+            guard let v = d.video ?? d.audio.first else { continue }
+            if let sdp = try? await discovery.client.sdp(for: v, connectionAPI: d.connectionAPI),
+               let dom = Self.ptpDomain(inSDP: sdp) { return dom }
+        }
+        return nil
     }
 
     // MARK: Manuell gewählte Geräte überwachen

@@ -65,6 +65,8 @@ final class SenderController {
 
     var interfacesProvider: (() -> [InterfaceSnapshot])?
     var settingsProvider: (() -> AppSettings)?
+    /// PTP-Domain für „Automatisch“: aus den SDPs der Geräte im Netz (z. B. 123 beim 3x3G).
+    var domainProvider: (() async -> Int?)?
 
     private var sender: CoreSender?
     private var feeder: MediaFeeder?
@@ -102,6 +104,29 @@ final class SenderController {
 
     /// Schlägt Multicast-Adressen im eingestellten Bereich vor, abgeleitet aus der
     /// eigenen IP-Adresse (damit mehrere Macs nicht dieselbe Gruppe verwenden).
+    /// Zuletzt verwendete PTP-Domain (zur Anzeige).
+    private(set) var ptpDomainUsed = 127
+
+    /// MAC-Adresse einer Schnittstelle im SDP-Format (AA-BB-CC-DD-EE-FF) für a=ts-refclk:localmac.
+    static func macAddress(of name: String) -> String? {
+        var list: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&list) == 0, let first = list else { return nil }
+        defer { freeifaddrs(list) }
+        var p: UnsafeMutablePointer<ifaddrs>? = first
+        while let cur = p {
+            defer { p = cur.pointee.ifa_next }
+            guard let sa = cur.pointee.ifa_addr, sa.pointee.sa_family == UInt8(AF_LINK),
+                  String(cString: cur.pointee.ifa_name) == name else { continue }
+            return sa.withMemoryRebound(to: sockaddr_dl.self, capacity: 1) { dl -> String? in
+                guard dl.pointee.sdl_alen == 6, let off = MemoryLayout<sockaddr_dl>.offset(of: \sockaddr_dl.sdl_data) else { return nil }
+                // sdl_data ist variabel lang: erst der Name, dann die Adresse
+                let base = UnsafeRawPointer(dl).advanced(by: off + Int(dl.pointee.sdl_nlen))
+                return (0..<6).map { String(format: "%02X", base.load(fromByteOffset: $0, as: UInt8.self)) }.joined(separator: "-")
+            }
+        }
+        return nil
+    }
+
     func suggestAddresses(range: String, interface: InterfaceSnapshot?) {
         let r = AddressRange.parseList(range)?.first ?? AddressRange.parse("239.0.0.0/8")!
         let host = interface?.ipv4.flatMap(IPv4.init)?.value ?? 0x0A000001
@@ -139,7 +164,10 @@ final class SenderController {
         if let i = iface {
             setCString(&c.iface_name, i.name)
             setCString(&c.iface_addr, i.ipv4 ?? "")
+            if let mac = Self.macAddress(of: i.name) { setCString(&c.local_mac, mac) }
         }
+        let domain = settings.ptpDomain >= 0 ? settings.ptpDomain : (await domainProvider?() ?? 127)
+        ptpDomainUsed = domain
         setCString(&c.session_name, label)
         c.ttl = 16
         c.has_video = 1
@@ -154,7 +182,7 @@ final class SenderController {
         c.audio_channels = Int32(max(1, audioChannels))
         c.audio_ptime_us = ptime125 ? 125 : 1000
         c.use_ptp = usePTP ? 1 : 0
-        c.ptp_domain = Int32(settings.ptpDomain >= 0 ? settings.ptpDomain : 127)
+        c.ptp_domain = Int32(domain)
         c.pattern = source == .syncTest ? ST_PATTERN_SYNC : ST_PATTERN_BARS
 
         // Start (PTP-Wartezeit bis 4 s) abseits des Hauptthreads
