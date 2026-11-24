@@ -1,0 +1,16 @@
+diff -ru a/ptp/main.rs b/ptp/main.rs
+--- a/ptp/main.rs
++++ b/ptp/main.rs
+@@ -159,7 +159,11 @@
+     };
+     info!("Using clock ID {:?}", clock_id);
+ 
+-    thread::set_priority().context("Failed to set thread priority")?;
++    // 2110 Viewer: Ohne Root-Rechte (z. B. im App-Bundle unter macOS) schlägt das
++    // Erhöhen der Priorität fehl. Dann mit normaler Priorität weiterlaufen statt abzubrechen.
++    if let Err(err) = thread::set_priority() {
++        warn!("Running with normal priority: {}", err);
++    }
+ 
+     privileges::drop().context("Failed dropping privileges")?;
+ 

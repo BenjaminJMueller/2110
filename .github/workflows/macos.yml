@@ -56,6 +56,9 @@ jobs:
           key: gstreamer-1.28.8
       - name: GStreamer entpacken
         run: ./scripts/fetch-gstreamer.sh
+      - name: Rust (für gst-ptp-helper)
+        run: |
+          rustc --version || { curl --proto '=https' -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal; echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"; }
       - name: Unit-Tests
         run: GSTREAMER_PREFIX=$PWD/vendor/gstreamer swift test --filter ST2110KitTests
       - name: App bauen, signieren (ad hoc), Selbsttest, Lizenzprüfung, DMG

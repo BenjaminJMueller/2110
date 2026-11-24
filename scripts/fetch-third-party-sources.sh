@@ -44,6 +44,14 @@ cerbero-1.28.8/recipes/** an. Nachbauen: cerbero-Dokumentation, Profil
 „osx-universal“, Paket „gstreamer-1.0“. 2110 Viewer verwendet daraus die in
 THIRD_PARTY_NOTICES.md aufgeführten Dateien unverändert.
 TXT
+cat >> "$SRC/README.txt" <<'TXT'
+
+Ausnahme: Helpers/gst-ptp-helper (MPL-2.0) baut 2110 Viewer selbst aus
+gstreamer-1.28.8/libs/gst/helpers/ptp mit der Änderung in
+patches/gst-ptp-helper-priority.patch (siehe scripts/build-ptp-helper.sh im Repository).
+TXT
+mkdir -p "$SRC/patches"
+cp "$ROOT/packaging/patches/"*.patch "$SRC/patches/"
 cp "$ROOT/THIRD_PARTY_NOTICES.md" "$ROOT/LICENSE" "$SRC/"
 mkdir -p "$(dirname "$OUT")"
 tar -C "$WORK" -czf "$OUT" 2110-viewer-third-party-sources

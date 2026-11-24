@@ -14,7 +14,8 @@ Video und Audio aus Dateien und von der Kamera dekodiert macOS selbst (AVFoundat
 
 | Bestandteil | Version | Dateien im Bundle | Lizenz | Lizenztext |
 |---|---|---|---|---|
-| GStreamer core (Bibliotheken `gstreamer`, `gstbase`, `gstnet`; Plugin `coreelements`; `gst-plugin-scanner`, `gst-ptp-helper`) | 1.28.8 | `Frameworks/libgst{reamer,base,net}-1.0.0.dylib`, `PlugIns/libgstcoreelements.dylib`, `Helpers/*` | LGPL-2.1-or-later | `LGPL-2.1.txt` |
+| GStreamer core (Bibliotheken `gstreamer`, `gstbase`, `gstnet`; Plugin `coreelements`; `gst-plugin-scanner`) | 1.28.8 | `Frameworks/libgst{reamer,base,net}-1.0.0.dylib`, `PlugIns/libgstcoreelements.dylib`, `Helpers/gst-plugin-scanner` | LGPL-2.1-or-later | `LGPL-2.1.txt` |
+| gst-ptp-helper (aus GStreamer core, Rust) | 1.28.8, **angepasst**: läuft ohne Root-Rechte mit normaler Priorität weiter ([Patch](packaging/patches/gst-ptp-helper-priority.patch)); von 2110 Viewer selbst aus dem Quelltext gebaut (`scripts/build-ptp-helper.sh`) | `Helpers/gst-ptp-helper` | MPL-2.0 | `MPL-2.0.txt` |
 | GStreamer Base Plugins (Bibliotheken `app`, `audio`, `video`, `rtp`, `tag`, `pbutils`; Plugins `app`, `audioconvert`, `audioresample`, `volume`, `videotestsrc`, `audiotestsrc`, `videoconvertscale`) | 1.28.8 | `Frameworks/libgst{app,audio,video,rtp,tag,pbutils}-1.0.0.dylib`, `PlugIns/…` | LGPL-2.1-or-later | `LGPL-2.1.txt` |
 | GStreamer Good Plugins (`udp`, `rtp`, `osxaudio`) | 1.28.8 | `PlugIns/libgst{udp,rtp,osxaudio}.dylib` | LGPL-2.1-or-later | `LGPL-2.1.txt` |
 | GLib, GObject, GIO, GModule | 2.82.4 (+ cerbero-Patches) | `Frameworks/lib{glib,gobject,gio,gmodule}-2.0.0.dylib` | LGPL-2.1-or-later | `LGPL-2.1.txt` |

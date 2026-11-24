@@ -25,12 +25,14 @@ LICENSE_FILES = {
     "MIT (libffi)": "libffi-MIT.txt",
     "Zlib": "zlib.txt",
     "MIT (Sparkle)": "Sparkle-LICENSE.txt",
+    "MPL-2.0": "MPL-2.0.txt",
 }
 
 # (Regex auf Pfad relativ zu Contents/, Bestandteil, Lizenz)
 ALLOW = [
     (r"^MacOS/ST2110Viewer$", "2110 Viewer", "MIT (2110 Viewer)"),
-    (r"^Helpers/gst-(plugin-scanner|ptp-helper)$", "GStreamer core 1.28.8", "LGPL-2.1-or-later"),
+    (r"^Helpers/gst-plugin-scanner$", "GStreamer core 1.28.8", "LGPL-2.1-or-later"),
+    (r"^Helpers/gst-ptp-helper$", "gst-ptp-helper 1.28.8 (angepasst)", "MPL-2.0"),
     (r"^Frameworks/libgst(reamer|base|net)-1\.0\.0\.dylib$", "GStreamer core 1.28.8", "LGPL-2.1-or-later"),
     (r"^Frameworks/libgst(app|audio|video|rtp|tag|pbutils|riff)-1\.0\.0\.dylib$", "GStreamer base 1.28.8", "LGPL-2.1-or-later"),
     (r"^PlugIns/libgst(coreelements)\.dylib$", "GStreamer core 1.28.8", "LGPL-2.1-or-later"),

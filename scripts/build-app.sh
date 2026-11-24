@@ -56,6 +56,8 @@ python3 scripts/bundle_gstreamer.py --prefix "$GSTREAMER_PREFIX" \
   --helpers-dest "$APP/Contents/Helpers" \
   --binary "$APP/Contents/MacOS/$EXEC" \
   --manifest "$APP/Contents/Resources/gstreamer-files.txt"
+echo "== gst-ptp-helper aus dem Quelltext (ohne Root-Rechte lauffähig, MPL-2.0)"
+"$ROOT/scripts/build-ptp-helper.sh" "$APP/Contents/Helpers/gst-ptp-helper"
 # Entwicklungs-rpath (absoluter Pfad zum vendor-Ordner) entfernen
 install_name_tool -delete_rpath "$GSTREAMER_PREFIX/lib" "$APP/Contents/MacOS/$EXEC" 2>/dev/null || true
 # Nur Apple Silicon ausliefern (halbiert die Größe)
