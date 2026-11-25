@@ -34,6 +34,7 @@ struct st_sender {
     /* Zeit */
     GstClock *ptp;
     int ptp_locked;
+    int ptp_acquired;
     char gm[32];
     gulong ptp_cb;
 
@@ -123,6 +124,20 @@ static gboolean ptp_cb(guint8 domain, const GstStructure *st, gpointer user)
         }
     }
     return TRUE;
+}
+
+/* Grandmaster-ID direkt von der PTP-Uhr: Die Statistik-Nachricht zur
+ * Grandmaster-Wahl kommt nur einmal und ist verpasst, wenn PTP schon lief
+ * (z. B. vom Empfang). Dann stand „traceable“ statt der ID in der SDP. */
+static void read_gm(st_sender *s)
+{
+    if (!s->ptp) return;
+    guint64 gm = 0;
+    g_object_get(s->ptp, "grandmaster-clock-id", &gm, NULL);
+    if (!gm) return;
+    pthread_mutex_lock(&s->slock);
+    format_id(gm, s->gm, sizeof s->gm);
+    pthread_mutex_unlock(&s->slock);
 }
 
 /* ------------------------------------------------------------------ */
@@ -550,7 +565,7 @@ st_sender *st_sender_new(const st_sender_config *cfg, char *err, size_t len)
         if (!c.audio_pt) c.audio_pt = 97;
         if (!c.audio_dscp) c.audio_dscp = 46;
     }
-    if (c.ptp_domain <= 0) c.ptp_domain = 127;
+    if (c.ptp_domain < 0 || c.ptp_domain > 127) c.ptp_domain = 127;
     st_sender *s = calloc(1, sizeof *s);
     s->cfg = c;
     s->vfd = s->afd = -1;
@@ -585,14 +600,11 @@ int st_sender_start(st_sender *s, char *err, size_t len)
 {
     const st_sender_config *c = &s->cfg;
     if (c->use_ptp) {
-        if (!gst_ptp_is_initialized()) {
-            gchar *ifs[2] = { (gchar *)c->iface_name, NULL };
-            gst_ptp_init(GST_PTP_CLOCK_ID_NONE, c->iface_name[0] ? ifs : NULL);
-        }
-        if (gst_ptp_is_initialized()) {
+        if (!s->ptp_acquired && st_ptp_acquire(c->iface_name) == 0) s->ptp_acquired = 1;
+        if (s->ptp_acquired) {
             s->ptp_cb = gst_ptp_statistics_callback_add(ptp_cb, s, NULL);
             s->ptp = gst_ptp_clock_new("st-send-ptp", (guint)c->ptp_domain);
-            if (s->ptp && gst_clock_wait_for_sync(s->ptp, 4 * GST_SECOND)) s->ptp_locked = 1;
+            if (s->ptp && gst_clock_wait_for_sync(s->ptp, 4 * GST_SECOND)) { s->ptp_locked = 1; read_gm(s); }
         }
     }
     if (c->has_video && (s->vfd = open_tx(c->video_addr, c->video_port, c, c->video_dscp, err, len)) < 0) return -1;
@@ -618,6 +630,9 @@ void st_sender_stop(st_sender *s)
     s->vfd = s->afd = -1;
     if (s->ptp_cb) { gst_ptp_statistics_callback_remove(s->ptp_cb); s->ptp_cb = 0; }
     if (s->ptp) { gst_object_unref(s->ptp); s->ptp = NULL; }
+    if (s->ptp_acquired) { st_ptp_release(); s->ptp_acquired = 0; }
+    s->ptp_locked = 0;
+    s->st.ptp_locked = 0;
     s->st.running = 0;
 }
 
@@ -637,6 +652,7 @@ int st_sender_sdp(st_sender *s, int video, char *out, size_t len)
     const st_sender_config *c = &s->cfg;
     if ((video && !c->has_video) || (!video && !c->has_audio)) return -1;
     char refclk[128];
+    if (s->ptp_locked) read_gm(s);
     pthread_mutex_lock(&s->slock);
     if (s->ptp_locked && s->gm[0]) snprintf(refclk, sizeof refclk, "ptp=IEEE1588-2008:%s:%d", s->gm, c->ptp_domain);
     else if (s->ptp_locked) snprintf(refclk, sizeof refclk, "ptp=IEEE1588-2008:traceable");

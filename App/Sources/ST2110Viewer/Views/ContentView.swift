@@ -5,7 +5,6 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @Environment(AppModel.self) private var model
     @State private var columns: NavigationSplitViewVisibility = .all
-    @State private var sidebarAutoHidden = false
 
     var body: some View {
         @Bindable var model = model
@@ -21,20 +20,25 @@ struct ContentView: View {
         } detail: {
             Group {
                 switch model.mode {
-                case .receive:
-                    PlayerView()
-                        .inspector(isPresented: $model.inspectorShown) {
-                            DiagnosticsView()
-                                .inspectorColumnWidth(min: 320, ideal: 360, max: 560)
-                        }
+                case .receive: PlayerView()
                 case .send: SendView()
                 case .analyze: AnalysisView()
                 }
             }
+            // Feste Mindestbreite der Mitte: Das Fenster wird nicht schmaler als
+            // Seitenleiste, Mitte und Diagnose zusammen, statt etwas abzuschneiden.
+            .frame(minWidth: 500)
+            // Die Diagnose gehört zum Empfangen; beim Moduswechsel verschwindet sie ohne Animation
+            .inspector(isPresented: Binding(get: { model.inspectorShown && model.mode == .receive },
+                                            set: { model.inspectorShown = $0 })) {
+                DiagnosticsView()
+                    .inspectorColumnWidth(min: 320, ideal: 360, max: 560)
+            }
         }
+        .onChange(of: model.inspectorShown) { _, shown in if shown && model.mode == .receive { makeRoomForInspector() } }
+        .onChange(of: model.mode) { _, mode in if mode == .receive && model.inspectorShown { makeRoomForInspector() } }
         .navigationTitle(tr(title))
         .navigationSubtitle(tr(subtitle))
-        .onChange(of: model.inspectorShown) { _, shown in fitInspector(shown) }
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Picker("Modus", selection: $model.mode) {
@@ -45,13 +49,14 @@ struct ContentView: View {
                 .help("Empfangen (⌘1), Senden (⌘2), Analysieren (⌘3)")
             }
             ToolbarItemGroup(placement: .primaryAction) {
-                Button {
-                    model.explainerPage = 1
-                    model.showOnboarding = true
-                } label: {
-                    Label("So funktioniert ST 2110", systemImage: "questionmark.circle")
+                if model.player.isActive && model.mode != .receive {
+                    Button {
+                        model.player.stop()
+                    } label: {
+                        Label("Empfang stoppen", systemImage: "stop.circle")
+                    }
+                    .help("Läuft noch im Hintergrund: Empfang beenden")
                 }
-                .help("Erklärung: Essenzen, Multicast, PTP, NMOS")
                 SettingsLink {
                     Label("Erweitert", systemImage: "slider.horizontal.3")
                 }
@@ -105,7 +110,11 @@ struct ContentView: View {
         .onChange(of: model.selection) { _, new in
             model.activate(new)
         }
-        .onAppear { model.applyAppearance() }
+        .onAppear { model.applyAppearance(); model.checkDevices() }
+        .onChange(of: model.audioDevices.devices.map(\.uid)) { _, _ in model.checkDevices() }
+        .onChange(of: model.interfaces.changeCounter) { _, _ in model.checkDevices() }
+        .onChange(of: model.settings.audioDeviceUID) { _, _ in model.deviceNotice = nil; model.checkDevices() }
+        .onChange(of: model.settings.interfaceName) { _, _ in model.deviceNotice = nil; model.checkDevices() }
         .buttonBorderShape(.capsule)
         .task {
             if let dir = SnapshotRunner.outputDir { await SnapshotRunner.run(model: model, dir: dir) }
@@ -148,47 +157,132 @@ struct SendSidebar: View {
     }
 }
 
-/// Seitenleiste im Modus „Analysieren“: geöffnete Mitschnitte
+/// Seitenleiste im Modus „Analysieren“: Mitschnitte mit ihren Strömen,
+/// wie Ordner in Mail oder Dateien in Xcode.
 struct AnalysisSidebar: View {
     @Environment(AppModel.self) private var model
+    @State private var expanded: Set<UUID> = []
 
     var body: some View {
-        @Bindable var a = model.analysis
-        List(selection: $a.selectedID) {
+        let a = model.analysis
+        List(selection: Binding<String?>(get: { selectionTag }, set: { select($0) })) {
             Section("Mitschnitte") {
+                if a.entries.isEmpty && !a.liveRunning {
+                    Text("Noch keine").foregroundStyle(.secondary)
+                }
                 ForEach(a.entries) { e in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(tr(e.url.lastPathComponent)).lineLimit(1)
-                        Text(tr(e.report.map { "\($0.streams.count) Ströme, \(String(format: "%.1f", locale: .current, $0.capture.duration_s)) s" } ?? (e.error ?? "")))
-                            .font(.caption).foregroundStyle(.secondary)
+                    DisclosureGroup(isExpanded: Binding(get: { expanded.contains(e.id) || a.selectedID == e.id },
+                                                        set: { if $0 { expanded.insert(e.id) } else { expanded.remove(e.id) } })) {
+                        if let r = e.report {
+                            ForEach(r.orderedStreams, id: \.key) { st in
+                                StreamRow(stream: st, missing: a.isLive(e) && a.liveMissing.contains(st.key))
+                                    .tag("s|\(e.id.uuidString)|\(st.key)")
+                            }
+                            Label("PTP und IGMP", systemImage: "clock.arrow.2.circlepath")
+                                .tag("s|\(e.id.uuidString)|\(AnalysisModel.network)")
+                        }
+                    } label: {
+                        EntryRow(entry: e, live: a.isLive(e))
+                            .tag("e|\(e.id.uuidString)")
+                            .contextMenu {
+                                if a.isLive(e) { Button("Live beenden") { a.stopLive() } }
+                                Button("Entfernen") { if a.isLive(e) { a.stopLive() }; a.remove(e.id) }
+                            }
                     }
-                    .tag(e.id)
-                    .contextMenu { Button("Entfernen") { a.remove(e.id) } }
                 }
             }
         }
         .listStyle(.sidebar)
     }
+
+    private var selectionTag: String? {
+        let a = model.analysis
+        guard let id = a.selectedID else { return nil }
+        guard let k = a.selectedStream else { return "e|\(id.uuidString)" }
+        return "s|\(id.uuidString)|\(k)"
+    }
+
+    private func select(_ tag: String?) {
+        guard let tag else { return }
+        let parts = tag.split(separator: "|", maxSplits: 2).map(String.init)
+        guard parts.count >= 2, let id = UUID(uuidString: parts[1]) else { return }
+        let a = model.analysis
+        a.selectedID = id
+        if parts.count == 3 {
+            a.selectedStream = parts[2]
+        } else {
+            a.selectedStream = nil
+        }
+        expanded.insert(id)
+    }
+}
+
+private struct EntryRow: View {
+    let entry: AnalysisModel.Entry
+    let live: Bool
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: live ? "dot.radiowaves.left.and.right" : "doc.text.magnifyingglass")
+                .foregroundStyle(live ? Color.red : Color.accentColor)
+                .symbolEffect(.pulse, options: .repeating, isActive: live)
+                .frame(width: 18)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(tr(live ? entry.url.lastPathComponent.replacingOccurrences(of: " (Live)", with: "") : entry.url.lastPathComponent))
+                    .lineLimit(1)
+                Text(tr(live ? "Live" : entry.report.map { "\($0.streams.count) Ströme, \(String(format: "%.1f", locale: .current, $0.capture.duration_s)) s" } ?? (entry.error ?? "")))
+                    .font(.caption).foregroundStyle(live ? Color.red : Color.secondary)
+                    .lineLimit(1)
+            }
+        }
+    }
+}
+
+private struct StreamRow: View {
+    let stream: AnalysisReport.Stream
+    let missing: Bool
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: stream.kind == "video" ? "film" : stream.kind == "audio" ? "waveform" : "text.alignleft")
+                .foregroundStyle(.secondary)
+                .frame(width: 18)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(tr(stream.summary)).lineLimit(1)
+                Text(tr(stream.destination)).font(.caption.monospacedDigit()).foregroundStyle(.secondary).lineLimit(1)
+            }
+            Spacer(minLength: 4)
+            Circle()
+                .fill(missing ? Color.secondary.opacity(0.4) : stream.worstLevel >= 2 ? Color.red : stream.worstLevel == 1 ? Color.orange : Color.green)
+                .frame(width: 7, height: 7)
+                .help(tr(missing ? "Im letzten Abschnitt nicht empfangen" : stream.worstLevel >= 2 ? "Fehler" : stream.worstLevel == 1 ? "Hinweise" : "In Ordnung"))
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(tr("\(stream.kindTitle), \(stream.summary), \(stream.destination)"))
+    }
 }
 
 extension ContentView {
+    /// Wie Xcode: Reicht die Fensterbreite für Seitenleiste, Bild und Diagnose
+    /// nicht, wird das Fenster breiter. Nur wenn auch der Bildschirm zu schmal
+    /// ist, weicht die Seitenleiste.
+    func makeRoomForInspector() {
+        guard !model.isFullScreen, let w = NSApp.keyWindow ?? NSApp.mainWindow, let screen = w.screen else { return }
+        let needed: CGFloat = (columns == .detailOnly ? 0 : 260) + 600 + 380
+        guard w.frame.width < needed else { return }
+        let vis = screen.visibleFrame
+        var f = w.frame
+        f.size.width = min(needed, vis.width)
+        if f.maxX > vis.maxX { f.origin.x = max(vis.minX, vis.maxX - f.width) }
+        w.setFrame(f, display: true, animate: true)
+        if f.width < needed { columns = .detailOnly }
+    }
+
     /// Untertitel nur, wenn er etwas anderes sagt als der Titel.
     var subtitle: String {
         guard model.mode == .receive, model.player.isDemo else { return "" }
         let s = "Demo: Testbild und Testton"
         return title == s ? "" : s
     }
-
-    /// Ist das Fenster für Seitenleiste, Bild und Diagnose zu schmal, weicht die
-    /// Seitenleiste, solange die Diagnose offen ist (statt den Inhalt abzuschneiden).
-    func fitInspector(_ shown: Bool) {
-        let width = NSApp.keyWindow?.frame.width ?? NSApp.windows.first?.frame.width ?? 0
-        if shown, columns != .detailOnly, width > 0, width < 1500 {
-            withAnimation { columns = .detailOnly }
-            sidebarAutoHidden = true
-        } else if !shown, sidebarAutoHidden {
-            withAnimation { columns = .all }
-            sidebarAutoHidden = false
-        }
-    }
 }
+

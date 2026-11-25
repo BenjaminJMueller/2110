@@ -40,6 +40,12 @@ typedef struct {
     uint64_t drift_base_time;
 } st_offset_tracker;
 
+/* PTP gemeinsam für Empfänger und Sender: eine Initialisierung mit Zähler.
+ * Solange jemand PTP nutzt, wird es nie neu gestartet; sonst würden die
+ * PTP-Uhren der anderen ungültig (Absturz in gst_clock_get_time). */
+int st_ptp_acquire(const char *iface);
+void st_ptp_release(void);
+
 void st_offset_init(st_offset_tracker *t);
 /* Liefert 1, wenn dabei neu ausgerichtet wurde (Sprung). */
 int st_offset_update(st_offset_tracker *t, int64_t delta, uint64_t now_local);

@@ -24,12 +24,15 @@ LICENSE_FILES = {
     "BSD-3-Clause (PCRE2)": "pcre2-BSD.txt",
     "MIT (libffi)": "libffi-MIT.txt",
     "Zlib": "zlib.txt",
+    "MIT (Sparkle)": "Sparkle-LICENSE.txt",
+    "MPL-2.0": "MPL-2.0.txt",
 }
 
 # (Regex auf Pfad relativ zu Contents/, Bestandteil, Lizenz)
 ALLOW = [
     (r"^MacOS/ST2110Viewer$", "2110 Viewer", "MIT (2110 Viewer)"),
-    (r"^Helpers/gst-(plugin-scanner|ptp-helper)$", "GStreamer core 1.28.8", "LGPL-2.1-or-later"),
+    (r"^Helpers/gst-plugin-scanner$", "GStreamer core 1.28.8", "LGPL-2.1-or-later"),
+    (r"^Helpers/gst-ptp-helper$", "gst-ptp-helper 1.28.8 (angepasst)", "MPL-2.0"),
     (r"^Frameworks/libgst(reamer|base|net)-1\.0\.0\.dylib$", "GStreamer core 1.28.8", "LGPL-2.1-or-later"),
     (r"^Frameworks/libgst(app|audio|video|rtp|tag|pbutils|riff)-1\.0\.0\.dylib$", "GStreamer base 1.28.8", "LGPL-2.1-or-later"),
     (r"^PlugIns/libgst(coreelements)\.dylib$", "GStreamer core 1.28.8", "LGPL-2.1-or-later"),
@@ -41,6 +44,7 @@ ALLOW = [
     (r"^Frameworks/libffi\.7\.dylib$", "libffi 3.2.9999.5", "MIT (libffi)"),
     (r"^Frameworks/libpcre2-8\.0\.dylib$", "PCRE2 10.42", "BSD-3-Clause (PCRE2)"),
     (r"^Frameworks/libz\.1\.dylib$", "zlib 1.3.1", "Zlib"),
+    (r"^Frameworks/Sparkle\.framework/", "Sparkle 2.10.1", "MIT (Sparkle)"),
     # Nicht ausführbare Dateien
     (r"^Info\.plist$", "2110 Viewer", "MIT (2110 Viewer)"),
     (r"^PkgInfo$", "2110 Viewer", "MIT (2110 Viewer)"),

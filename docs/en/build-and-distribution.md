@@ -84,6 +84,16 @@ SIGN_IDENTITY="Developer ID Application: … (TEAMID)" NOTARY_PROFILE=st2110-not
 
 The script then signs with hardened runtime and a timestamp, submits the DMG for notarization and staples the ticket. For GitHub Actions the certificate and credentials have to be stored as encrypted secrets; the workflow is prepared for this but not set up.
 
+## Updates (Sparkle)
+
+The app checks for new versions once a day (can be turned off under *Advanced › Info*) and installs them on request. [Sparkle](https://sparkle-project.org) 2.10.1 is embedded for this (MIT).
+
+- The version list `appcast.xml` is attached to the latest GitHub release; the app reads it via `releases/latest/download/appcast.xml`.
+- Every DMG is signed with an EdDSA key (Ed25519). The app contains the public part (`packaging/sparkle-public-key.txt`) and installs only updates with a matching signature. With the ad-hoc signature, this replaces the missing Developer ID.
+- The private key exists only as the repository secret `SPARKLE_PRIVATE_KEY` (*Settings › Secrets and variables › Actions*). The release run signs the DMG with it and checks that it matches the public key. Without the secret, the release is published without an update feed.
+- If the private key is lost, existing installations can no longer be updated; a new key pair and one manual installation are needed. Keep a copy somewhere safe (password manager).
+- Release notes in the update window: `packaging/release-notes/<version>.de.html` and `.en.html`.
+
 ## App permissions
 
 | Permission | What for | How |

@@ -67,6 +67,8 @@ The app shows in the picture and below the bar what it has **measured** (for exa
 |---|---|
 | Possibly the wrong network interface | Advanced › Network › choose the interface in the Blackmagic devices’ network |
 | Wi-Fi selected | use a wired connection (10GbE) |
+| Sender is turned off on the device | click **Turn On…** below the picture. Blackmagic converters partly ship with their senders turned off; the display then shows “N/C”. |
+| Connection too slow for this stream | smaller format on the source device (1080p25 instead of 1080p50/60) or a faster connection. Also check the switch ports: a 1 Gbit SFP module limits the link to 1 Gbit/s. |
 | No data received | check IGMP snooping with a querier on the switch; is the sender active? Is Local Network access allowed? |
 | Interlaced (1080i) not supported | set the camera or switcher to **1080p25** or **1080p50** |
 | RGB 4:4:4 not supported | set the source device to YUV 4:2:2 |

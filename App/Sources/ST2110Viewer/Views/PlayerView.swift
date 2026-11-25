@@ -46,10 +46,6 @@ struct PlayerView: View {
             model.togglePlay()
             return .handled
         }
-        .onKeyPress(.escape) {
-            if model.isFullScreen { NSApp.keyWindow?.toggleFullScreen(nil); return .handled }
-            return .ignored
-        }
         .onKeyPress(characters: CharacterSet(charactersIn: "mM")) { _ in
             model.settings.muted.toggle()
             model.player.setMute(model.settings.muted)
@@ -180,16 +176,60 @@ private struct VideoOverlay: View {
 /// Wichtigster Hinweis unter der Bedienleiste
 private struct HintBanner: View {
     @Environment(AppModel.self) private var model
+    @State private var confirmActivate = false
+    @State private var activating = false
 
     var body: some View {
         let p = model.player
         let warnings = (p.formatProblem.map { [$0] } ?? []) + p.mediaWarnings
-        if let w = warnings.first {
+        if let n = model.deviceNotice {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange).accessibilityHidden(true)
+                Text(tr(n)).font(.callout).fixedSize(horizontal: false, vertical: true)
+                Spacer()
+                Button { model.deviceNotice = nil } label: { Image(systemName: "xmark") }
+                    .buttonStyle(.borderless)
+                    .help("Hinweis schließen")
+            }
+            .padding(10)
+            .background(Color.orange.opacity(0.10), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        } else if p.isActive, let h = p.hints.first(where: { $0.id == "nmos-disabled" }) {
+            // Häufigste Ursache im ersten Hardwaretest: Sender am Gerät aus. Direkt einschalten lassen.
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "power.circle.fill").foregroundStyle(.orange).accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(tr(h.title)).font(.callout.weight(.semibold))
+                    Text("Das Gerät schickt deshalb keine Pakete.").font(.callout).foregroundStyle(.secondary)
+                }
+                Spacer()
+                if activating {
+                    ProgressView().controlSize(.small)
+                } else {
+                    Button("Einschalten …") { confirmActivate = true }
+                        .controlButtonStyle(prominent: true)
+                        .controlSize(.small)
+                }
+            }
+            .padding(10)
+            .background(Color.orange.opacity(0.10), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .confirmationDialog("Sender am Gerät einschalten?", isPresented: $confirmActivate) {
+                Button("Einschalten") {
+                    activating = true
+                    Task {
+                        let msg = await model.activateCurrentSenders()
+                        activating = false
+                        if !msg.hasPrefix("Übernommen") { model.alert = msg }
+                    }
+                }
+            } message: {
+                Text("Schaltet Video und Audio dieser Quelle per NMOS IS-05 ein. Das wirkt auf das Gerät und damit auf alle Empfänger im Netz.")
+            }
+        } else if let w = warnings.first {
             banner(icon: "exclamationmark.triangle.fill", color: .orange, title: "Format", text: w)
         } else if let h = p.hints.first, h.severity >= .warning, p.isActive {
             banner(icon: h.severity == .error ? "xmark.octagon.fill" : "exclamationmark.triangle.fill",
                    color: h.severity == .error ? .red : .orange,
-                   title: h.title + (h.certainty == .suspected ? " (vermutet)" : ""), text: h.detail)
+                   title: h.title, text: h.detail)
         }
     }
 

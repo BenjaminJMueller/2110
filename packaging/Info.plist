@@ -38,7 +38,15 @@
 	<key>NSSupportsAutomaticGraphicsSwitching</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Entstanden für die Lehre. Enthält GStreamer (LGPL).</string>
+	<string>Prof. Dr. Benjamin Müller, Hochschule Ansbach. Entstanden für die Lehre.</string>
+	<key>SUFeedURL</key>
+	<string>https://github.com/BenjaminJMueller/2110/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>@SPARKLE_KEY@</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>2110 Viewer sucht Blackmagic-Geräte im lokalen Netzwerk (NMOS) und empfängt deren Video- und Audioströme (Multicast). Ohne diese Erlaubnis sind weder Geräteerkennung noch Empfang möglich.</string>
 	<key>NSCameraUsageDescription</key>

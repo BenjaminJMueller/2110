@@ -198,7 +198,7 @@ struct DiagnosticsView: View {
     private func lossPct(_ lost: UInt64, _ got: UInt64) -> String {
         let total = lost + got
         guard total > 0, lost > 0 else { return "" }
-        return String(format: " (%.4f %%)", locale: .current, Double(lost) / Double(total) * 100)
+        return String(format: " (%.2f %%)", locale: .current, Double(lost) / Double(total) * 100)
     }
 
     private func syncExplanation(_ m: st_sync_mode) -> String {
@@ -296,11 +296,6 @@ private struct SenderControlSection: View {
     }
 
     private func apply() async {
-        guard let src = model.player.current, let ref = src.nmos, let conn = ref.connectionAPI,
-              let id = ref.videoSenderID ?? ref.audioSenderID else {
-            message = "Keine Connection API bekannt."
-            return
-        }
         let ip = newAddress.trimmingCharacters(in: .whitespaces)
         if !ip.isEmpty {
             guard let addr = IPv4(ip), addr.isMulticast else { message = "Keine gültige Multicast-Adresse."; return }
@@ -310,15 +305,6 @@ private struct SenderControlSection: View {
                 return
             }
         }
-        do {
-            try await model.discovery.client.activateSender(connectionAPI: conn, senderID: id, enable: true,
-                                                            destinationIP: ip.isEmpty ? nil : ip,
-                                                            destinationPort: Int(newPort))
-            message = "Übernommen. Die SDP wird neu geladen."
-            await model.updateNMOSStatus(src)
-            if let updated = await model.refreshNMOS(src) { model.player.play(updated, settings: model.settings) }
-        } catch {
-            message = error.localizedDescription
-        }
+        message = await model.activateCurrentSenders(destinationIP: ip.isEmpty ? nil : ip, port: Int(newPort))
     }
 }

@@ -24,6 +24,12 @@ final class ExternalOutput {
     var isActive: Bool { activeDisplay != nil }
     var activeName: String? { displays.first { $0.id == activeDisplay }?.name }
     func dismissMessage() { message = nil }
+    var windowNumber: Int? { window?.windowNumber }
+    var debugSummary: String {
+        guard let window, let renderer else { return "keine Ausgabe" }
+        let v = window.contentView
+        return "Fenster \(Int(window.frame.width))×\(Int(window.frame.height)) sichtbar \(window.isVisible) Ebene \(window.level.rawValue), Ansicht \(Int(v?.frame.width ?? 0))×\(Int(v?.frame.height ?? 0)) Layer \(v?.layer.map { String(describing: type(of: $0)) } ?? "–"), " + renderer.debugSummary
+    }
 
     private var window: NSWindow?
     private var renderer: VideoRenderer?
@@ -59,9 +65,11 @@ final class ExternalOutput {
             return
         }
         message = nil
-        let w = window ?? makeWindow()
+        let w = window ?? makeWindow(on: screen)
         w.setFrame(screen.frame, display: true)
         w.orderFrontRegardless()
+        w.contentView?.needsDisplay = true
+        w.displayIfNeeded()
         activeDisplay = id
         UserDefaults.standard.set(screen.localizedName, forKey: Self.lastKey)
         if displays.first(where: { $0.id == id })?.isMain == true {
@@ -100,9 +108,12 @@ final class ExternalOutput {
         }
     }
 
-    private func makeWindow() -> NSWindow {
+    private func makeWindow(on screen: NSScreen) -> NSWindow {
         let r = VideoRenderer(sink: sink)
-        let w = OutputWindow(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: false)
+        // Gleich in voller Größe auf dem Zielbildschirm anlegen: Ein mit Größe null
+        // angelegtes Fenster zeigte seinen Inhalt nie an (nur Schwarz).
+        let w = OutputWindow(contentRect: NSRect(origin: .zero, size: screen.frame.size), styleMask: [.borderless],
+                             backing: .buffered, defer: false, screen: screen)
         w.onEscape = { [weak self] in self?.hide() }
         w.isReleasedWhenClosed = false
         w.backgroundColor = .black
@@ -112,10 +123,13 @@ final class ExternalOutput {
         w.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.mainMenuWindow)) + 1)
         w.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
         w.title = "2110 Viewer – Ausgabe"
-        let v = OutputView(frame: .zero)
-        r.configure(v)
-        v.setAccessibilityLabel("Videoausgabe auf zweitem Bildschirm")
-        w.contentView = v
+        // Gleicher Aufbau wie das Bild im Hauptfenster (SwiftUI um eine MTKView);
+        // eine nackte MTKView als contentView blieb auf manchen Macs schwarz.
+        let host = NSHostingView(rootView: OutputContent(renderer: r))
+        host.frame = NSRect(origin: .zero, size: screen.frame.size)
+        host.wantsLayer = true
+        host.setAccessibilityLabel("Videoausgabe auf zweitem Bildschirm")
+        w.contentView = host
         renderer = r
         window = w
         return w
@@ -135,15 +149,18 @@ private final class OutputWindow: NSWindow {
     }
 }
 
-/// Metal-Ansicht, die den Mauszeiger über der Ausgabe ausblendet.
-private final class OutputView: MTKView {
-    override func resetCursorRects() {
-        addCursorRect(bounds, cursor: Self.blank)
+/// Inhalt der Ausgabe: nur das Bild auf Schwarz, Mauszeiger ausgeblendet.
+private struct OutputContent: View {
+    let renderer: VideoRenderer
+
+    var body: some View {
+        ZStack {
+            Color.black
+            VideoSurface(renderer: renderer)
+        }
+        .ignoresSafeArea()
+        .onContinuousHover { _ in NSCursor.setHiddenUntilMouseMoves(true) }
     }
-    private static let blank: NSCursor = {
-        let img = NSImage(size: NSSize(width: 1, height: 1))
-        return NSCursor(image: img, hotSpot: .zero)
-    }()
 }
 
 /// Menü für Symbolleiste und Wiedergabe-Steuerung.
@@ -157,7 +174,7 @@ struct ExternalOutputMenu: View {
             Section("Ausgabe auf Bildschirm") {
                 ForEach(out.displays) { d in
                     Toggle(isOn: Binding(get: { out.activeDisplay == d.id },
-                                         set: { $0 ? out.show(on: d.id) : out.hide() })) {
+                                         set: { $0 ? model.showOutput(on: d.id) : out.hide() })) {
                         Text(tr(d.isMain ? d.title + " (Hauptfenster)" : d.title))
                     }
                 }

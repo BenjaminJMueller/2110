@@ -20,6 +20,10 @@ let package = Package(
     products: [
         .executable(name: "ST2110Viewer", targets: ["ST2110Viewer"]),
     ],
+    dependencies: [
+        // Updates (MIT, siehe packaging/licenses/Sparkle-LICENSE.txt)
+        .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.1"),
+    ],
     targets: [
         // C-Empfangskern (auch unter Linux mit make baubar und getestet)
         .target(
@@ -57,7 +61,7 @@ let package = Package(
         ),
         .executableTarget(
             name: "ST2110Viewer",
-            dependencies: ["ST2110Core", "ST2110Kit"],
+            dependencies: ["ST2110Core", "ST2110Kit", .product(name: "Sparkle", package: "Sparkle")],
             path: "App/Sources/ST2110Viewer",
             linkerSettings: [
                 .linkedFramework("Metal"),

@@ -37,7 +37,9 @@ final class AppModel {
             if oldValue.appearance != settings.appearance { applyAppearance() }
             if oldValue.mdnsDiscovery != settings.mdnsDiscovery || oldValue.registryURL != settings.registryURL
                 || oldValue.manualNodes != settings.manualNodes {
-                discovery.start(settings: settings)
+                // Erst nach der Einführung suchen: Dann fragt macOS nach dem lokalen Netzwerk,
+        // wenn die Einführung es gerade erklärt hat.
+        if settings.onboardingDone { discovery.start(settings: settings) }
             }
         }
     }
@@ -61,7 +63,16 @@ final class AppModel {
     let audioDevices = AudioDeviceList()
     let sender = SenderController()
     let analysis = AnalysisModel()
+    let updates = Updates()
     let output: ExternalOutput
+
+    @ObservationIgnored private var keyMonitor: Any?
+
+    /// Hinweis, wenn ein manuell gewähltes Gerät (Schnittstelle, Tonausgang) wegfällt oder zurückkommt.
+    var deviceNotice: String?
+    @ObservationIgnored private var audioNames: [String: String] = [:]
+    @ObservationIgnored private var audioMissing = false
+    @ObservationIgnored private var interfaceMissing = false
 
     var appVersion: String {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
@@ -84,12 +95,146 @@ final class AppModel {
         discovery.start(settings: settings)
         sender.interfacesProvider = { [weak self] in self?.interfaces.interfaces ?? [] }
         sender.settingsProvider = { [weak self] in self?.settings ?? AppSettings() }
+        sender.domainProvider = { [weak self] in await self?.ptpDomainHint() }
         applyAppearance()
+        // Esc beendet Vollbild und Bildschirmausgabe, egal wo der Fokus liegt
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] e in
+            guard e.keyCode == 53 else { return e }
+            return MainActor.assumeIsolated {
+                guard let self else { return e }
+                if self.output.isActive { self.output.hide(); return nil }
+                if self.isFullScreen { (NSApp.keyWindow ?? NSApp.mainWindow)?.toggleFullScreen(nil); return nil }
+                return e
+            }
+        }
         if let e = GStreamerEnvironment.initError {
             alert = "Die Medienkomponente (GStreamer) konnte nicht gestartet werden: \(e)"
         } else if !GStreamerEnvironment.missingPlugins.isEmpty {
             alert = "Es fehlen Bestandteile der Medienkomponente: \(GStreamerEnvironment.missingPlugins). Bitte die App neu installieren."
         }
+    }
+
+    /// Ende der Einführung; beim ersten Mal startet hier die Gerätesuche.
+    func finishOnboarding() {
+        let first = !settings.onboardingDone
+        settings.onboardingDone = true
+        if first { discovery.start(settings: settings) }
+    }
+
+    // MARK: PTP-Domain erkennen
+
+    /// Domain aus einer SDP (a=ts-refclk:ptp=IEEE1588-2008:<GM>:<Domain>).
+    nonisolated static func ptpDomain(inSDP sdp: String?) -> Int? {
+        guard let sdp, let rx = try? NSRegularExpression(pattern: #"ts-refclk:ptp=IEEE1588-20(?:08|19):[0-9A-Fa-f-]+:(\d{1,3})"#),
+              let m = rx.firstMatch(in: sdp, range: NSRange(sdp.startIndex..., in: sdp)),
+              let r = Range(m.range(at: 1), in: sdp), let d = Int(sdp[r]), (0...127).contains(d) else { return nil }
+        return d
+    }
+
+    /// Für „Automatisch“ beim Senden: die Domain, in der die Geräte im Netz laufen.
+    /// Reihenfolge: laufender Empfang, zuletzt verwendete Quellen, SDP eines gefundenen Geräts.
+    func ptpDomainHint() async -> Int? {
+        let known = [player.current?.videoSDP, player.current?.audioSDP]
+            + saved.sorted { ($0.lastUsed ?? $0.createdAt) > ($1.lastUsed ?? $1.createdAt) }.flatMap { [$0.videoSDP, $0.audioSDP] }
+        for s in known { if let d = Self.ptpDomain(inSDP: s) { return d } }
+        for d in discovery.sources.prefix(4) {
+            guard let v = d.video ?? d.audio.first else { continue }
+            if let sdp = try? await discovery.client.sdp(for: v, connectionAPI: d.connectionAPI),
+               let dom = Self.ptpDomain(inSDP: sdp) { return dom }
+        }
+        return nil
+    }
+
+    // MARK: Manuell gewählte Geräte überwachen
+
+    /// Aufruf bei jeder Änderung der Audio- oder Netzwerkgeräte. Fällt ein manuell
+    /// gewähltes Gerät weg, sagt die App das und weicht aus; kommt es zurück, wird es wieder benutzt.
+    func checkDevices() {
+        for d in audioDevices.devices { audioNames[d.uid] = d.name }
+
+        let uid = settings.audioDeviceUID
+        if !uid.isEmpty {
+            let present = audioDevices.device(uid: uid) != nil
+            let name = audioNames[uid] ?? tr("Das gewählte Gerät")
+            if !present && !audioMissing {
+                audioMissing = true
+                deviceNotice = tr("„\(name)“ ist nicht mehr verfügbar. Der Ton läuft über den Systemausgang.")
+                player.addLog(.warning, "Tonausgang \(name) getrennt, weiter über den Systemausgang")
+                restartPlayback()
+            } else if present && audioMissing {
+                audioMissing = false
+                deviceNotice = tr("„\(name)“ ist wieder verbunden und wird benutzt.")
+                player.addLog(.info, "Tonausgang \(name) wieder verbunden")
+                restartPlayback()
+            }
+        } else {
+            audioMissing = false
+        }
+
+        let ifName = settings.interfaceName
+        if !ifName.isEmpty {
+            let present = interfaces.interface(named: ifName)?.ipv4 != nil
+            if !present && !interfaceMissing {
+                interfaceMissing = true
+                deviceNotice = tr("Die Schnittstelle „\(ifName)“ ist nicht mehr verbunden. Kabel oder Adapter prüfen, oder unter Erweitert › Netzwerk „Automatisch“ wählen.")
+                player.addLog(.warning, "Schnittstelle \(ifName) getrennt")
+            } else if present && interfaceMissing {
+                interfaceMissing = false
+                deviceNotice = tr("Die Schnittstelle „\(ifName)“ ist wieder verbunden.")
+                player.addLog(.info, "Schnittstelle \(ifName) wieder verbunden, Empfang neu gestartet")
+                restartPlayback()
+            }
+        } else {
+            interfaceMissing = false
+        }
+    }
+
+    private func restartPlayback() {
+        guard player.isActive, let c = player.current else { return }
+        if player.isDemo { player.playDemo(settings: settings) } else { player.play(c, settings: settings) }
+    }
+
+    // MARK: Vollbild und Bildschirmausgabe
+
+    /// Vollbild ein/aus; vor dem ersten Mal ein Hinweis, wie man es wieder verlässt.
+    func toggleFullScreen() {
+        guard let w = NSApp.keyWindow ?? NSApp.mainWindow else { return }
+        if !isFullScreen, !confirmHint(key: "hint.fullscreen", title: "Vollbild",
+                                       text: "Beenden mit Esc oder ⌃⌘F. Die Bedienleiste erscheint, sobald Sie die Maus bewegen.",
+                                       ok: "Vollbild starten") { return }
+        w.toggleFullScreen(nil)
+    }
+
+    func toggleOutput() {
+        if output.isActive { output.hide(); return }
+        if confirmOutputHint() { output.toggle() }
+    }
+
+    func showOutput(on id: CGDirectDisplayID) {
+        if !output.isActive, !confirmOutputHint() { return }
+        output.show(on: id)
+    }
+
+    private func confirmOutputHint() -> Bool {
+        confirmHint(key: "hint.output", title: "Ausgabe auf Bildschirm",
+                    text: "Beenden mit Esc oder ⌘⇧B. Das Bild füllt den gewählten Bildschirm ohne Bedienelemente.",
+                    ok: "Ausgabe starten")
+    }
+
+    /// Hinweis wie in MadMapper: einmal zeigen, abschaltbar.
+    private func confirmHint(key: String, title: String, text: String, ok: String) -> Bool {
+        if SnapshotRunner.outputDir != nil || UserDefaults.standard.bool(forKey: key) { return true }
+        let a = NSAlert()
+        a.messageText = tr(title)
+        a.informativeText = tr(text)
+        a.icon = NSImage(systemSymbolName: "escape", accessibilityDescription: nil) ?? a.icon
+        a.addButton(withTitle: tr(ok))
+        a.addButton(withTitle: tr("Abbrechen"))
+        a.showsSuppressionButton = true
+        a.suppressionButton?.title = tr("Nicht mehr anzeigen")
+        let r = a.runModal()
+        if a.suppressionButton?.state == .on { UserDefaults.standard.set(true, forKey: key) }
+        return r == .alertFirstButtonReturn
     }
 
     func applyAppearance() {
@@ -214,6 +359,31 @@ final class AppModel {
     // MARK: Quellen verwalten
 
     /// Den eigenen Sendestrom auf diesem Mac empfangen (über die eigene Netzwerkschnittstelle bzw. Loopback).
+    /// Schaltet Video- und Audiosender der laufenden NMOS-Quelle am Gerät ein (IS-05)
+    /// und lädt danach die SDP neu. Eine neue Zieladresse gilt nur für Video.
+    func activateCurrentSenders(destinationIP: String? = nil, port: Int? = nil) async -> String {
+        guard let src = player.current, let ref = src.nmos, let conn = ref.connectionAPI,
+              ref.videoSenderID != nil || ref.audioSenderID != nil else {
+            return "Keine Connection API bekannt."
+        }
+        do {
+            if let v = ref.videoSenderID {
+                try await discovery.client.activateSender(connectionAPI: conn, senderID: v, enable: true,
+                                                          destinationIP: destinationIP, destinationPort: port)
+            }
+            if let a = ref.audioSenderID {
+                try await discovery.client.activateSender(connectionAPI: conn, senderID: a, enable: true,
+                                                          destinationIP: nil, destinationPort: nil)
+            }
+            player.addLog(.info, "Sender am Gerät eingeschaltet (IS-05)")
+            await updateNMOSStatus(src)
+            if let updated = await refreshNMOS(src) { player.play(updated, settings: settings) }
+            return "Übernommen. Die SDP wird neu geladen."
+        } catch {
+            return error.localizedDescription
+        }
+    }
+
     func receiveOwnStream() {
         guard sender.isSending, sender.videoSDP != nil || sender.audioSDP != nil else { return }
         let name = "Eigener 2110-Viewer-Strom"

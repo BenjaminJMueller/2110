@@ -4,13 +4,19 @@
 
 **Legende:** **D** = nur dokumentiert (Herstellerangabe bzw. Norm); **S** = synthetisch getestet (eigener Testsender, Linux bzw. macOS-CI); **H** = mit Blackmagic-Hardware geprüft
 
-> Stand dieser Version: **Es wurde noch nichts mit Blackmagic-Hardware geprüft.** Die Spalte H füllt sich mit Ihren Testergebnissen (siehe [06-Testplan](06-Testplan.md)).
+> **Erster Hardwaretest (November 2026):** 2110 IP Converter 3x3G, MikroTik CRS305 mit SFP+-Kupfermodulen, MacBook Pro M4 mit USB-2,5-GbE-Adapter. Geprüft (**H**): Erkennung per NMOS, PTP (3x3G als Grandmaster, Domain 123), Sender am Gerät per IS-05 einschalten, Empfang vom 3x3G, Senden aus der App an den 3x3G (Empfänger in Converters Setup gewählt). Weitere Punkte füllen sich mit Testergebnissen (siehe [06-Testplan](06-Testplan.md)).
+>
+> **Erkenntnisse aus dem Test:**
+> * Die Sender des 3x3G waren ab Werk **inaktiv** (NMOS `master_enable: false`); das Display zeigte „N/C“. Erst nach „Einschalten“ (IS-05) sendet das Gerät.
+> * Laut Datenblatt kann der Ethernet-Port 10M/100M/1G/10G, nicht 2,5G/5G. 1080p25 braucht etwa 1,1 Gbit/s, 1080p50/60 etwa 2,2–2,6 Gbit/s; eine 1-Gbit/s-Strecke (z. B. 1G-SFP-Modul im Switch) verliert dann einen großen Teil der Pakete.
+> * Der 3x3G lehnt **720p25** per IS-05 ab („SDP format refused“); Normformate wie 1080p25 verwenden.
+> * Bis Version 1.2.4 brach das PTP-Hilfsprogramm ohne Root-Rechte ab; ab 1.2.4 behoben.
 
 ## 2.1 Geräte
 
 | Modell | Firmware | Status |
 |---|---|---|
-| Blackmagic 2110 IP Converter 3x3G | noch zu erfassen (Blackmagic Converters Setup › Setup › Software) | D (Handbuch 09/2026, Techspecs), H ausstehend |
+| Blackmagic 2110 IP Converter 3x3G | Blackmagic Converters 12.4.2 | D (Handbuch 09/2026, Techspecs), **H** (erster Test, siehe oben) |
 | andere Blackmagic-2110-Geräte (Mini BiDirect, SDI to HDMI 12G …) | – | nicht Gegenstand dieser Version. Bei 2160p59.94/60 senden die 12G-Modelle **IP10**, das wird nicht unterstützt. |
 
 ## 2.2 Videoformate (ST 2110-20, unkomprimiert)
@@ -41,11 +47,11 @@
 
 | Funktion | Status |
 |---|---|
-| NMOS IS-04 Peer-to-Peer (mDNS `_nmos-node._tcp`) | D (Blackmagic-Angabe), Client S (Unit-Tests mit nachgebildeten IS-04-Antworten), H ausstehend |
+| NMOS IS-04 Peer-to-Peer (mDNS `_nmos-node._tcp`) | D (Blackmagic-Angabe), Client S (Unit-Tests mit nachgebildeten IS-04-Antworten), **H** |
 | NMOS-Registry (Query API) | D, S (gleicher Code wie Node API) |
 | Gruppierung Video/Audio (BCP-002-01) | D, S |
 | SDP über `manifest_href` bzw. IS-05 `transportfile` | S |
-| IS-05 Sender aktivieren/Ziel setzen | D, implementiert, nur nach Freischaltung, H ausstehend |
+| IS-05 Sender aktivieren/Ziel setzen | D, implementiert, **H** (Einschalten am 3x3G) |
 | Geräteadresse manuell / Adressbereichssuche | S (Parser), H ausstehend |
 | SDP-Datei, Drag-and-drop, Texteingabe, getrennte Video-/Audio-SDP | S |
 
@@ -54,7 +60,7 @@
 | Funktion | Status |
 |---|---|
 | Multicast-Beitritt ASM und SSM auf gewählter Schnittstelle | S (Linux), macOS-Pfad (IP_BOUND_IF) H ausstehend |
-| PTP passiver Slave, Domain aus SDP/einstellbar | S (Software-Grandmaster linuxptp, Linux), H ausstehend |
+| PTP passiver Slave, Domain aus SDP/einstellbar | S (Software-Grandmaster linuxptp, Linux), **H** (3x3G als Grandmaster, Domain 123) |
 | Rückfall, wenn der Sender nicht zum Grandmaster passt | S |
 | RTP-abgestimmte Lippensynchronität | S: Versatz < 0,2 ms an den Ausgabezeitstempeln |
 | Senderneustart, Unterbrechung, Formatwechsel, Paketverlust | S |
@@ -68,7 +74,7 @@
 | Senden ST 2110-30 L24, 1–16 Kanäle, 1 ms/125 µs | S |
 | Quellen Datei (AVFoundation) und Kamera | D, implementiert, auf echtem Mac zu prüfen (T13) |
 | NMOS-Knoten (IS-04 Node API, mDNS) und IS-05 für Sender | S (Unit-Tests: eigener Client liest die Ressourcen) |
-| IS-05: Empfänger am 3x3G verbinden | D, implementiert, **H ausstehend** (T11) |
+| IS-05: Empfänger am 3x3G verbinden | D, implementiert, H teilweise: Annahme in Converters Setup **H**; 720p25 vom Gerät abgelehnt |
 | Analyse pcap/pcapng: Formate, Verluste, Cinst/VRX, TS-DF, PTP, IGMP | S |
 
 ## 2.7 Empfohlene Geräteeinstellungen (3x3G)

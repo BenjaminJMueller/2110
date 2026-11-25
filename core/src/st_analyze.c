@@ -926,7 +926,7 @@ static void build_json(st_analysis *a)
         finding f[16];
         int nf = 0;
         double loss_pct = s->packets + s->lost ? 100.0 * (double)s->lost / (double)(s->packets + s->lost) : 0;
-        if (s->lost) add_finding(f, &nf, loss_pct > 0.01 ? 2 : 1, "%llu Pakete fehlen (%.4f %%).", (unsigned long long)s->lost, loss_pct);
+        if (s->lost) add_finding(f, &nf, loss_pct > 0.01 ? 2 : 1, "%llu Pakete fehlen (%.2f %%).", (unsigned long long)s->lost, loss_pct);
         else add_finding(f, &nf, 0, "Keine Paketverluste.");
         if (s->reorder) add_finding(f, &nf, 1, "%llu Pakete in falscher Reihenfolge.", (unsigned long long)s->reorder);
         if (s->ssrc_changes) add_finding(f, &nf, 1, "SSRC hat %llu-mal gewechselt (Senderneustart?).", (unsigned long long)s->ssrc_changes);

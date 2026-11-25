@@ -1,3 +1,4 @@
+import AppKit
 import Charts
 import SwiftUI
 
@@ -63,9 +64,10 @@ struct LiveChartTile: View {
             }
             .chartXAxis(.hidden)
             .chartYAxis(.hidden)
-            .chartXScale(domain: 0...max(LiveSeries.capacity - 1, series.values.count - 1))
-            .chartYScale(domain: 0...max(series.maxValue * 1.15, minimumScale))
+            .chartXScale(domain: 0...max(30, series.values.count - 1))
+            .chartYScale(domain: yDomain)
             .frame(height: 44)
+            .clipped()
             .accessibilityHidden(true)
         }
         .padding(12)
@@ -76,7 +78,15 @@ struct LiveChartTile: View {
         .accessibilityValue(series.last.map { String(format: format, locale: .current, $0) + " " + tr(unit) } ?? "–")
     }
 
-    private var minimumScale: Double { warnAbove.map { $0 * 2 } ?? 1 }
+    private var minimumScale: Double { warnAbove.map { max($0 * 2, 1) } ?? 1 }
+
+    /// Auch negative Werte (z. B. Laufzeit) bleiben im Kasten.
+    private var yDomain: ClosedRange<Double> {
+        let lo = min(0, series.values.min() ?? 0)
+        let hi = max(series.maxValue, 0)
+        let span = max(hi - lo, minimumScale)
+        return (lo < 0 ? lo - span * 0.1 : 0)...(lo + span * 1.15)
+    }
 }
 
 /// Kleines „i“ neben einer Überschrift; die Erklärung erscheint als Popover.
@@ -94,9 +104,21 @@ struct InfoButton: View {
         .popover(isPresented: $shown, arrowEdge: .bottom) {
             Text(tr(text))
                 .font(.callout)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(width: 300, alignment: .leading)
+                .lineLimit(nil)
+                .frame(width: Self.width, height: Self.height(for: tr(text)), alignment: .topLeading)
                 .padding(14)
         }
+    }
+
+    private static let width: CGFloat = 300
+
+    /// Popover messen ihren Inhalt unter macOS nicht zuverlässig, längere Texte
+    /// würden mit „…“ abgeschnitten. Daher die Höhe vorab ausrechnen.
+    private static func height(for text: String) -> CGFloat {
+        let font = NSFont.preferredFont(forTextStyle: .callout)
+        let r = (text as NSString).boundingRect(with: NSSize(width: width, height: .greatestFiniteMagnitude),
+                                                 options: [.usesLineFragmentOrigin, .usesFontLeading],
+                                                 attributes: [.font: font])
+        return ceil(r.height) + 4
     }
 }
