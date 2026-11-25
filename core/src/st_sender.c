@@ -34,6 +34,7 @@ struct st_sender {
     /* Zeit */
     GstClock *ptp;
     int ptp_locked;
+    int ptp_acquired;
     char gm[32];
     gulong ptp_cb;
 
@@ -599,11 +600,8 @@ int st_sender_start(st_sender *s, char *err, size_t len)
 {
     const st_sender_config *c = &s->cfg;
     if (c->use_ptp) {
-        if (!gst_ptp_is_initialized()) {
-            gchar *ifs[2] = { (gchar *)c->iface_name, NULL };
-            gst_ptp_init(GST_PTP_CLOCK_ID_NONE, c->iface_name[0] ? ifs : NULL);
-        }
-        if (gst_ptp_is_initialized()) {
+        if (!s->ptp_acquired && st_ptp_acquire(c->iface_name) == 0) s->ptp_acquired = 1;
+        if (s->ptp_acquired) {
             s->ptp_cb = gst_ptp_statistics_callback_add(ptp_cb, s, NULL);
             s->ptp = gst_ptp_clock_new("st-send-ptp", (guint)c->ptp_domain);
             if (s->ptp && gst_clock_wait_for_sync(s->ptp, 4 * GST_SECOND)) { s->ptp_locked = 1; read_gm(s); }
@@ -632,6 +630,9 @@ void st_sender_stop(st_sender *s)
     s->vfd = s->afd = -1;
     if (s->ptp_cb) { gst_ptp_statistics_callback_remove(s->ptp_cb); s->ptp_cb = 0; }
     if (s->ptp) { gst_object_unref(s->ptp); s->ptp = NULL; }
+    if (s->ptp_acquired) { st_ptp_release(); s->ptp_acquired = 0; }
+    s->ptp_locked = 0;
+    s->st.ptp_locked = 0;
     s->st.running = 0;
 }
 

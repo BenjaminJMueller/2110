@@ -74,6 +74,7 @@ struct st_receiver {
     GstElement *vsink, *asink, *volume;
     GstClock *clock;          /* Pipeline-Uhr */
     GstClock *ptp_clock;      /* nur PTP-Betrieb */
+    int ptp_acquired;         /* hält eine Nutzung von st_ptp_acquire */
     int vfd, afd;
     int rcvbuf;
 
@@ -248,6 +249,34 @@ static GMutex g_ptp_lock;
 static st_receiver *g_ptp_receiver = NULL;
 static gulong g_ptp_cb_id = 0;
 static char g_ptp_iface[ST_STR_SHORT] = "";
+static GMutex g_ptp_init_lock;
+static int g_ptp_users = 0;
+
+int st_ptp_acquire(const char *iface)
+{
+    if (!iface) iface = "";
+    g_mutex_lock(&g_ptp_init_lock);
+    /* Andere Schnittstelle nur übernehmen, wenn gerade niemand PTP nutzt */
+    if (gst_ptp_is_initialized() && g_ptp_users == 0 && strcmp(g_ptp_iface, iface) != 0) gst_ptp_deinit();
+    if (!gst_ptp_is_initialized()) {
+        gchar *ifaces[2] = { (gchar *)iface, NULL };
+        if (!gst_ptp_init(GST_PTP_CLOCK_ID_NONE, iface[0] ? ifaces : NULL)) {
+            g_mutex_unlock(&g_ptp_init_lock);
+            return -1;
+        }
+        g_strlcpy(g_ptp_iface, iface, sizeof g_ptp_iface);
+    }
+    g_ptp_users++;
+    g_mutex_unlock(&g_ptp_init_lock);
+    return 0;
+}
+
+void st_ptp_release(void)
+{
+    g_mutex_lock(&g_ptp_init_lock);
+    if (g_ptp_users > 0) g_ptp_users--;
+    g_mutex_unlock(&g_ptp_init_lock);
+}
 
 static void format_clock_id(guint64 id, char *out, size_t len)
 {
@@ -297,19 +326,14 @@ static gboolean ptp_stats_cb(guint8 domain, const GstStructure *s, gpointer user
 static int ptp_setup(st_receiver *r, char *err, size_t err_len)
 {
     const char *iface = r->cfg.iface_name;
-    if (gst_ptp_is_initialized() && strcmp(g_ptp_iface, iface) != 0) {
-        /* Andere Schnittstelle gewünscht: neu initialisieren. */
-        gst_ptp_deinit();
-    }
-    if (!gst_ptp_is_initialized()) {
-        gchar *ifaces[2] = { (gchar *)iface, NULL };
-        if (!gst_ptp_init(GST_PTP_CLOCK_ID_NONE, iface[0] ? ifaces : NULL)) {
+    if (!r->ptp_acquired) {
+        if (st_ptp_acquire(iface) < 0) {
             snprintf(err, err_len,
                      "Der PTP-Empfang konnte nicht gestartet werden (Hilfsprogramm gst-ptp-helper). "
                      "Möglicherweise sind die UDP-Ports 319/320 belegt oder die Firewall blockiert sie.");
             return -1;
         }
-        g_strlcpy(g_ptp_iface, iface, sizeof g_ptp_iface);
+        r->ptp_acquired = 1;
     }
     g_mutex_lock(&g_ptp_lock);
     g_ptp_receiver = r;
@@ -332,6 +356,10 @@ static void ptp_release(st_receiver *r)
     if (r->ptp_clock) {
         gst_object_unref(r->ptp_clock);
         r->ptp_clock = NULL;
+    }
+    if (r->ptp_acquired) {
+        st_ptp_release();
+        r->ptp_acquired = 0;
     }
 }
 
