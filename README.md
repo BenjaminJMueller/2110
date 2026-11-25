@@ -15,6 +15,8 @@
 | Lip sync via RTP timestamps or as a passive PTP slave | Timestamps from the PTP grandmaster, evenly paced packets | Audio TS-DF, PTP domains and grandmasters, IGMP querier, thumbnail |
 | Monitor a single channel or any stereo pair, choose the output device; full-screen picture on a second display or projector | macOS decodes files itself (H.264, HEVC, ProRes, AAC) | Record a capture straight from reception |
 
+**Successfully tested** with the Blackmagic 2110 IP Converter 3x3G (November 2026): receiving, sending, PTP and NMOS. Setup and results: [test report](docs/en/test-report.md).
+
 The app follows the system language (English or German).
 
 ## Installation
@@ -34,6 +36,7 @@ The DMG is published under [Releases](https://github.com/BenjaminJMueller/2110/r
 | [Analysis](docs/en/analysis.md) | measurements, formulas, limits |
 | [Network adapters](docs/en/network-adapters.md) | compatible 10GbE adapters with approximate prices |
 | [Test plan](docs/en/test-plan.md) | acceptance tests with real equipment, feedback template |
+| [Test report](docs/en/test-report.md) | first test with the 3x3G: setup, results, findings |
 | [Feasibility](docs/en/feasibility.md) | devices, manufacturer information, GStreamer review |
 | [Build and distribution](docs/en/build-and-distribution.md) | reproducible build, DMG, signing, notarization |
 | [LGPL sources](docs/en/lgpl-sources.md) | source code of the embedded libraries |
