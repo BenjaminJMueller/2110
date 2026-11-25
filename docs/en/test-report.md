@@ -32,10 +32,11 @@ Before that, the 3x3G was also connected directly (without a switch) to the 2.5G
 
 ## Findings
 
-1. **Senders off out of the box:** the 3x3G's senders reported `master_enable: false` in NMOS and the display showed “N/C”. Packets only arrived after turning them on via IS-05. Since 1.2.8 the app offers “Turn On…” right below the picture.
-2. **Bandwidth:** a 1 Gbit SFP module in the switch limited the path to 1 Gbit/s. 1080p25 needs about 1.1 Gbit/s, 1080p60 about 2.6 Gbit/s. According to the data sheet the 3x3G's port supports 10M/100M/1G/10G. Since 1.2.8 the app warns when a stream does not fit through the connection.
-3. **Formats:** the 3x3G only accepts standard SDI formats; 720p25 is not one of them.
-4. **PTP domain:** the 3x3G ran on domain 123 instead of 127. Since 1.2.4 the app detects the domain automatically.
+1. **The 3x3G strictly requires a 10 Gbit/s connection.** At 2.5 Gbit/s (direct connection) and at 1 Gbit/s (1G SFP module in the switch) the display showed “N/C” and the device did not send, not even with its sender turned on. Management, NMOS and PTP kept working. Only on the 10G port did the 3x3G send. According to the data sheet the port supports 10M/100M/1G/10G; ST 2110 needs 10G.
+2. **Senders off out of the box:** the 3x3G's senders reported `master_enable: false` in NMOS. In addition to the 10G connection they must be turned on (IS-05). Since 1.2.8 the app offers “Turn On…” right below the picture.
+3. **Bandwidth to the Mac:** 1080p25 needs about 1.1 Gbit/s, 1080p60 about 2.6 Gbit/s. Over a 1 Gbit/s path to the Mac many packets are lost. Since 1.2.8 the app warns when a stream does not fit through the connection.
+4. **Formats:** the 3x3G only accepts standard SDI formats; 720p25 is not one of them.
+5. **PTP domain:** the 3x3G ran on domain 123 instead of 127. Since 1.2.4 the app detects the domain automatically.
 
 ## App bugs found and fixed during the test
 

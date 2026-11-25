@@ -66,6 +66,7 @@ Die App zeigt im Bild und unter der Leiste, was sie **gemessen** hat (z. B. „K
 | Möglicherweise falsche Netzwerkschnittstelle | Erweitert › Netzwerk › Schnittstelle wählen, die im Netz der Blackmagic-Geräte liegt |
 | WLAN ausgewählt | Kabelverbindung (10 GbE) verwenden |
 | Sender ist am Gerät deaktiviert | Unter dem Bild auf **Einschalten …** klicken. Blackmagic-Converter liefern ihre Sender teils ausgeschaltet aus; das Display zeigt dann „N/C“. |
+| Display des 3x3G zeigt „N/C“ | Der 3x3G braucht eine **10-Gbit/s-Verbindung**. Mit 1 oder 2,5 Gbit/s sendet er nicht. Am Switch ein 10GBASE-T-Modul verwenden; danach den Sender unter dem Bild einschalten. |
 | Verbindung zu langsam für diesen Strom | Kleineres Format am Quellgerät (1080p25 statt 1080p50/60) oder schnellere Verbindung. Auch Switch-Ports prüfen: Ein 1-Gbit-SFP-Modul bremst auf 1 Gbit/s. |
 | Keine Daten empfangen | Am Switch IGMP-Snooping mit Querier prüfen; Sender aktiv? Lokales Netzwerk erlaubt? |
 | Zeilensprung (1080i) nicht unterstützt | Kamera/Mischer auf **1080p25** oder **1080p50** umstellen |

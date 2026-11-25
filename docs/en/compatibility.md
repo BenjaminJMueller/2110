@@ -7,8 +7,9 @@
 > **First hardware test (November 2026):** 2110 IP Converter 3x3G, MikroTik CRS305 with SFP+ copper modules, MacBook Pro (M4 Pro, 24 GB) with a USB 2.5 GbE adapter. Verified (**H**): discovery via NMOS, PTP (3x3G as grandmaster, domain 123), turning on the device's senders via IS-05, receiving from the 3x3G, sending from the app to the 3x3G (receiver chosen in Converters Setup). Further items fill up with test results (see the [test plan](test-plan.md)).
 >
 > **Findings from the test:**
-> * The 3x3G's senders were **inactive** out of the box (NMOS `master_enable: false`); the display showed “N/C”. Only after “Turn on” (IS-05) does the device send.
-> * According to the data sheet the Ethernet port supports 10M/100M/1G/10G, not 2.5G/5G. 1080p25 needs about 1.1 Gbit/s, 1080p50/60 about 2.2–2.6 Gbit/s; a 1 Gbit/s path (e.g. a 1G SFP module in the switch) then loses a large share of packets.
+> * **The 3x3G strictly requires a 10 Gbit/s connection** (direct or to the switch). At 1 or 2.5 Gbit/s the display shows “N/C” and the device does not send, even with its sender turned on.
+> * The 3x3G's senders were **inactive** out of the box (NMOS `master_enable: false`). Only after “Turn on” (IS-05) does the device send.
+> * 1080p25 needs about 1.1 Gbit/s, 1080p50/60 about 2.2–2.6 Gbit/s. For the Mac, a 2.5 GbE adapter is enough for 1080p25 through a switch; a 1 Gbit/s path to the Mac loses a large share of packets.
 > * The 3x3G refuses **720p25** via IS-05 (“SDP format refused”); use standard formats such as 1080p25.
 > * Up to version 1.2.4 the PTP helper aborted without root rights; fixed from 1.2.4.
 
@@ -84,3 +85,5 @@
 * **Multicast:** a unique address per stream (Converters Setup › 2110 › Multicast Address). On the switch, IGMPv3 snooping **with a querier**.
 * **NMOS:** peer-to-peer (mDNS) is enough for the app. A registry is optional.
 * **Network:** Mac and 3x3G in the same IP subnet so that mDNS and IGMP work.
+* **Connection:** the 3x3G needs a **10 Gbit/s connection**. On switches with SFP+ ports use a 10GBASE-T module, not a 1G module.
+* **Turn on senders:** they may be off out of the box; in the app, “Turn On…” below the picture.
