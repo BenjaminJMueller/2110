@@ -49,6 +49,14 @@ struct ContentView: View {
                 .help("Empfangen (⌘1), Senden (⌘2), Analysieren (⌘3)")
             }
             ToolbarItemGroup(placement: .primaryAction) {
+                if model.player.isActive && model.mode != .receive {
+                    Button {
+                        model.player.stop()
+                    } label: {
+                        Label("Empfang stoppen", systemImage: "stop.circle")
+                    }
+                    .help("Läuft noch im Hintergrund: Empfang beenden")
+                }
                 SettingsLink {
                     Label("Erweitert", systemImage: "slider.horizontal.3")
                 }

@@ -297,7 +297,7 @@ private struct SenderControlSection: View {
 
     private func apply() async {
         guard let src = model.player.current, let ref = src.nmos, let conn = ref.connectionAPI,
-              let id = ref.videoSenderID ?? ref.audioSenderID else {
+              ref.videoSenderID != nil || ref.audioSenderID != nil else {
             message = "Keine Connection API bekannt."
             return
         }
@@ -311,9 +311,17 @@ private struct SenderControlSection: View {
             }
         }
         do {
-            try await model.discovery.client.activateSender(connectionAPI: conn, senderID: id, enable: true,
-                                                            destinationIP: ip.isEmpty ? nil : ip,
-                                                            destinationPort: Int(newPort))
+            // Video und Audio gemeinsam einschalten (im Hardwaretest blieb sonst der Audiosender aus);
+            // eine neue Zieladresse gilt nur für Video.
+            if let v = ref.videoSenderID {
+                try await model.discovery.client.activateSender(connectionAPI: conn, senderID: v, enable: true,
+                                                                destinationIP: ip.isEmpty ? nil : ip,
+                                                                destinationPort: Int(newPort))
+            }
+            if let a = ref.audioSenderID {
+                try await model.discovery.client.activateSender(connectionAPI: conn, senderID: a, enable: true,
+                                                                destinationIP: nil, destinationPort: nil)
+            }
             message = "Übernommen. Die SDP wird neu geladen."
             await model.updateNMOSStatus(src)
             if let updated = await model.refreshNMOS(src) { model.player.play(updated, settings: model.settings) }

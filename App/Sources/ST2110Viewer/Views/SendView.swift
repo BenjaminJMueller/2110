@@ -90,10 +90,15 @@ struct SendView: View {
                     HStack {
                         Label("Dieser Mac", systemImage: "laptopcomputer").font(.callout)
                         Spacer()
-                        Button("Empfangen") { model.receiveOwnStream() }
-                            .controlSize(.small)
-                            .disabled(!s.isSending)
-                            .help("Öffnet den eigenen Strom im Modus Empfangen")
+                        if model.player.isActive, model.player.current?.name == "Eigener 2110-Viewer-Strom" {
+                            Button("Empfang stoppen") { model.player.stop() }
+                                .controlSize(.small)
+                        } else {
+                            Button("Empfangen") { model.receiveOwnStream() }
+                                .controlSize(.small)
+                                .disabled(!s.isSending)
+                                .help("Öffnet den eigenen Strom im Modus Empfangen")
+                        }
                     }
                     ForEach(model.discovery.destinations) { d in
                         Divider()

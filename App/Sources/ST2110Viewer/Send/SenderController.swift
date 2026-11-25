@@ -317,7 +317,12 @@ final class SenderController {
             connectedDestination = "\(d.deviceLabel) – \(d.title)"
             addLog("Verbunden mit \(d.deviceLabel) – \(d.title) (IS-05).")
         } catch {
-            message = "Verbinden mit \(d.title) fehlgeschlagen: \(error.localizedDescription)"
+            let text = error.localizedDescription
+            if text.contains("format refused") {
+                message = "\(d.title) lehnt das Format \(format.rawValue) ab. Blackmagic-Converter nehmen nur SDI-Normformate an, z. B. 1080p25, 1080p50 oder 720p50; 720p25 gehört nicht dazu. Bitte ein anderes Format wählen."
+            } else {
+                message = "Verbinden mit \(d.title) fehlgeschlagen: \(text)"
+            }
         }
     }
 
