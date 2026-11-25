@@ -137,4 +137,32 @@ final class NodeResourceTests: XCTestCase {
         XCTAssertEqual(d.first?.audio.first?.id, "r2")
         XCTAssertEqual(d.first?.connectedSenderIDs, ["s9"])
     }
+
+    func testStreamBandwidth() {
+        // 1080p25 10 Bit 4:2:2 ≈ 1,09 Gbit/s, 1080p60 ≈ 2,6 Gbit/s
+        let p25 = StreamBandwidth.videoMbps(width: 1920, height: 1080, fps: 25, depth: 10, sampling: "YCbCr-4:2:2")
+        let p60 = StreamBandwidth.videoMbps(width: 1920, height: 1080, fps: 60, depth: 10, sampling: "YCbCr-4:2:2")
+        XCTAssertEqual(p25, 1088.6, accuracy: 5)
+        XCTAssertEqual(p60, 2612.7, accuracy: 10)
+        let a16 = StreamBandwidth.audioMbps(channels: 16, bitsPerSample: 24, sampleRate: 48000, ptimeMs: 0.125)
+        XCTAssertGreaterThan(a16, 18)
+        XCTAssertLessThan(a16, 24)
+    }
+
+    func testSlowLinkHintUsesExpectedRate() {
+        func input(expected: Double, link: UInt64) -> DiagnosisInput {
+            var d = DiagnosisInput(state: .receiving)
+            d.expectsVideo = true
+            d.expectedMbps = expected
+            d.interface = InterfaceSnapshot(name: "en14", displayName: "USB LAN", ipv4: "192.168.88.2", netmask: "255.255.255.0",
+                                            isUp: true, isWireless: false, linkSpeedBps: link)
+            return d
+        }
+        // 1080p25 über 2,5 Gbit/s: kein Hinweis
+        XCTAssertFalse(Diagnosis.hints(input(expected: 1110, link: 2_500_000_000)).contains { $0.id == "if-slow" })
+        // 1080p60 über 2,5 Gbit/s: Hinweis
+        XCTAssertTrue(Diagnosis.hints(input(expected: 2630, link: 2_500_000_000)).contains { $0.id == "if-slow" })
+        // 1080p25 über 1 Gbit/s: Hinweis
+        XCTAssertTrue(Diagnosis.hints(input(expected: 1110, link: 1_000_000_000)).contains { $0.id == "if-slow" })
+    }
 }

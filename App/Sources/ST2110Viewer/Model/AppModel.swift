@@ -359,6 +359,31 @@ final class AppModel {
     // MARK: Quellen verwalten
 
     /// Den eigenen Sendestrom auf diesem Mac empfangen (über die eigene Netzwerkschnittstelle bzw. Loopback).
+    /// Schaltet Video- und Audiosender der laufenden NMOS-Quelle am Gerät ein (IS-05)
+    /// und lädt danach die SDP neu. Eine neue Zieladresse gilt nur für Video.
+    func activateCurrentSenders(destinationIP: String? = nil, port: Int? = nil) async -> String {
+        guard let src = player.current, let ref = src.nmos, let conn = ref.connectionAPI,
+              ref.videoSenderID != nil || ref.audioSenderID != nil else {
+            return "Keine Connection API bekannt."
+        }
+        do {
+            if let v = ref.videoSenderID {
+                try await discovery.client.activateSender(connectionAPI: conn, senderID: v, enable: true,
+                                                          destinationIP: destinationIP, destinationPort: port)
+            }
+            if let a = ref.audioSenderID {
+                try await discovery.client.activateSender(connectionAPI: conn, senderID: a, enable: true,
+                                                          destinationIP: nil, destinationPort: nil)
+            }
+            player.addLog(.info, "Sender am Gerät eingeschaltet (IS-05)")
+            await updateNMOSStatus(src)
+            if let updated = await refreshNMOS(src) { player.play(updated, settings: settings) }
+            return "Übernommen. Die SDP wird neu geladen."
+        } catch {
+            return error.localizedDescription
+        }
+    }
+
     func receiveOwnStream() {
         guard sender.isSending, sender.videoSDP != nil || sender.audioSDP != nil else { return }
         let name = "Eigener 2110-Viewer-Strom"

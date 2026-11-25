@@ -494,6 +494,13 @@ final class PlayerController {
         }
         d.interface = interface
         d.otherInterfaces = interfacesProvider?() ?? []
+        if let v = video {
+            d.expectedMbps += StreamBandwidth.videoMbps(width: v.width, height: v.height, fps: v.fps, depth: v.depth, sampling: v.sampling)
+        }
+        if let a = audio {
+            d.expectedMbps += StreamBandwidth.audioMbps(channels: a.channels, bitsPerSample: a.encoding.uppercased() == "L16" ? 16 : 24,
+                                                        sampleRate: a.clockRate > 0 ? a.clockRate : 48000, ptimeMs: a.ptimeMs)
+        }
         d.senderAddress = video?.senderAddress ?? audio?.senderAddress
         d.multicastGroups = [video.map { "\($0.destination):\($0.port)" }, audio.map { "\($0.destination):\($0.port)" }].compactMap { $0 }
         d.ptpRequested = effectiveSync == .automatic && !isDemo

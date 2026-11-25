@@ -199,6 +199,17 @@ final class SenderController {
         }
         sender = s
         isSending = true
+        // Passt der Strom durch die Leitung? (Hardwaretest: 1080p über 1 Gbit/s verlor die Hälfte)
+        if let i = iface, i.linkSpeedBps > 0 {
+            let (w, h) = format.size
+            let (rn, rd) = format.rate
+            let mbps = StreamBandwidth.videoMbps(width: w, height: h, fps: Double(rn) / Double(max(1, rd)), depth: 10, sampling: "YCbCr-4:2:2")
+                + (audioChannels > 0 ? StreamBandwidth.audioMbps(channels: audioChannels, bitsPerSample: 24, sampleRate: 48000, ptimeMs: ptime125 ? 0.125 : 1) : 0)
+            if mbps * 1_000_000 > Double(i.linkSpeedBps) * 0.95 {
+                message = String(format: "%@ braucht etwa %.1f Gbit/s, „%@“ hat nur %@. Empfänger verlieren Pakete; ein kleineres Format wählen oder eine schnellere Verbindung nutzen.",
+                                 format.rawValue, mbps / 1000, i.displayName, i.speedText ?? "?")
+            }
+        }
         videoSDP = s.sdp(video: true)
         audioSDP = c.has_audio != 0 ? s.sdp(video: false) : nil
         var line: String = "Sende " + format.rawValue + " an " + videoAddress + ":" + String(port)

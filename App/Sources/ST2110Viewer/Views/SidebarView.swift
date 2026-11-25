@@ -108,6 +108,13 @@ private struct DiscoveredRow: View {
     @Environment(AppModel.self) private var model
     let source: DiscoveredSource
 
+    /// Blackmagic nennt Sender schlicht „Transmit0“ und das Gerät „Stage #3 SDI 1“.
+    /// Dann ist der Gerätename die aussagekräftigere Überschrift.
+    private var genericLabel: Bool {
+        source.title.range(of: #"^(transmit|transmitter|sender|tx|output|out|source)\s*\d*$"#,
+                           options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: source.video != nil ? "video.fill" : "waveform")
@@ -115,8 +122,9 @@ private struct DiscoveredRow: View {
                 .frame(width: 18)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 1) {
-                Text(tr(source.title))
-                Text(tr([source.deviceLabel, source.formatSummary, source.audio.isEmpty ? nil : "\(source.audio.count) Audio"]
+                Text(tr(genericLabel ? source.deviceLabel : source.title))
+                Text(tr([genericLabel ? source.title : source.deviceLabel, source.formatSummary,
+                         source.audio.isEmpty ? nil : "\(source.audio.count) Audio"]
                         .compactMap { $0 }.joined(separator: ", ")))
                     .font(.caption)
                     .foregroundStyle(.secondary)

@@ -1577,6 +1577,13 @@ void st_receiver_get_stats(st_receiver *r, st_stats *o)
     o->ptp_enabled = r->ptp_enabled;
     o->ptp_synced = r->ptp_clock ? gst_clock_is_synced(r->ptp_clock) : 0;
     o->ptp_domain = r->ptp_domain;
+    /* Die Statistik-Nachricht zur Grandmaster-Wahl kommt nur einmal; lief PTP
+     * schon (z. B. vom Sender), fehlt sie. Dann die ID direkt von der Uhr lesen. */
+    if (!r->ptp_gm[0] && r->ptp_clock && o->ptp_synced) {
+        guint64 gm = 0;
+        g_object_get(r->ptp_clock, "grandmaster-clock-id", &gm, NULL);
+        if (gm) format_clock_id(gm, r->ptp_gm, sizeof r->ptp_gm);
+    }
     g_strlcpy(o->ptp_grandmaster, r->ptp_gm, sizeof o->ptp_grandmaster);
     g_strlcpy(o->ptp_master, r->ptp_master, sizeof o->ptp_master);
     o->ptp_path_delay_us = r->ptp_path_delay_us;

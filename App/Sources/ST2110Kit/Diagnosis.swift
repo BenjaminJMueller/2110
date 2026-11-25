@@ -96,6 +96,8 @@ public struct DiagnosisInput: Sendable {
     public var socketBufferBytes: Int
     public var latencyRaised: Bool
     public var latencyMs: Double
+    /// Erwartete Datenrate aller Ströme laut SDP (Mbit/s), 0 = unbekannt.
+    public var expectedMbps: Double
 
     public init(state: State) {
         self.state = state
@@ -117,6 +119,27 @@ public struct DiagnosisInput: Sendable {
         socketBufferBytes = 0
         latencyRaised = false
         latencyMs = 0
+        expectedMbps = 0
+    }
+}
+
+/// Datenrate von ST-2110-Strömen inklusive RTP/UDP/IP-Overhead (Schätzung).
+public enum StreamBandwidth {
+    /// Video ST 2110-20; `fps` = Bilder je Sekunde (bei Zeilensprung Vollbilder).
+    public static func videoMbps(width: Int, height: Int, fps: Double, depth: Int, sampling: String) -> Double {
+        guard width > 0, height > 0, fps > 0, depth > 0 else { return 0 }
+        let s = sampling.uppercased()
+        let samplesPerPixel: Double = s.contains("4:4:4") || s.hasPrefix("RGB") ? 3 : s.contains("4:2:0") ? 1.5 : 2
+        let payload = Double(width * height) * samplesPerPixel * Double(depth) * fps
+        return payload * 1.05 / 1_000_000
+    }
+
+    /// Audio ST 2110-30 (L24/L16) mit Paketköpfen je Paket.
+    public static func audioMbps(channels: Int, bitsPerSample: Int, sampleRate: Int, ptimeMs: Double) -> Double {
+        guard channels > 0, sampleRate > 0 else { return 0 }
+        let payload = Double(channels * bitsPerSample * sampleRate)
+        let packetsPerSecond = ptimeMs > 0 ? 1000 / ptimeMs : 1000
+        return (payload + packetsPerSecond * 62 * 8) / 1_000_000
     }
 }
 
@@ -139,6 +162,14 @@ public enum Diagnosis {
                 out.append(Hint(id: "if-wifi", severity: .warning, certainty: .measured,
                                 title: "WLAN ausgewählt",
                                 detail: "ST 2110 braucht 1 bis 2,6 Gbit/s je HD-Strom, das schafft WLAN nicht. Ethernet wählen, etwa einen 10-GbE-Adapter."))
+            } else if i.linkSpeedBps > 0 && d.expectedMbps > 0 {
+                // Mit 5 % Reserve: Bei voll ausgelasteter Leitung verwirft der Switch Pakete
+                if d.expectedMbps * 1_000_000 > Double(i.linkSpeedBps) * 0.95 {
+                    out.append(Hint(id: "if-slow", severity: .warning, certainty: .measured,
+                                    title: "Verbindung zu langsam für diesen Strom",
+                                    detail: String(format: "Der Strom braucht etwa %.1f Gbit/s, „%@“ hat %@. Ein kleineres Format wählen (z. B. 1080p25 statt 1080p50/60) oder eine schnellere Verbindung (10 GbE).",
+                                                   d.expectedMbps / 1000, i.displayName, i.speedText ?? "?")))
+                }
             } else if i.linkSpeedBps > 0 && i.linkSpeedBps < 2_500_000_000 && d.expectsVideo {
                 out.append(Hint(id: "if-slow", severity: .warning, certainty: .measured,
                                 title: "Verbindung zu langsam für unkomprimiertes HD-Video",
@@ -163,7 +194,7 @@ public enum Diagnosis {
             if d.nmosSenderEnabled == false {
                 out.append(Hint(id: "nmos-disabled", severity: .error, certainty: .measured,
                                 title: "Sender ist am Gerät deaktiviert",
-                                detail: "Laut NMOS ist der Sender aus. Unter „Erweitert“ lässt er sich einschalten."))
+                                detail: "Laut NMOS ist der Sender aus und schickt keine Pakete. Mit „Einschalten“ (unter dem Bild oder in der Diagnose) aktivieren."))
             }
             out.append(Hint(id: "mc-causes", severity: .info, certainty: .suspected,
                             title: "Mögliche Ursachen",
