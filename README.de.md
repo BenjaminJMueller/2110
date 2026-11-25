@@ -15,7 +15,7 @@
 | Lippensynchron über RTP-Zeitstempel bzw. als passiver PTP-Slave | Zeitstempel vom PTP-Grandmaster, Pakete gleichmäßig verteilt | Audio-TS-DF, PTP-Domains und Grandmaster, IGMP-Querier, Vorschaubild |
 | Einzelkanal oder freies Stereopaar abhören, Ausgabegerät wählbar; Bild randlos auf zweitem Bildschirm oder Beamer | Dateien dekodiert macOS selbst (H.264, HEVC, ProRes, AAC) | Mitschnitt direkt aus dem Empfang aufzeichnen |
 
-**Erfolgreich getestet** mit dem Blackmagic 2110 IP Converter 3x3G (November 2026): Empfangen, Senden, PTP und NMOS. Aufbau und Ergebnisse: [Testbericht](docs/10-Testbericht.md).
+**Erfolgreich getestet** mit dem Blackmagic 2110 IP Converter 3x3G (November 2026): Empfangen, Senden, PTP und NMOS. Aufbau und Ergebnisse: [Testbericht](docs/10-Testbericht.md). Wichtig: Der 3x3G braucht eine 10-Gbit/s-Verbindung.
 
 Projektseite: https://benjaminjmueller.github.io/2110/
 

@@ -7,8 +7,9 @@
 > **Erster Hardwaretest (November 2026):** 2110 IP Converter 3x3G, MikroTik CRS305 mit SFP+-Kupfermodulen, MacBook Pro (M4 Pro, 24 GB) mit USB-2,5-GbE-Adapter. Geprüft (**H**): Erkennung per NMOS, PTP (3x3G als Grandmaster, Domain 123), Sender am Gerät per IS-05 einschalten, Empfang vom 3x3G, Senden aus der App an den 3x3G (Empfänger in Converters Setup gewählt). Weitere Punkte füllen sich mit Testergebnissen (siehe [06-Testplan](06-Testplan.md)).
 >
 > **Erkenntnisse aus dem Test:**
-> * Die Sender des 3x3G waren ab Werk **inaktiv** (NMOS `master_enable: false`); das Display zeigte „N/C“. Erst nach „Einschalten“ (IS-05) sendet das Gerät.
-> * Laut Datenblatt kann der Ethernet-Port 10M/100M/1G/10G, nicht 2,5G/5G. 1080p25 braucht etwa 1,1 Gbit/s, 1080p50/60 etwa 2,2–2,6 Gbit/s; eine 1-Gbit/s-Strecke (z. B. 1G-SFP-Modul im Switch) verliert dann einen großen Teil der Pakete.
+> * **Der 3x3G braucht zwingend eine 10-Gbit/s-Verbindung** (direkt oder zum Switch). Mit 1 oder 2,5 Gbit/s zeigt das Display „N/C“, und das Gerät sendet nicht, auch mit eingeschaltetem Sender.
+> * Die Sender des 3x3G waren ab Werk **inaktiv** (NMOS `master_enable: false`). Erst nach „Einschalten“ (IS-05) sendet das Gerät.
+> * 1080p25 braucht etwa 1,1 Gbit/s, 1080p50/60 etwa 2,2–2,6 Gbit/s. Für den Mac reicht ein 2,5-GbE-Adapter für 1080p25 über einen Switch; eine 1-Gbit/s-Strecke zum Mac verliert einen großen Teil der Pakete.
 > * Der 3x3G lehnt **720p25** per IS-05 ab („SDP format refused“); Normformate wie 1080p25 verwenden.
 > * Bis Version 1.2.4 brach das PTP-Hilfsprogramm ohne Root-Rechte ab; ab 1.2.4 behoben.
 
@@ -84,3 +85,5 @@
 * **Multicast:** Adressen je Strom eindeutig (Converters Setup › 2110 › Multicast Address). Am Switch IGMPv3-Snooping **mit Querier**.
 * **NMOS:** Für die App genügt Peer-to-Peer (mDNS). Eine Registry ist optional.
 * **Netz:** Mac und 3x3G im selben IP-Subnetz, damit mDNS und IGMP funktionieren.
+* **Verbindung:** Der 3x3G braucht eine **10-Gbit/s-Verbindung**. Bei Switches mit SFP+-Ports ein 10GBASE-T-Modul verwenden, kein 1G-Modul.
+* **Sender einschalten:** Ab Werk können die Sender aus sein; in der App unter dem Bild „Einschalten …“.

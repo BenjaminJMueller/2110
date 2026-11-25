@@ -15,7 +15,7 @@
 | Lip sync via RTP timestamps or as a passive PTP slave | Timestamps from the PTP grandmaster, evenly paced packets | Audio TS-DF, PTP domains and grandmasters, IGMP querier, thumbnail |
 | Monitor a single channel or any stereo pair, choose the output device; full-screen picture on a second display or projector | macOS decodes files itself (H.264, HEVC, ProRes, AAC) | Record a capture straight from reception |
 
-**Successfully tested** with the Blackmagic 2110 IP Converter 3x3G (November 2026): receiving, sending, PTP and NMOS. Setup and results: [test report](docs/en/test-report.md).
+**Successfully tested** with the Blackmagic 2110 IP Converter 3x3G (November 2026): receiving, sending, PTP and NMOS. Setup and results: [test report](docs/en/test-report.md). Important: the 3x3G needs a 10 Gbit/s connection.
 
 The app follows the system language (English or German).
 

@@ -32,10 +32,11 @@ Vorher wurde der 3x3G auch direkt (ohne Switch) an den 2,5-G-Adapter angeschloss
 
 ## Erkenntnisse
 
-1. **Sender ab Werk aus:** Die Sender des 3x3G meldeten in NMOS `master_enable: false`, das Display zeigte „N/C“. Erst nach dem Einschalten per IS-05 kamen Pakete. Die App bietet dafür seit 1.2.8 „Einschalten …“ direkt unter dem Bild.
-2. **Bandbreite:** Ein 1-Gbit-SFP-Modul im Switch begrenzte die Strecke auf 1 Gbit/s. 1080p25 braucht etwa 1,1 Gbit/s, 1080p60 etwa 2,6 Gbit/s. Laut Datenblatt kann der Port des 3x3G 10M/100M/1G/10G. Seit 1.2.8 warnt die App, wenn ein Strom nicht durch die Verbindung passt.
-3. **Formate:** Der 3x3G nimmt nur SDI-Normformate an; 720p25 gehört nicht dazu.
-4. **PTP-Domain:** Der 3x3G lief auf Domain 123 statt 127. Die App erkennt die Domain seit 1.2.4 automatisch.
+1. **Der 3x3G braucht zwingend eine 10-Gbit/s-Verbindung.** Mit 2,5 Gbit/s (Direktverbindung) und mit 1 Gbit/s (1G-SFP-Modul im Switch) zeigte das Display „N/C“, und das Gerät sendete nicht, auch nicht mit eingeschaltetem Sender. Verwaltung, NMOS und PTP liefen dabei weiter. Erst am 10G-Port sendete der 3x3G. Laut Datenblatt kann der Port 10M/100M/1G/10G; für ST 2110 ist 10G nötig.
+2. **Sender ab Werk aus:** Die Sender des 3x3G meldeten in NMOS `master_enable: false`. Zusätzlich zur 10G-Verbindung müssen sie eingeschaltet werden (IS-05). Die App bietet dafür seit 1.2.8 „Einschalten …“ direkt unter dem Bild.
+3. **Bandbreite zum Mac:** 1080p25 braucht etwa 1,1 Gbit/s, 1080p60 etwa 2,6 Gbit/s. Über eine 1-Gbit/s-Strecke zum Mac gehen viele Pakete verloren. Seit 1.2.8 warnt die App, wenn ein Strom nicht durch die Verbindung passt.
+4. **Formate:** Der 3x3G nimmt nur SDI-Normformate an; 720p25 gehört nicht dazu.
+5. **PTP-Domain:** Der 3x3G lief auf Domain 123 statt 127. Die App erkennt die Domain seit 1.2.4 automatisch.
 
 ## Im Test gefundene und behobene Fehler der App
 
