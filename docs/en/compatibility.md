@@ -4,7 +4,7 @@
 
 **Legend:** **D** = documented only (manufacturer information or standard); **S** = synthetically tested (own test sender, Linux or macOS CI); **H** = verified with Blackmagic hardware
 
-> **First hardware test (November 2026):** 2110 IP Converter 3x3G, MikroTik CRS305 with SFP+ copper modules, MacBook Pro M4 with a USB 2.5 GbE adapter. Verified (**H**): discovery via NMOS, PTP (3x3G as grandmaster, domain 123), turning on the device's senders via IS-05, receiving from the 3x3G, sending from the app to the 3x3G (receiver chosen in Converters Setup). Further items fill up with test results (see the [test plan](test-plan.md)).
+> **First hardware test (November 2026):** 2110 IP Converter 3x3G, MikroTik CRS305 with SFP+ copper modules, MacBook Pro (M4 Pro, 24 GB) with a USB 2.5 GbE adapter. Verified (**H**): discovery via NMOS, PTP (3x3G as grandmaster, domain 123), turning on the device's senders via IS-05, receiving from the 3x3G, sending from the app to the 3x3G (receiver chosen in Converters Setup). Further items fill up with test results (see the [test plan](test-plan.md)).
 >
 > **Findings from the test:**
 > * The 3x3G's senders were **inactive** out of the box (NMOS `master_enable: false`); the display showed “N/C”. Only after “Turn on” (IS-05) does the device send.

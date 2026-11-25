@@ -11,7 +11,7 @@
 |---|---|---|
 | ST-2110-Gerät | Blackmagic 2110 IP Converter 3x3G („3x3G Stage #3“) | Software: neueste zum Testzeitpunkt, Blackmagic Converters 12.4.2 (4. November 2026); PTP-Grandmaster des Aufbaus (Domain 123, „PTP Follower Only“ aus); IP 192.168.88.3 |
 | Switch | MikroTik CRS305-1G-4S+ | 4 × SFP+; Werkseinstellung (Bridge, ohne IGMP-Snooping); 10GBASE-T-Kupfermodule (mehrere Geschwindigkeiten) und ein 1-Gbit-Kupfermodul |
-| Mac | MacBook Pro 16″ (Mac16,7, Apple M4) | macOS 26.2 (25C56) |
+| Mac | MacBook Pro 16″ (Mac16,7), Apple M4 Pro, 24 GB Arbeitsspeicher | macOS 26.2 (25C56) |
 | Netzwerkadapter am Mac | USB 10/100/1G/2.5G LAN (Realtek) | 2,5 Gbit/s ausgehandelt; IP 192.168.88.2/16 |
 | SDI-Quelle | am Eingang SDI 1 des 3x3G | 1080p25 und 1080p60, YCbCr 4:2:2, 10 Bit |
 | Software | 2110 Viewer 1.2.6/1.2.7 | Converters Setup zum Prüfen der Gerätewerte |

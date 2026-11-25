@@ -4,7 +4,7 @@
 
 **Legende:** **D** = nur dokumentiert (Herstellerangabe bzw. Norm); **S** = synthetisch getestet (eigener Testsender, Linux bzw. macOS-CI); **H** = mit Blackmagic-Hardware geprüft
 
-> **Erster Hardwaretest (November 2026):** 2110 IP Converter 3x3G, MikroTik CRS305 mit SFP+-Kupfermodulen, MacBook Pro M4 mit USB-2,5-GbE-Adapter. Geprüft (**H**): Erkennung per NMOS, PTP (3x3G als Grandmaster, Domain 123), Sender am Gerät per IS-05 einschalten, Empfang vom 3x3G, Senden aus der App an den 3x3G (Empfänger in Converters Setup gewählt). Weitere Punkte füllen sich mit Testergebnissen (siehe [06-Testplan](06-Testplan.md)).
+> **Erster Hardwaretest (November 2026):** 2110 IP Converter 3x3G, MikroTik CRS305 mit SFP+-Kupfermodulen, MacBook Pro (M4 Pro, 24 GB) mit USB-2,5-GbE-Adapter. Geprüft (**H**): Erkennung per NMOS, PTP (3x3G als Grandmaster, Domain 123), Sender am Gerät per IS-05 einschalten, Empfang vom 3x3G, Senden aus der App an den 3x3G (Empfänger in Converters Setup gewählt). Weitere Punkte füllen sich mit Testergebnissen (siehe [06-Testplan](06-Testplan.md)).
 >
 > **Erkenntnisse aus dem Test:**
 > * Die Sender des 3x3G waren ab Werk **inaktiv** (NMOS `master_enable: false`); das Display zeigte „N/C“. Erst nach „Einschalten“ (IS-05) sendet das Gerät.
