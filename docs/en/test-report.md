@@ -9,7 +9,7 @@
 
 | Component | Device | Details |
 |---|---|---|
-| ST 2110 device | Blackmagic 2110 IP Converter 3x3G (“3x3G Stage #3”) | firmware: _to be added_ (Converters Setup › Setup); PTP grandmaster of the setup (domain 123, “PTP Follower Only” off); IP 192.168.88.3 |
+| ST 2110 device | Blackmagic 2110 IP Converter 3x3G (“3x3G Stage #3”) | software: latest at the time of the test, Blackmagic Converters 12.4.2 (4 November 2026); PTP grandmaster of the setup (domain 123, “PTP Follower Only” off); IP 192.168.88.3 |
 | Switch | MikroTik CRS305-1G-4S+ | 4 × SFP+; factory settings (bridge, no IGMP snooping); multi-rate 10GBASE-T copper modules and one 1 Gbit copper module |
 | Mac | MacBook Pro 16″ (Mac16,7, Apple M4) | macOS 26.2 (25C56) |
 | Network adapter on the Mac | USB 10/100/1G/2.5G LAN (Realtek) | 2.5 Gbit/s negotiated; IP 192.168.88.2/16 |
@@ -27,7 +27,7 @@ Before that, the 3x3G was also connected directly (without a switch) to the 2.5G
 | PTP: Mac as passive follower | ✔ synchronized to the 3x3G (grandmaster 7C-2E-0D-FF-FE-20-96-EA, domain 123) |
 | Turning on the device's sender via IS-05 | ✔ “Active: yes”, then the 3x3G sends |
 | Receiving from the 3x3G (1080p25) | ✔ video arrives; losses while part of the path ran at only 1 Gbit/s |
-| Sending from the app to the 3x3G | ✔ picture at the 3x3G output (receiver chosen in Converters Setup); format: _to be added_ |
+| Sending from the app to the 3x3G | ✔ 1080p25 test pattern at the 3x3G output (receiver chosen in Converters Setup) |
 | IS-05 “Connect” of a receiver on the 3x3G | ✔ technically; the device refuses 720p25 (“SDP format refused”) |
 
 ## Findings
@@ -49,6 +49,5 @@ Before that, the 3x3G was also connected directly (without a switch) to the 2.5G
 
 ## Still open
 
-* Add the 3x3G firmware and the format that was sent.
 * Check receiving 1080p50/60 and lip sync with 10 Gbit/s throughout or 2.5 Gbit/s to the Mac.
 * Further items from the [test plan](test-plan.md).

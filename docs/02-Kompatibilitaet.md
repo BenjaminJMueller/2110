@@ -16,7 +16,7 @@
 
 | Modell | Firmware | Status |
 |---|---|---|
-| Blackmagic 2110 IP Converter 3x3G | noch zu erfassen (Blackmagic Converters Setup › Setup › Software) | D (Handbuch 09/2026, Techspecs), **H** (erster Test, siehe oben) |
+| Blackmagic 2110 IP Converter 3x3G | Blackmagic Converters 12.4.2 | D (Handbuch 09/2026, Techspecs), **H** (erster Test, siehe oben) |
 | andere Blackmagic-2110-Geräte (Mini BiDirect, SDI to HDMI 12G …) | – | nicht Gegenstand dieser Version. Bei 2160p59.94/60 senden die 12G-Modelle **IP10**, das wird nicht unterstützt. |
 
 ## 2.2 Videoformate (ST 2110-20, unkomprimiert)
