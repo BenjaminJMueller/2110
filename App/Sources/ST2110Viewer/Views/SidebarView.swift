@@ -108,7 +108,7 @@ private struct DiscoveredRow: View {
     @Environment(AppModel.self) private var model
     let source: DiscoveredSource
 
-    /// Blackmagic nennt Sender schlicht „Transmit0“ und das Gerät „Stage #3 SDI 1“.
+    /// Blackmagic nennt Sender schlicht „Transmit0“ und das Gerät nach dem Kanal, z. B. „SDI 1“.
     /// Dann ist der Gerätename die aussagekräftigere Überschrift.
     private var genericLabel: Bool {
         source.title.range(of: #"^(transmit|transmitter|sender|tx|output|out|source)\s*\d*$"#,
